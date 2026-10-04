@@ -1,0 +1,89 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Packaging / build
+build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
+
+# Virtual environments (uv creates .venv; uv.lock and .python-version ARE committed)
+.venv/
+venv/
+env/
+
+# Tests, coverage, linters, type checkers
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.tox/
+.nox/
+.mypy_cache/
+.ruff_cache/
+.pyright/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# --- Secrets & local config (never commit credentials) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+secrets.json
+local.settings.json
+
+# --- Azure / Terraform / Bicep ---
+.azure/
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+
+# --- Data (local bronze/silver/gold outputs and large raw files) ---
+data/raw/
+data/bronze/
+data/silver/
+data/gold/
+*.parquet
+*.duckdb
+*.db
+*.sqlite
+
+# --- Power BI ---
+*.pbix.bak
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# --- LangChain / LLM local caches ---
+.langchain.db
+.cache/
+
+# --- Logs & temp files ---
+*.log
+logs/
+tmp/
+*.tmp
+
+# --- Editors & OS ---
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Claude Code local settings ---
+.claude/settings.local.json

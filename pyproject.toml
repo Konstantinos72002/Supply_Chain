@@ -7,7 +7,9 @@ authors = [
     { name = "Daino2002", email = "80028630+Konstantinos72002@users.noreply.github.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "gh>=0.0.4",
+]
 
 [project.scripts]
 supply-chain = "supply_chain:main"

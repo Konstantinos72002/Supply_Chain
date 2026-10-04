@@ -1,0 +1,2286 @@
+{
+ "milestones": {
+  "0": [
+   "Phase 0 – Setup & ways of working",
+   "2026-10-04"
+  ],
+  "1": [
+   "Phase 1 – Discover: brief, KPIs, data",
+   "2026-10-05"
+  ],
+  "2": [
+   "Phase 2 – Bronze ingestion",
+   "2026-10-06"
+  ],
+  "3": [
+   "Phase 3 – Silver & data quality",
+   "2026-10-08"
+  ],
+  "4": [
+   "Phase 4 – Gold dimensional model",
+   "2026-10-09"
+  ],
+  "5": [
+   "Phase 5 – Fabric semantic model & Power BI",
+   "2026-10-13"
+  ],
+  "6": [
+   "Phase 6 – Azure foundation",
+   "2026-10-06"
+  ],
+  "7": [
+   "Phase 7 – FastAPI integration layer",
+   "2026-10-12"
+  ],
+  "8": [
+   "Phase 8 – LangChain Core assistant",
+   "2026-10-13"
+  ],
+  "9": [
+   "Phase 9 – CI/CD (GitHub Actions)",
+   "2026-10-13"
+  ],
+  "10": [
+   "Phase 10 – Testing, operations & bonus",
+   "2026-10-13"
+  ],
+  "11": [
+   "Phase 11 – Final presentation & delivery",
+   "2026-10-15"
+  ]
+ },
+ "reviewer": {
+  "P1": "P2",
+  "P2": "P1",
+  "P3": "P4",
+  "P4": "P3",
+  "P5": "P2"
+ },
+ "issues": [
+  {
+   "id": "T01",
+   "title": "Create private repository and invite collaborators",
+   "role": "P5",
+   "priority": "P0",
+   "phase": 0,
+   "est": 1,
+   "target": "2026-10-03",
+   "deps": [],
+   "type": "chore",
+   "desc": "Create `team4-supply-chain-analytics` on GitHub and give the whole team plus the instructor access.",
+   "ac": [
+    "Private repo exists with README and Python `.gitignore` template",
+    "All 4 team members and the instructor are collaborators",
+    "Every member has cloned the repo and set `git config user.name/user.email`"
+   ],
+   "labels": [
+    "phase-0",
+    "role:P5",
+    "priority:P0",
+    "type:chore"
+   ],
+   "milestone": "Phase 0 – Setup & ways of working"
+  },
+  {
+   "id": "T02",
+   "title": "Scaffold repository folder structure (src layout)",
+   "role": "P5",
+   "priority": "P0",
+   "phase": 0,
+   "est": 2,
+   "target": "2026-10-03",
+   "deps": [
+    "T01"
+   ],
+   "type": "chore",
+   "desc": "Create the folder tree from guide §0.2 (`src/team4_sc/...`, `notebooks/`, `tests/`, `docs/`, `fabric/`, `postman/`, `infra/`, `.github/`).",
+   "ac": [
+    "Folder tree matches guide §0.2; empty folders contain `.gitkeep`",
+    "`.gitignore` includes `.env`, `*.key`, `__pycache__/`, `.venv/`",
+    "`.env.example` lists variable names only (no values)"
+   ],
+   "labels": [
+    "phase-0",
+    "role:P5",
+    "priority:P0",
+    "type:chore"
+   ],
+   "milestone": "Phase 0 – Setup & ways of working"
+  },
+  {
+   "id": "T03",
+   "title": "Initialise Python project with uv (pyproject.toml + uv.lock)",
+   "role": "P5",
+   "priority": "P0",
+   "phase": 0,
+   "est": 2,
+   "target": "2026-10-04",
+   "deps": [
+    "T02"
+   ],
+   "type": "chore",
+   "desc": "Run `uv init --package --name team4-sc --python 3.11` and add runtime, dev and `spark` dependency groups as in guide §0.2a.",
+   "ac": [
+    "`pyproject.toml`, `uv.lock` and `.python-version` (3.11) committed; no `requirements.txt`",
+    "ruff and pytest configured in `pyproject.toml`; `pyspark` is in the separate `spark` group",
+    "Every member runs `uv sync --all-groups`, `uv run pytest` and `uv run ruff check .` successfully"
+   ],
+   "labels": [
+    "phase-0",
+    "role:P5",
+    "priority:P0",
+    "type:chore"
+   ],
+   "milestone": "Phase 0 – Setup & ways of working"
+  },
+  {
+   "id": "T04",
+   "title": "Configure branch protection on main",
+   "role": "P4",
+   "priority": "P0",
+   "phase": 0,
+   "est": 1,
+   "target": "2026-10-04",
+   "deps": [
+    "T01"
+   ],
+   "type": "chore",
+   "desc": "Add a branch ruleset for `main` so nobody pushes directly.",
+   "ac": [
+    "Pull request required before merging, with 1 approval",
+    "Force pushes blocked",
+    "Note added that required status checks will be enabled in the CI v1 issue"
+   ],
+   "labels": [
+    "phase-0",
+    "role:P4",
+    "priority:P0",
+    "type:chore"
+   ],
+   "milestone": "Phase 0 – Setup & ways of working"
+  },
+  {
+   "id": "T05",
+   "title": "Create GitHub Project board 'Team 4 Backlog'",
+   "role": "P5",
+   "priority": "P0",
+   "phase": 0,
+   "est": 1,
+   "target": "2026-10-03",
+   "deps": [
+    "T01"
+   ],
+   "type": "chore",
+   "desc": "Board view with Status columns and custom fields required by the spec (owner, priority, acceptance criteria, status).",
+   "ac": [
+    "Status: Backlog → Ready → In Progress → In Review → Done",
+    "Fields: Priority (P0/P1/P2), Phase (0–11), Estimate (number, hours), Iteration (1 week)",
+    "All backlog issues are added to the board with assignee, priority and phase"
+   ],
+   "labels": [
+    "phase-0",
+    "role:P5",
+    "priority:P0",
+    "type:chore"
+   ],
+   "milestone": "Phase 0 – Setup & ways of working"
+  },
+  {
+   "id": "T06",
+   "title": "Add issue template and pull request template",
+   "role": "P5",
+   "priority": "P1",
+   "phase": 0,
+   "est": 1,
+   "target": "2026-10-04",
+   "deps": [
+    "T02"
+   ],
+   "type": "chore",
+   "desc": "Add `.github/ISSUE_TEMPLATE/task.md` and `.github/pull_request_template.md` from guide §0.4–0.5.",
+   "ac": [
+    "Issue template has: what to do, acceptance criteria, dependencies, owner/reviewer",
+    "PR template has: what changes, `Closes #`, how I tested (incl. 'no secrets'), evidence"
+   ],
+   "labels": [
+    "phase-0",
+    "role:P5",
+    "priority:P1",
+    "type:chore"
+   ],
+   "milestone": "Phase 0 – Setup & ways of working"
+  },
+  {
+   "id": "T07",
+   "title": "Record roles in README and complete first PR per member",
+   "role": "P5",
+   "priority": "P0",
+   "phase": 0,
+   "est": 1,
+   "target": "2026-10-04",
+   "deps": [
+    "T04",
+    "T06"
+   ],
+   "type": "chore",
+   "desc": "Every member practises the full PR flow (branch → PR → review → squash merge) by adding their name/role to the README.",
+   "ac": [
+    "README has a role table (P1–P5) with names",
+    "Each of the 5 members has at least one merged, reviewed PR",
+    "Branch naming convention `type/<issue>-<desc>` documented in README"
+   ],
+   "labels": [
+    "phase-0",
+    "role:P5",
+    "priority:P0",
+    "type:chore"
+   ],
+   "milestone": "Phase 0 – Setup & ways of working"
+  },
+  {
+   "id": "T08",
+   "title": "Set up ADR folder and risk log",
+   "role": "P5",
+   "priority": "P1",
+   "phase": 0,
+   "est": 1,
+   "target": "2026-10-04",
+   "deps": [
+    "T02"
+   ],
+   "type": "docs",
+   "desc": "Create the ADR template and the initial risk log covering data availability, access, quality, integration and schedule.",
+   "ac": [
+    "`docs/adr/0000-template.md` exists (Context / Decision / Alternatives / Consequences)",
+    "`docs/risk_log.md` contains R1–R3 from the guide with owner and status",
+    "Risk log review cadence (daily stand-up + weekly review) recorded"
+   ],
+   "labels": [
+    "phase-0",
+    "role:P5",
+    "priority:P1",
+    "type:docs"
+   ],
+   "milestone": "Phase 0 – Setup & ways of working"
+  },
+  {
+   "id": "T09",
+   "title": "Confirm platform access and Fabric access pattern with instructor",
+   "role": "P5",
+   "priority": "P0",
+   "phase": 0,
+   "est": 2,
+   "target": "2026-10-05",
+   "deps": [],
+   "type": "coordination",
+   "desc": "Stakeholder task: secure Azure, Databricks (Unity Catalog), Fabric and LLM access early; this unblocks Phases 2, 5, 6 and 8.",
+   "ac": [
+    "Azure subscription / Resource Group permissions confirmed and documented",
+    "Databricks workspace and Unity Catalog `team4` availability confirmed",
+    "Fabric access pattern (Mirrored catalog / OneLake shortcut / Import) agreed by Mon 5/10",
+    "LLM provider and credential source known; outcomes logged in the risk log"
+   ],
+   "labels": [
+    "phase-0",
+    "role:P5",
+    "priority:P0",
+    "type:coordination"
+   ],
+   "milestone": "Phase 0 – Setup & ways of working"
+  },
+  {
+   "id": "T10",
+   "title": "PM cadence: daily stand-up, board hygiene and evening plan check",
+   "role": "P5",
+   "priority": "P1",
+   "phase": 0,
+   "est": 4,
+   "target": "2026-10-15",
+   "deps": [
+    "T05"
+   ],
+   "type": "coordination",
+   "desc": "Recurring PM task for the whole project (keep open until delivery).",
+   "ac": [
+    "15-min stand-up held each working day; blockers captured on the board",
+    "Board statuses reflect reality every evening; slipped items re-planned using the cut order (bonus → 5th page/2nd endpoint → prod deploy)",
+    "Risk log updated at least weekly"
+   ],
+   "labels": [
+    "phase-0",
+    "role:P5",
+    "priority:P1",
+    "type:coordination"
+   ],
+   "milestone": "Phase 0 – Setup & ways of working"
+  },
+  {
+   "id": "T11",
+   "title": "Write business brief (docs/business_brief.md)",
+   "role": "P5",
+   "priority": "P0",
+   "phase": 1,
+   "est": 4,
+   "target": "2026-10-05",
+   "deps": [
+    "T08"
+   ],
+   "type": "docs",
+   "desc": "Problem, users and decisions, business questions, KPI definitions, dataset inventory and success measures (guide §1.1).",
+   "ac": [
+    "All 6 sections present, including users/decisions/KPI table",
+    "5–8 business questions, each mapped to a KPI and the report page that answers it",
+    "Approved by the whole team in a PR (ideally shown to the instructor)"
+   ],
+   "labels": [
+    "phase-1",
+    "role:P5",
+    "priority:P0",
+    "type:docs"
+   ],
+   "milestone": "Phase 1 – Discover: brief, KPIs, data"
+  },
+  {
+   "id": "T12",
+   "title": "Define KPI formulas and record ADR 0002",
+   "role": "P2",
+   "priority": "P0",
+   "phase": 1,
+   "est": 3,
+   "target": "2026-10-05",
+   "deps": [],
+   "type": "docs",
+   "desc": "Exact formulas for the 8 required KPIs; they are reused in Gold, DAX, the API and LangChain, so they must be identical everywhere.",
+   "ac": [
+    "Order value, on-time rate, avg delay, fill rate, exposed value, delayed qty, critical-item count, alternate-supplier coverage defined with formula and Gold source",
+    "`docs/adr/0002-kpi-definitions.md` merged",
+    "Reviewed by P1 (data) and P3 (API/assistant)"
+   ],
+   "labels": [
+    "phase-1",
+    "role:P2",
+    "priority:P0",
+    "type:docs"
+   ],
+   "milestone": "Phase 1 – Discover: brief, KPIs, data"
+  },
+  {
+   "id": "T13",
+   "title": "Lock raw file schemas (source contracts)",
+   "role": "P1",
+   "priority": "P0",
+   "phase": 1,
+   "est": 2,
+   "target": "2026-10-05",
+   "deps": [],
+   "type": "design",
+   "desc": "Agree columns and types for suppliers, products, purchase_orders, shipment_events (nested) and locations (guide §1.3). Changes after lock require an ADR.",
+   "ac": [
+    "Columns/types for all 5 files agreed with P2 and documented",
+    "Valid shipment status sequence documented",
+    "Schema declared frozen in the PR description"
+   ],
+   "labels": [
+    "phase-1",
+    "role:P1",
+    "priority:P0",
+    "type:design"
+   ],
+   "milestone": "Phase 1 – Discover: brief, KPIs, data"
+  },
+  {
+   "id": "T14",
+   "title": "Build synthetic data generator",
+   "role": "P1",
+   "priority": "P0",
+   "phase": 1,
+   "est": 6,
+   "target": "2026-10-05",
+   "deps": [
+    "T03",
+    "T13"
+   ],
+   "type": "feature",
+   "desc": "`src/team4_sc/data_generator/generate.py` producing batch_001 (~85%) and batch_002 (new orders, corrections, late events).",
+   "ac": [
+    "Uses faker with `random.seed(42)`; argparse for output folder; reproducible output",
+    "≥10,000 transactional/event records in total; no real company or person names",
+    "batch_001 and batch_002 written under `data/raw/` and committed"
+   ],
+   "labels": [
+    "phase-1",
+    "role:P1",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 1 – Discover: brief, KPIs, data"
+  },
+  {
+   "id": "T15",
+   "title": "Inject quality defects and write defects manifest",
+   "role": "P1",
+   "priority": "P0",
+   "phase": 1,
+   "est": 3,
+   "target": "2026-10-05",
+   "deps": [
+    "T14"
+   ],
+   "type": "feature",
+   "desc": "Inject every defect type from guide §1.4 at the stated rates, including late-arriving events and corrected records in batch_002.",
+   "ac": [
+    "Unknown supplier/product, negative qty, invalid status sequence, delivery before order, currency inconsistency, duplicate lines, bad date format all present",
+    "`data/raw/injected_defects_manifest.csv` lists file, record id and defect type",
+    "Summary count per defect type included in the PR"
+   ],
+   "labels": [
+    "phase-1",
+    "role:P1",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 1 – Discover: brief, KPIs, data"
+  },
+  {
+   "id": "T16",
+   "title": "Data dictionary for raw files",
+   "role": "P1",
+   "priority": "P1",
+   "phase": 1,
+   "est": 3,
+   "target": "2026-10-05",
+   "deps": [
+    "T13"
+   ],
+   "type": "docs",
+   "desc": "`docs/data_dictionary.md`: one table per raw file (living document, extended in Phases 3 and 4).",
+   "ac": [
+    "Every column has name, type, key (PK/FK), business meaning, example, sensitivity, allowed values/rules",
+    "Reviewed by P2"
+   ],
+   "labels": [
+    "phase-1",
+    "role:P1",
+    "priority:P1",
+    "type:docs"
+   ],
+   "milestone": "Phase 1 – Discover: brief, KPIs, data"
+  },
+  {
+   "id": "T17",
+   "title": "Databricks setup: Git folder, catalog, schemas, landing volume",
+   "role": "P1",
+   "priority": "P0",
+   "phase": 2,
+   "est": 2,
+   "target": "2026-10-06",
+   "deps": [
+    "T09"
+   ],
+   "type": "chore",
+   "desc": "Link the repo as a Databricks Git folder and create `team4` catalog with bronze/silver/gold/ops schemas.",
+   "ac": [
+    "Repo linked as Git folder; work happens on feature branches",
+    "Schemas `team4.bronze|silver|gold|ops` and volume `team4.bronze.landing` exist",
+    "batch_001 uploaded to the volume; batch_002 deliberately NOT uploaded"
+   ],
+   "labels": [
+    "phase-2",
+    "role:P1",
+    "priority:P0",
+    "type:chore"
+   ],
+   "milestone": "Phase 2 – Bronze ingestion"
+  },
+  {
+   "id": "T18",
+   "title": "Bronze ingestion module: audit columns, record hash, schema drift",
+   "role": "P1",
+   "priority": "P0",
+   "phase": 2,
+   "est": 5,
+   "target": "2026-10-06",
+   "deps": [
+    "T14",
+    "T17"
+   ],
+   "type": "feature",
+   "desc": "`src/team4_sc/ingestion/bronze.py` with reusable, testable functions.",
+   "ac": [
+    "Explicit StructType schemas (no inferSchema)",
+    "Adds `_ingest_ts`, `_batch_id`, `_source_file`, `_source_system`, `_record_hash`, `_load_status`",
+    "Missing column → batch FAILED; new column → warning + `_rescued_data`",
+    "Unit tests for pure functions in `tests/unit/`"
+   ],
+   "labels": [
+    "phase-2",
+    "role:P1",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 2 – Bronze ingestion"
+  },
+  {
+   "id": "T19",
+   "title": "Parameterised Bronze notebook with idempotent MERGE and load log",
+   "role": "P1",
+   "priority": "P0",
+   "phase": 2,
+   "est": 5,
+   "target": "2026-10-06",
+   "deps": [
+    "T18"
+   ],
+   "type": "feature",
+   "desc": "`notebooks/bronze/ingest.py` (thin notebook) for CSV and nested JSON sources.",
+   "ac": [
+    "Widgets: source_name, file_format, batch_id, landing_path; loads suppliers, products, purchase_orders, shipment_events (+locations)",
+    "MERGE on `_record_hash` + `_source_file`; second run of the same batch adds no rows",
+    "JSON kept nested (one row per shipment)",
+    "Every run writes a row to `team4.ops.bronze_load_log` (counts, duration, status, error)"
+   ],
+   "labels": [
+    "phase-2",
+    "role:P1",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 2 – Bronze ingestion"
+  },
+  {
+   "id": "T20",
+   "title": "Bronze Databricks job and job JSON in repo",
+   "role": "P1",
+   "priority": "P1",
+   "phase": 2,
+   "est": 2,
+   "target": "2026-10-06",
+   "deps": [
+    "T19"
+   ],
+   "type": "feature",
+   "desc": "Workflow job with `batch_id` parameter.",
+   "ac": [
+    "Job runs all Bronze sources for a given batch",
+    "`databricks/jobs/bronze_job.json` committed"
+   ],
+   "labels": [
+    "phase-2",
+    "role:P1",
+    "priority:P1",
+    "type:feature"
+   ],
+   "milestone": "Phase 2 – Bronze ingestion"
+  },
+  {
+   "id": "T21",
+   "title": "Bronze verification evidence",
+   "role": "P1",
+   "priority": "P0",
+   "phase": 2,
+   "est": 2,
+   "target": "2026-10-06",
+   "deps": [
+    "T20"
+   ],
+   "type": "test",
+   "desc": "Prove the Bronze acceptance condition.",
+   "ac": [
+    "Table counts match file line counts",
+    "Re-run of batch_001 leaves counts unchanged (idempotency)",
+    "File with a missing column is logged as FAILED (schema drift)",
+    "A random row is traced to source file and batch; screenshots in `docs/evidence/bronze/`"
+   ],
+   "labels": [
+    "phase-2",
+    "role:P1",
+    "priority:P0",
+    "type:test"
+   ],
+   "milestone": "Phase 2 – Bronze ingestion"
+  },
+  {
+   "id": "T22",
+   "title": "ADR: incremental vs full refresh + schema drift; refresh_strategy v1",
+   "role": "P1",
+   "priority": "P1",
+   "phase": 2,
+   "est": 2,
+   "target": "2026-10-06",
+   "deps": [
+    "T19"
+   ],
+   "type": "docs",
+   "desc": "Document Bronze loading decisions.",
+   "ac": [
+    "ADR for incremental/idempotent loading and ADR for schema-drift handling merged",
+    "`docs/refresh_strategy.md` v1: new batch, rerun, failure handling"
+   ],
+   "labels": [
+    "phase-2",
+    "role:P1",
+    "priority:P1",
+    "type:docs"
+   ],
+   "milestone": "Phase 2 – Bronze ingestion"
+  },
+  {
+   "id": "T23",
+   "title": "Silver cleaning functions, FX rates table and unit tests",
+   "role": "P1",
+   "priority": "P0",
+   "phase": 3,
+   "est": 4,
+   "target": "2026-10-07",
+   "deps": [
+    "T18"
+   ],
+   "type": "feature",
+   "desc": "Reusable standardisation logic in `src/team4_sc/transforms/`.",
+   "ac": [
+    "snake_case names, type casting, multi-format date parsing, status upper-casing",
+    "Currency normalisation (EUR/eur/€/blank → supplier default); `team4.silver.fx_rates` with 3–4 currencies",
+    "pytest tests in `tests/unit/transforms/` pass (e.g. `normalize_currency('€') == 'EUR'`)"
+   ],
+   "labels": [
+    "phase-3",
+    "role:P1",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 3 – Silver & data quality"
+  },
+  {
+   "id": "T24",
+   "title": "Data quality rules catalogue (docs/data_quality_rules.md)",
+   "role": "P1",
+   "priority": "P1",
+   "phase": 3,
+   "est": 1,
+   "target": "2026-10-07",
+   "deps": [],
+   "type": "docs",
+   "desc": "Rules DQ01–DQ11 from guide §3.2.",
+   "ac": [
+    "Each rule has ID, table, category, rule and action",
+    "Rule IDs match those written to quarantine"
+   ],
+   "labels": [
+    "phase-3",
+    "role:P1",
+    "priority:P1",
+    "type:docs"
+   ],
+   "milestone": "Phase 3 – Silver & data quality"
+  },
+  {
+   "id": "T25",
+   "title": "Create quarantine and dq_results tables",
+   "role": "P1",
+   "priority": "P0",
+   "phase": 3,
+   "est": 2,
+   "target": "2026-10-07",
+   "deps": [
+    "T17"
+   ],
+   "type": "feature",
+   "desc": "Operational tables for rejected records and rule results.",
+   "ac": [
+    "`team4.ops.quarantine` with schema of §3.3 including `resolution_status` (OPEN/FIXED/ACCEPTED), resolved_by, resolved_ts",
+    "`team4.ops.dq_results` with run_id, table, rule_id, records_checked, records_failed, pass_rate"
+   ],
+   "labels": [
+    "phase-3",
+    "role:P1",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 3 – Silver & data quality"
+  },
+  {
+   "id": "T26",
+   "title": "Silver suppliers (SCD2) and products (SCD1)",
+   "role": "P1",
+   "priority": "P0",
+   "phase": 3,
+   "est": 4,
+   "target": "2026-10-07",
+   "deps": [
+    "T23",
+    "T25"
+   ],
+   "type": "feature",
+   "desc": "Reference-data Silver tables.",
+   "ac": [
+    "`silver.suppliers` keeps history with valid_from, valid_to, is_current",
+    "`silver.products` overwrites changed attributes (SCD1)",
+    "DQ results written for completeness/uniqueness"
+   ],
+   "labels": [
+    "phase-3",
+    "role:P1",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 3 – Silver & data quality"
+  },
+  {
+   "id": "T27",
+   "title": "Silver purchase_order_lines: DQ01–DQ08, dedup, MERGE",
+   "role": "P1",
+   "priority": "P0",
+   "phase": 3,
+   "est": 6,
+   "target": "2026-10-08",
+   "deps": [
+    "T26"
+   ],
+   "type": "feature",
+   "desc": "Core transactional Silver table.",
+   "ac": [
+    "Reads only new Bronze records; keeps original price and `unit_price_eur`",
+    "Failing rows go to quarantine with rule_id and reason",
+    "Dedup keeps latest `last_modified_at` per po_id + po_line_number; older versions quarantined as DUPLICATE",
+    "MERGE on business key so batch_002 corrections update rows; dq_results written"
+   ],
+   "labels": [
+    "phase-3",
+    "role:P1",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 3 – Silver & data quality"
+  },
+  {
+   "id": "T28",
+   "title": "Silver shipment_events and shipments: explode, DQ09–DQ11",
+   "role": "P1",
+   "priority": "P0",
+   "phase": 3,
+   "est": 5,
+   "target": "2026-10-08",
+   "deps": [
+    "T25",
+    "T27"
+   ],
+   "type": "feature",
+   "desc": "Flatten nested JSON into event and shipment grain.",
+   "ac": [
+    "`silver.shipment_events`: one row per event with flattened location fields",
+    "`silver.shipments`: one row per shipment (latest status, first/last event_ts, delayed flag, delay_reason)",
+    "DQ09 status sequence check via `lag()`; DQ10 dedup on event_id; DQ11 orphans handled per ADR"
+   ],
+   "labels": [
+    "phase-3",
+    "role:P1",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 3 – Silver & data quality"
+  },
+  {
+   "id": "T29",
+   "title": "Silver validation: Injected vs Detected and count balance",
+   "role": "P1",
+   "priority": "P0",
+   "phase": 3,
+   "est": 2,
+   "target": "2026-10-08",
+   "deps": [
+    "T15",
+    "T27",
+    "T28"
+   ],
+   "type": "test",
+   "desc": "Prove every injected defect was caught.",
+   "ac": [
+    "'Injected vs Detected' table per defect type = 100%",
+    "Bronze count = Silver count + quarantine count per table per batch",
+    "`notebooks/checks/dq_checks.py` committed; evidence in `docs/evidence/`"
+   ],
+   "labels": [
+    "phase-3",
+    "role:P1",
+    "priority:P0",
+    "type:test"
+   ],
+   "milestone": "Phase 3 – Silver & data quality"
+  },
+  {
+   "id": "T30",
+   "title": "ADRs for SCD strategy and orphan events; refresh_strategy update",
+   "role": "P1",
+   "priority": "P1",
+   "phase": 3,
+   "est": 2,
+   "target": "2026-10-08",
+   "deps": [
+    "T26",
+    "T28"
+   ],
+   "type": "docs",
+   "desc": "Document Silver design decisions.",
+   "ac": [
+    "ADR: SCD2 suppliers / SCD1 products",
+    "ADR: orphan shipment events (flag vs quarantine)",
+    "`refresh_strategy.md` covers late-arriving events and corrected records"
+   ],
+   "labels": [
+    "phase-3",
+    "role:P1",
+    "priority:P1",
+    "type:docs"
+   ],
+   "milestone": "Phase 3 – Silver & data quality"
+  },
+  {
+   "id": "T31",
+   "title": "Data dictionary (Silver) and source_to_target.md (Bronze → Silver)",
+   "role": "P1",
+   "priority": "P1",
+   "phase": 3,
+   "est": 2,
+   "target": "2026-10-08",
+   "deps": [
+    "T27",
+    "T28"
+   ],
+   "type": "docs",
+   "desc": "Update living documentation.",
+   "ac": [
+    "Silver tables added to data dictionary",
+    "`docs/source_to_target.md` maps every Bronze column to Silver with transformation"
+   ],
+   "labels": [
+    "phase-3",
+    "role:P1",
+    "priority:P1",
+    "type:docs"
+   ],
+   "milestone": "Phase 3 – Silver & data quality"
+  },
+  {
+   "id": "T32",
+   "title": "Design star schema and grain statements",
+   "role": "P2",
+   "priority": "P0",
+   "phase": 4,
+   "est": 3,
+   "target": "2026-10-07",
+   "deps": [
+    "T12",
+    "T13"
+   ],
+   "type": "design",
+   "desc": "Paper design before code (guide §4.1–4.3).",
+   "ac": [
+    "`docs/diagrams/star_schema.png` with 3 facts and 6 dims",
+    "Grain statement for each fact table",
+    "Every KPI computable from facts/dims without logic in visuals; approved in PR"
+   ],
+   "labels": [
+    "phase-4",
+    "role:P2",
+    "priority:P0",
+    "type:design"
+   ],
+   "milestone": "Phase 4 – Gold dimensional model"
+  },
+  {
+   "id": "T33",
+   "title": "Build dim_date and dimensions with surrogate keys and unknown members",
+   "role": "P2",
+   "priority": "P0",
+   "phase": 4,
+   "est": 5,
+   "target": "2026-10-08",
+   "deps": [
+    "T32",
+    "T26"
+   ],
+   "type": "feature",
+   "desc": "Logic in `src/team4_sc/gold/`, thin notebooks in `notebooks/gold/`.",
+   "ac": [
+    "dim_date 2024-01-01..2027-12-31 with date_key yyyymmdd",
+    "dim_supplier (SCD2), dim_product, dim_location, dim_shipment_status, dim_risk_level built",
+    "Each dim has `_sk` and an Unknown member with `_sk = -1`",
+    "Table and column COMMENTs set"
+   ],
+   "labels": [
+    "phase-4",
+    "role:P2",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 4 – Gold dimensional model"
+  },
+  {
+   "id": "T34",
+   "title": "Build fact_purchase_order_line",
+   "role": "P2",
+   "priority": "P0",
+   "phase": 4,
+   "est": 4,
+   "target": "2026-10-09",
+   "deps": [
+    "T33",
+    "T27"
+   ],
+   "type": "feature",
+   "desc": "Grain: one purchase-order line (latest version).",
+   "ac": [
+    "Order/promised/delivery date keys (role-playing dim_date)",
+    "line_value_eur, delay_days, is_delivered, is_on_time, is_delayed, is_open",
+    "No NULL foreign keys (unmatched → -1); COMMENTs set"
+   ],
+   "labels": [
+    "phase-4",
+    "role:P2",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 4 – Gold dimensional model"
+  },
+  {
+   "id": "T35",
+   "title": "Build fact_shipment_event and fact_inventory_exposure",
+   "role": "P2",
+   "priority": "P0",
+   "phase": 4,
+   "est": 5,
+   "target": "2026-10-09",
+   "deps": [
+    "T33",
+    "T28"
+   ],
+   "type": "feature",
+   "desc": "Remaining fact tables per guide §4.2.",
+   "ac": [
+    "fact_shipment_event at event grain with is_delay_event, is_late_arriving",
+    "fact_inventory_exposure at product/location/snapshot grain with exposed_value_eur, days_of_cover, has_alternate_supplier",
+    "Risk level assigned using the documented rule"
+   ],
+   "labels": [
+    "phase-4",
+    "role:P2",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 4 – Gold dimensional model"
+  },
+  {
+   "id": "T36",
+   "title": "Silver → Gold reconciliation",
+   "role": "P2",
+   "priority": "P0",
+   "phase": 4,
+   "est": 3,
+   "target": "2026-10-09",
+   "deps": [
+    "T34",
+    "T35"
+   ],
+   "type": "test",
+   "desc": "`team4.ops.reconciliation` filled every run (with P1).",
+   "ac": [
+    "Checks: row counts, total line value EUR, total ordered qty, shipment event count, unknown-supplier rows",
+    "Job fails if any check is FAIL",
+    "All checks PASS for batch_001"
+   ],
+   "labels": [
+    "phase-4",
+    "role:P2",
+    "priority:P0",
+    "type:test"
+   ],
+   "milestone": "Phase 4 – Gold dimensional model"
+  },
+  {
+   "id": "T37",
+   "title": "End-to-end Databricks job and batch_002 incremental test",
+   "role": "P1",
+   "priority": "P0",
+   "phase": 4,
+   "est": 3,
+   "target": "2026-10-09",
+   "deps": [
+    "T36",
+    "T20"
+   ],
+   "type": "feature",
+   "desc": "Chain bronze → silver → gold → reconciliation as dependent tasks.",
+   "ac": [
+    "Job tasks have dependencies; job JSON in `databricks/jobs/` updated",
+    "Failure notification configured",
+    "batch_002 run: corrections and late events correctly reflected in Gold; reconciliation PASS"
+   ],
+   "labels": [
+    "phase-4",
+    "role:P1",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 4 – Gold dimensional model"
+  },
+  {
+   "id": "T38",
+   "title": "Dimensional model docs, Delta optimisation rationale, Gold data dictionary",
+   "role": "P2",
+   "priority": "P1",
+   "phase": 4,
+   "est": 3,
+   "target": "2026-10-09",
+   "deps": [
+    "T34",
+    "T35"
+   ],
+   "type": "docs",
+   "desc": "Make the model usable by another analyst.",
+   "ac": [
+    "`docs/dimensional_model.md`: grain, keys, unknown members, SCD handling",
+    "OPTIMIZE/ZORDER (or liquid clustering) applied with before/after query time and 3–4 line rationale",
+    "Gold tables in data dictionary; Silver → Gold in source_to_target.md"
+   ],
+   "labels": [
+    "phase-4",
+    "role:P2",
+    "priority:P1",
+    "type:docs"
+   ],
+   "milestone": "Phase 4 – Gold dimensional model"
+  },
+  {
+   "id": "T39",
+   "title": "Connect Microsoft Fabric to Gold and record ADR",
+   "role": "P2",
+   "priority": "P0",
+   "phase": 5,
+   "est": 3,
+   "target": "2026-10-09",
+   "deps": [
+    "T09",
+    "T34"
+   ],
+   "type": "feature",
+   "desc": "Use the access pattern agreed with the instructor.",
+   "ac": [
+    "Gold tables accessible in Fabric (mirrored catalog / shortcut / import)",
+    "ADR documents the chosen pattern and alternatives"
+   ],
+   "labels": [
+    "phase-5",
+    "role:P2",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 5 – Fabric semantic model & Power BI"
+  },
+  {
+   "id": "T40",
+   "title": "Semantic model: relationships, date table, hierarchies, measures table",
+   "role": "P2",
+   "priority": "P0",
+   "phase": 5,
+   "est": 4,
+   "target": "2026-10-12",
+   "deps": [
+    "T39"
+   ],
+   "type": "feature",
+   "desc": "Hide technical complexity, expose business terminology (guide §5.2).",
+   "ac": [
+    "One-to-many single-direction relationships; 1 active + 2 inactive date relationships",
+    "dim_date marked as date table; Date, Location, Product hierarchies",
+    "Business names, formats, descriptions; all `_sk`/technical fields hidden; `_Measures` table"
+   ],
+   "labels": [
+    "phase-5",
+    "role:P2",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 5 – Fabric semantic model & Power BI"
+  },
+  {
+   "id": "T41",
+   "title": "DAX measures (≥8) and fabric/measures.dax",
+   "role": "P2",
+   "priority": "P0",
+   "phase": 5,
+   "est": 4,
+   "target": "2026-10-12",
+   "deps": [
+    "T40",
+    "T12"
+   ],
+   "type": "feature",
+   "desc": "Implement KPI ADR in DAX.",
+   "ac": [
+    "≥8 explicit measures covering volume, rate/ratio, trend and exception",
+    "USERELATIONSHIP used for promised/delivery date measures",
+    "Each measure has format string and description; definitions match ADR 0002",
+    "All measures saved in `fabric/measures.dax`"
+   ],
+   "labels": [
+    "phase-5",
+    "role:P2",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 5 – Fabric semantic model & Power BI"
+  },
+  {
+   "id": "T42",
+   "title": "Row-level security by region",
+   "role": "P2",
+   "priority": "P1",
+   "phase": 5,
+   "est": 2,
+   "target": "2026-10-12",
+   "deps": [
+    "T40"
+   ],
+   "type": "feature",
+   "desc": "Region is an ownership boundary, so RLS is required.",
+   "ac": [
+    "Static or dynamic RLS (user_region_map + USERPRINCIPALNAME) implemented",
+    "Tested with 'View as role'; screenshots saved"
+   ],
+   "labels": [
+    "phase-5",
+    "role:P2",
+    "priority:P1",
+    "type:feature"
+   ],
+   "milestone": "Phase 5 – Fabric semantic model & Power BI"
+  },
+  {
+   "id": "T43",
+   "title": "Report pages 1–3: Supply Overview, Delay & Exposure, Supplier Scorecard",
+   "role": "P2",
+   "priority": "P0",
+   "phase": 5,
+   "est": 6,
+   "target": "2026-10-12",
+   "deps": [
+    "T41"
+   ],
+   "type": "feature",
+   "desc": "Core analytical pages (guide §5.5).",
+   "ac": [
+    "Overview with KPI cards, on-time trend, region view",
+    "Delay & Exposure by risk level, delay reason and month",
+    "Supplier scorecard table with conditional formatting and on-time vs fill-rate scatter"
+   ],
+   "labels": [
+    "phase-5",
+    "role:P2",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 5 – Fabric semantic model & Power BI"
+  },
+  {
+   "id": "T44",
+   "title": "Report page 4: Product/Location drill-through",
+   "role": "P2",
+   "priority": "P0",
+   "phase": 5,
+   "est": 3,
+   "target": "2026-10-13",
+   "deps": [
+    "T43"
+   ],
+   "type": "feature",
+   "desc": "Exceptions/drill-through page required by the spec.",
+   "ac": [
+    "Drill-through reachable from pages 1–3",
+    "Shows order history, shipments and stock vs safety stock for the selected product/location"
+   ],
+   "labels": [
+    "phase-5",
+    "role:P2",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 5 – Fabric semantic model & Power BI"
+  },
+  {
+   "id": "T45",
+   "title": "Report page 5: Mitigation Queue",
+   "role": "P2",
+   "priority": "P2",
+   "phase": 5,
+   "est": 3,
+   "target": "2026-10-13",
+   "deps": [
+    "T43"
+   ],
+   "type": "feature",
+   "desc": "Cuttable if behind schedule (see cut order).",
+   "ac": [
+    "Critical products with exposure and no alternate supplier, sorted by exposed value",
+    "Open quarantine records count shown"
+   ],
+   "labels": [
+    "phase-5",
+    "role:P2",
+    "priority:P2",
+    "type:feature"
+   ],
+   "milestone": "Phase 5 – Fabric semantic model & Power BI"
+  },
+  {
+   "id": "T46",
+   "title": "Report usability polish and last-refresh indicator",
+   "role": "P2",
+   "priority": "P1",
+   "phase": 5,
+   "est": 2,
+   "target": "2026-10-13",
+   "deps": [
+    "T43"
+   ],
+   "type": "feature",
+   "desc": "Spec requirements that apply to every page.",
+   "ac": [
+    "Slicers (date, region, category), tooltips, accessible titles, clear units (€, days, %)",
+    "Visible last-refresh card driven by job log end_ts"
+   ],
+   "labels": [
+    "phase-5",
+    "role:P2",
+    "priority:P1",
+    "type:feature"
+   ],
+   "milestone": "Phase 5 – Fabric semantic model & Power BI"
+  },
+  {
+   "id": "T47",
+   "title": "Report validation, performance and usability test",
+   "role": "P2",
+   "priority": "P0",
+   "phase": 5,
+   "est": 2,
+   "target": "2026-10-13",
+   "deps": [
+    "T43",
+    "T44"
+   ],
+   "type": "test",
+   "desc": "Prove the report is correct.",
+   "ac": [
+    "5–6 report values reproduced with SQL on Gold in `docs/evidence/report_validation.md`",
+    "Performance Analyzer timings recorded per page",
+    "A peer from another team answers 3 questions using only the report"
+   ],
+   "labels": [
+    "phase-5",
+    "role:P2",
+    "priority:P0",
+    "type:test"
+   ],
+   "milestone": "Phase 5 – Fabric semantic model & Power BI"
+  },
+  {
+   "id": "T48",
+   "title": "Azure boundary and naming convention (azure_design.md v1)",
+   "role": "P4",
+   "priority": "P0",
+   "phase": 6,
+   "est": 2,
+   "target": "2026-10-05",
+   "deps": [
+    "T09"
+   ],
+   "type": "docs",
+   "desc": "Document account, subscription and Resource Group boundary.",
+   "ac": [
+    "Subscription/RG boundary and permissions recorded",
+    "Naming convention `type-project-env` and resource list for dev/prod"
+   ],
+   "labels": [
+    "phase-6",
+    "role:P4",
+    "priority:P0",
+    "type:docs"
+   ],
+   "milestone": "Phase 6 – Azure foundation"
+  },
+  {
+   "id": "T49",
+   "title": "Provision Azure resources with a repeatable script (infra/)",
+   "role": "P4",
+   "priority": "P0",
+   "phase": 6,
+   "est": 5,
+   "target": "2026-10-06",
+   "deps": [
+    "T48"
+   ],
+   "type": "feature",
+   "desc": "Azure CLI or Bicep in `infra/`.",
+   "ac": [
+    "RG dev (+prod), Storage (ADLS Gen2), Key Vault, ACR, App Service (container), Log Analytics + App Insights",
+    "System/user-assigned managed identity on the App Service",
+    "Script is re-runnable without errors"
+   ],
+   "labels": [
+    "phase-6",
+    "role:P4",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 6 – Azure foundation"
+  },
+  {
+   "id": "T50",
+   "title": "IAM least privilege and GitHub OIDC federated credential",
+   "role": "P4",
+   "priority": "P0",
+   "phase": 6,
+   "est": 3,
+   "target": "2026-10-06",
+   "deps": [
+    "T49"
+   ],
+   "type": "feature",
+   "desc": "Roles per guide §6.2.",
+   "ac": [
+    "Developers: Contributor on dev, Reader on prod",
+    "API managed identity: Key Vault Secrets User (+ Storage Blob Data Reader if needed)",
+    "GitHub Actions uses OIDC federated credential (no stored password) scoped to deployment",
+    "IAM table in azure_design.md; screenshot of RG Access control"
+   ],
+   "labels": [
+    "phase-6",
+    "role:P4",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 6 – Azure foundation"
+  },
+  {
+   "id": "T51",
+   "title": "Secrets management: Key Vault, KV references, GitHub environments",
+   "role": "P4",
+   "priority": "P0",
+   "phase": 6,
+   "est": 2,
+   "target": "2026-10-06",
+   "deps": [
+    "T49"
+   ],
+   "type": "feature",
+   "desc": "No secret ever in source control.",
+   "ac": [
+    "Secrets (Databricks token, LLM key, API key) stored in Key Vault",
+    "App Service settings use Key Vault references",
+    "GitHub environments `dev`/`prod` created with OIDC IDs as secrets; screenshot of secret names only"
+   ],
+   "labels": [
+    "phase-6",
+    "role:P4",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 6 – Azure foundation"
+  },
+  {
+   "id": "T52",
+   "title": "Networking choices, Azure environment diagram and resource inventory",
+   "role": "P4",
+   "priority": "P1",
+   "phase": 6,
+   "est": 3,
+   "target": "2026-10-07",
+   "deps": [
+    "T49",
+    "T50"
+   ],
+   "type": "docs",
+   "desc": "Select and justify, don't over-engineer.",
+   "ac": [
+    "HTTPS only, Key Vault RBAC, no public blob access; private endpoints/VNet listed as next step",
+    "`docs/diagrams/azure_environment.png` with official icons",
+    "Resource inventory with naming and configuration responsibility"
+   ],
+   "labels": [
+    "phase-6",
+    "role:P4",
+    "priority:P1",
+    "type:docs"
+   ],
+   "milestone": "Phase 6 – Azure foundation"
+  },
+  {
+   "id": "T53",
+   "title": "FastAPI skeleton with config, routers, /health and /ready",
+   "role": "P3",
+   "priority": "P0",
+   "phase": 7,
+   "est": 3,
+   "target": "2026-10-05",
+   "deps": [
+    "T03"
+   ],
+   "type": "feature",
+   "desc": "Structure from guide §7.2 under `src/team4_sc/api/`.",
+   "ac": [
+    "App runs with `uv run uvicorn team4_sc.api.main:app --reload`; Swagger at /docs",
+    "`GET /health` returns status (and version); `GET /ready` checks backend connectivity",
+    "Settings from env via pydantic-settings"
+   ],
+   "labels": [
+    "phase-7",
+    "role:P3",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 7 – FastAPI integration layer"
+  },
+  {
+   "id": "T54",
+   "title": "Pydantic models and repository pattern with mock backend",
+   "role": "P3",
+   "priority": "P0",
+   "phase": 7,
+   "est": 4,
+   "target": "2026-10-06",
+   "deps": [
+    "T53",
+    "T12"
+   ],
+   "type": "feature",
+   "desc": "Lets API and assistant work before Gold exists.",
+   "ac": [
+    "Request/response models (AnalyticsQuery, AnalyticsResult, etc.) with examples",
+    "Repository interface with MockRepository; `DATA_BACKEND=mock|databricks` switch"
+   ],
+   "labels": [
+    "phase-7",
+    "role:P3",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 7 – FastAPI integration layer"
+  },
+  {
+   "id": "T55",
+   "title": "POST /analytics/query with parameterised KPI templates",
+   "role": "P3",
+   "priority": "P0",
+   "phase": 7,
+   "est": 4,
+   "target": "2026-10-07",
+   "deps": [
+    "T54"
+   ],
+   "type": "feature",
+   "desc": "No free SQL: each KPI maps to a fixed parameterised query.",
+   "ac": [
+    "KPI enum → SQL template dictionary; bind parameters only",
+    "Returns value, unit, filters_applied, source, as_of",
+    "Definitions match KPI ADR / DAX"
+   ],
+   "labels": [
+    "phase-7",
+    "role:P3",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 7 – FastAPI integration layer"
+  },
+  {
+   "id": "T56",
+   "title": "Domain endpoint: GET /suppliers/{supplier_id}/scorecard",
+   "role": "P3",
+   "priority": "P0",
+   "phase": 7,
+   "est": 2,
+   "target": "2026-10-07",
+   "deps": [
+    "T54"
+   ],
+   "type": "feature",
+   "desc": "Required domain-specific endpoint.",
+   "ac": [
+    "Returns on-time rate, fill rate, average delay for one supplier",
+    "Unknown supplier → 404 in standard error format"
+   ],
+   "labels": [
+    "phase-7",
+    "role:P3",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 7 – FastAPI integration layer"
+  },
+  {
+   "id": "T57",
+   "title": "Optional endpoint: GET /mitigation-queue with pagination",
+   "role": "P3",
+   "priority": "P2",
+   "phase": 7,
+   "est": 2,
+   "target": "2026-10-12",
+   "deps": [
+    "T54"
+   ],
+   "type": "feature",
+   "desc": "Cuttable if behind schedule.",
+   "ac": [
+    "risk_level filter, page and page_size with bounds",
+    "Response includes pagination metadata"
+   ],
+   "labels": [
+    "phase-7",
+    "role:P3",
+    "priority:P2",
+    "type:feature"
+   ],
+   "milestone": "Phase 7 – FastAPI integration layer"
+  },
+  {
+   "id": "T58",
+   "title": "Uniform error handling (400/401/404/422/429/503)",
+   "role": "P3",
+   "priority": "P0",
+   "phase": 7,
+   "est": 2,
+   "target": "2026-10-07",
+   "deps": [
+    "T53"
+   ],
+   "type": "feature",
+   "desc": "Consistent error body per guide §7.4.",
+   "ac": [
+    "`{error:{code,message,correlation_id}}` for all handled errors",
+    "Logical validation (e.g. date_from > date_to) returns 400; upstream failure returns 503"
+   ],
+   "labels": [
+    "phase-7",
+    "role:P3",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 7 – FastAPI integration layer"
+  },
+  {
+   "id": "T59",
+   "title": "API security: X-API-Key and JWT validation design",
+   "role": "P3",
+   "priority": "P0",
+   "phase": 7,
+   "est": 3,
+   "target": "2026-10-07",
+   "deps": [
+    "T53"
+   ],
+   "type": "feature",
+   "desc": "Dev: API key; deployed design: OAuth2 bearer/JWT (Entra ID).",
+   "ac": [
+    "Protected routes require `X-API-Key` (value from env/Key Vault)",
+    "JWT validation (signature, aud, iss, exp) implemented; local-key mock clearly documented if App Registration unavailable",
+    "/health and /ready remain open"
+   ],
+   "labels": [
+    "phase-7",
+    "role:P3",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 7 – FastAPI integration layer"
+  },
+  {
+   "id": "T60",
+   "title": "Correlation IDs, structured JSON logs, timeouts and bounded retries",
+   "role": "P3",
+   "priority": "P1",
+   "phase": 7,
+   "est": 3,
+   "target": "2026-10-08",
+   "deps": [
+    "T53"
+   ],
+   "type": "feature",
+   "desc": "Observability and resilient outbound calls.",
+   "ac": [
+    "Middleware reads/creates `X-Correlation-ID` and returns it",
+    "JSON logs with timestamp, level, correlation_id, path, status, duration_ms; no secrets/PII",
+    "Databricks/LLM calls: timeout, ≤3 retries with exponential backoff (tenacity), 429 Retry-After handling"
+   ],
+   "labels": [
+    "phase-7",
+    "role:P3",
+    "priority:P1",
+    "type:feature"
+   ],
+   "milestone": "Phase 7 – FastAPI integration layer"
+  },
+  {
+   "id": "T61",
+   "title": "API unit tests (pytest + TestClient)",
+   "role": "P3",
+   "priority": "P0",
+   "phase": 7,
+   "est": 3,
+   "target": "2026-10-08",
+   "deps": [
+    "T55",
+    "T58",
+    "T59"
+   ],
+   "type": "test",
+   "desc": "Run in CI with mock backend.",
+   "ac": [
+    "health 200, missing key 401, bad KPI 422, invalid range 400, valid request 200",
+    "Tests under `tests/unit/api/`; all green"
+   ],
+   "labels": [
+    "phase-7",
+    "role:P3",
+    "priority:P0",
+    "type:test"
+   ],
+   "milestone": "Phase 7 – FastAPI integration layer"
+  },
+  {
+   "id": "T62",
+   "title": "OpenAPI export and Postman collection",
+   "role": "P3",
+   "priority": "P1",
+   "phase": 7,
+   "est": 2,
+   "target": "2026-10-12",
+   "deps": [
+    "T55",
+    "T56"
+   ],
+   "type": "docs",
+   "desc": "Executable API examples.",
+   "ac": [
+    "`openapi.json` committed; Swagger has descriptions and examples",
+    "`postman/team4.postman_collection.json` with one request per endpoint and per error case, using `{{base_url}}`, `{{api_key}}`"
+   ],
+   "labels": [
+    "phase-7",
+    "role:P3",
+    "priority:P1",
+    "type:docs"
+   ],
+   "milestone": "Phase 7 – FastAPI integration layer"
+  },
+  {
+   "id": "T63",
+   "title": "Dockerfile for the API (uv-based)",
+   "role": "P3",
+   "priority": "P1",
+   "phase": 7,
+   "est": 1,
+   "target": "2026-10-08",
+   "deps": [
+    "T53"
+   ],
+   "type": "feature",
+   "desc": "Image uses the same uv.lock as CI.",
+   "ac": [
+    "`docker build` succeeds locally; container serves /health on port 8000",
+    "`uv sync --locked --no-dev` used; no secrets baked in"
+   ],
+   "labels": [
+    "phase-7",
+    "role:P3",
+    "priority:P1",
+    "type:feature"
+   ],
+   "milestone": "Phase 7 – FastAPI integration layer"
+  },
+  {
+   "id": "T64",
+   "title": "Databricks repository backend: connect API to Gold",
+   "role": "P3",
+   "priority": "P0",
+   "phase": 7,
+   "est": 3,
+   "target": "2026-10-12",
+   "deps": [
+    "T55",
+    "T37",
+    "T51"
+   ],
+   "type": "feature",
+   "desc": "Switch from mock to real data (with P2 for KPI matching).",
+   "ac": [
+    "`DATA_BACKEND=databricks` queries Gold via SQL warehouse with bind parameters",
+    "Credentials come from env/Key Vault",
+    "At least 3 KPI values match the Power BI report"
+   ],
+   "labels": [
+    "phase-7",
+    "role:P3",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 7 – FastAPI integration layer"
+  },
+  {
+   "id": "T65",
+   "title": "Assistant prompt templates and system rules",
+   "role": "P3",
+   "priority": "P0",
+   "phase": 8,
+   "est": 2,
+   "target": "2026-10-08",
+   "deps": [
+    "T12"
+   ],
+   "type": "feature",
+   "desc": "ChatPromptTemplate with system and human messages.",
+   "ac": [
+    "System prompt defines business context, available evidence, response format and limitations",
+    "Rules: only use tools, never invent numbers, refuse out-of-scope and consequential actions"
+   ],
+   "labels": [
+    "phase-8",
+    "role:P3",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 8 – LangChain Core assistant"
+  },
+  {
+   "id": "T66",
+   "title": "Typed tools: get_kpi and list_delayed_orders",
+   "role": "P3",
+   "priority": "P0",
+   "phase": 8,
+   "est": 3,
+   "target": "2026-10-08",
+   "deps": [
+    "T54"
+   ],
+   "type": "feature",
+   "desc": "One KPI/aggregate tool and one filtered-detail tool, both using the API repository.",
+   "ac": [
+    "Pydantic argument schemas with enums/limits (e.g. limit ≤ 50)",
+    "Tools bound with `bind_tools`",
+    "Optional `get_dataset_metadata` tool"
+   ],
+   "labels": [
+    "phase-8",
+    "role:P3",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 8 – LangChain Core assistant"
+  },
+  {
+   "id": "T67",
+   "title": "Agent loop: tool-call detection, allow-list, validation, ToolMessage",
+   "role": "P3",
+   "priority": "P0",
+   "phase": 8,
+   "est": 5,
+   "target": "2026-10-09",
+   "deps": [
+    "T65",
+    "T66"
+   ],
+   "type": "feature",
+   "desc": "`src/team4_sc/assistant/agent.py` execution path (guide §8.3).",
+   "ac": [
+    "Allow-list check and Pydantic validation of arguments; errors returned as ToolMessage",
+    "Tool execution with timeout; NO_DATA/NOT_FOUND returned, never fabricated",
+    "`ToolMessage(tool_call_id=...)` appended; max 3 rounds"
+   ],
+   "labels": [
+    "phase-8",
+    "role:P3",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 8 – LangChain Core assistant"
+  },
+  {
+   "id": "T68",
+   "title": "Structured output (AssistantAnswer) and execution-path logging",
+   "role": "P3",
+   "priority": "P0",
+   "phase": 8,
+   "est": 2,
+   "target": "2026-10-09",
+   "deps": [
+    "T67"
+   ],
+   "type": "feature",
+   "desc": "Evidence-based, traceable answers.",
+   "ac": [
+    "`with_structured_output(AssistantAnswer)` with answer, evidence, filters, source_or_measure, limitations, in_scope",
+    "Each step logged with the same correlation_id"
+   ],
+   "labels": [
+    "phase-8",
+    "role:P3",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 8 – LangChain Core assistant"
+  },
+  {
+   "id": "T69",
+   "title": "POST /assistant/query endpoint",
+   "role": "P3",
+   "priority": "P0",
+   "phase": 8,
+   "est": 2,
+   "target": "2026-10-09",
+   "deps": [
+    "T68",
+    "T58"
+   ],
+   "type": "feature",
+   "desc": "Expose the assistant through the API.",
+   "ac": [
+    "Accepts `{question}` and returns AssistantAnswer",
+    "Secured like other protected endpoints; errors in standard format"
+   ],
+   "labels": [
+    "phase-8",
+    "role:P3",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 8 – LangChain Core assistant"
+  },
+  {
+   "id": "T70",
+   "title": "Assistant tests with fake LLM for the 7 scenarios",
+   "role": "P3",
+   "priority": "P0",
+   "phase": 8,
+   "est": 3,
+   "target": "2026-10-12",
+   "deps": [
+    "T67",
+    "T68"
+   ],
+   "type": "test",
+   "desc": "Deterministic tests without an API key.",
+   "ac": [
+    "GenericFakeChatModel (or mock) returning predefined tool_calls",
+    "Covers KPI, detail, comparison, NOT_FOUND, forbidden action, out-of-scope, bad arguments",
+    "Tests under `tests/unit/assistant/`; green in CI"
+   ],
+   "labels": [
+    "phase-8",
+    "role:P3",
+    "priority:P0",
+    "type:test"
+   ],
+   "milestone": "Phase 8 – LangChain Core assistant"
+  },
+  {
+   "id": "T71",
+   "title": "Grounded-response evidence on real Gold data",
+   "role": "P3",
+   "priority": "P1",
+   "phase": 8,
+   "est": 2,
+   "target": "2026-10-13",
+   "deps": [
+    "T64",
+    "T69"
+   ],
+   "type": "test",
+   "desc": "Demo-ready examples.",
+   "ac": [
+    "7 scenario outputs saved as JSON in `docs/evidence/assistant/` with full execution log",
+    "Numbers match Gold / Power BI"
+   ],
+   "labels": [
+    "phase-8",
+    "role:P3",
+    "priority:P1",
+    "type:test"
+   ],
+   "milestone": "Phase 8 – LangChain Core assistant"
+  },
+  {
+   "id": "T72",
+   "title": "CI v1: lint + test workflow and required status checks",
+   "role": "P4",
+   "priority": "P0",
+   "phase": 9,
+   "est": 2,
+   "target": "2026-10-07",
+   "deps": [
+    "T03",
+    "T04"
+   ],
+   "type": "feature",
+   "desc": "Start small and early (guide §9.1).",
+   "ac": [
+    "`.github/workflows/ci-cd.yml` triggers on pull_request and push to main",
+    "`lint` (ruff check + format check) and `test` (pytest, DATA_BACKEND=mock) jobs with `needs`",
+    "`lint` and `test` added as required status checks on main"
+   ],
+   "labels": [
+    "phase-9",
+    "role:P4",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 9 – CI/CD (GitHub Actions)"
+  },
+  {
+   "id": "T73",
+   "title": "Build job: Docker image tagged with SHA, pushed to ACR via OIDC",
+   "role": "P4",
+   "priority": "P0",
+   "phase": 9,
+   "est": 3,
+   "target": "2026-10-08",
+   "deps": [
+    "T72",
+    "T63",
+    "T50"
+   ],
+   "type": "feature",
+   "desc": "Reproducible artifact on push to main only.",
+   "ac": [
+    "azure/login via OIDC; no stored credentials",
+    "Image tagged `${{ github.sha }}` pushed to ACR"
+   ],
+   "labels": [
+    "phase-9",
+    "role:P4",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 9 – CI/CD (GitHub Actions)"
+  },
+  {
+   "id": "T74",
+   "title": "deploy-dev job with smoke test",
+   "role": "P4",
+   "priority": "P0",
+   "phase": 9,
+   "est": 3,
+   "target": "2026-10-09",
+   "deps": [
+    "T73",
+    "T51"
+   ],
+   "type": "feature",
+   "desc": "Deploy the built image to App Service dev.",
+   "ac": [
+    "Runs in environment `dev` after build",
+    "Smoke test `GET /health` returns 200, otherwise job fails"
+   ],
+   "labels": [
+    "phase-9",
+    "role:P4",
+    "priority:P0",
+    "type:feature"
+   ],
+   "milestone": "Phase 9 – CI/CD (GitHub Actions)"
+  },
+  {
+   "id": "T75",
+   "title": "deploy-prod with approval, rollback workflow and docs/cicd.md",
+   "role": "P4",
+   "priority": "P1",
+   "phase": 9,
+   "est": 4,
+   "target": "2026-10-13",
+   "deps": [
+    "T74"
+   ],
+   "type": "feature",
+   "desc": "Staged release with approvals (prod deploy may remain pending approval).",
+   "ac": [
+    "Environment `prod` with required reviewers (P4, P5); same image tag as dev",
+    "`workflow_dispatch` rollback with `image_tag` input",
+    "`docs/cicd.md`: rollback, config promotion, evidence required before approval"
+   ],
+   "labels": [
+    "phase-9",
+    "role:P4",
+    "priority:P1",
+    "type:feature"
+   ],
+   "milestone": "Phase 9 – CI/CD (GitHub Actions)"
+  },
+  {
+   "id": "T76",
+   "title": "CI/CD acceptance evidence",
+   "role": "P4",
+   "priority": "P0",
+   "phase": 9,
+   "est": 1,
+   "target": "2026-10-13",
+   "deps": [
+    "T75"
+   ],
+   "type": "test",
+   "desc": "Prove the acceptance condition with a controlled change.",
+   "ac": [
+    "Small change (e.g. version in /health) via PR: lint/test run automatically",
+    "After merge: build → deploy-dev → deploy-prod held for approval",
+    "Screenshots saved in `docs/evidence/`"
+   ],
+   "labels": [
+    "phase-9",
+    "role:P4",
+    "priority:P0",
+    "type:test"
+   ],
+   "milestone": "Phase 9 – CI/CD (GitHub Actions)"
+  },
+  {
+   "id": "T77",
+   "title": "End-to-end integration test (batch_002 → Gold → API → assistant)",
+   "role": "P4",
+   "priority": "P0",
+   "phase": 10,
+   "est": 4,
+   "target": "2026-10-13",
+   "deps": [
+    "T37",
+    "T64",
+    "T69"
+   ],
+   "type": "test",
+   "desc": "`tests/integration/e2e.sh` or notebook.",
+   "ac": [
+    "Uploading batch_002 and running the job changes Gold values",
+    "API returns the new value and assistant cites it",
+    "Result documented with evidence"
+   ],
+   "labels": [
+    "phase-10",
+    "role:P4",
+    "priority:P0",
+    "type:test"
+   ],
+   "milestone": "Phase 10 – Testing, operations & bonus"
+  },
+  {
+   "id": "T78",
+   "title": "Monitoring and log evidence",
+   "role": "P4",
+   "priority": "P1",
+   "phase": 10,
+   "est": 2,
+   "target": "2026-10-13",
+   "deps": [
+    "T37",
+    "T74"
+   ],
+   "type": "feature",
+   "desc": "Operational visibility.",
+   "ac": [
+    "Databricks job failure notification configured",
+    "Application Insights shows requests/failures; one request traced by correlation_id (screenshot)",
+    "Optional Pipeline Health page in Power BI"
+   ],
+   "labels": [
+    "phase-10",
+    "role:P4",
+    "priority:P1",
+    "type:feature"
+   ],
+   "milestone": "Phase 10 – Testing, operations & bonus"
+  },
+  {
+   "id": "T79",
+   "title": "Architecture and lineage diagram (source → report → API)",
+   "role": "P4",
+   "priority": "P0",
+   "phase": 10,
+   "est": 2,
+   "target": "2026-10-09",
+   "deps": [
+    "T32",
+    "T48"
+   ],
+   "type": "docs",
+   "desc": "`docs/diagrams/architecture.png` (with P5).",
+   "ac": [
+    "Covers sources, Bronze/Silver/Gold, Fabric/Power BI, FastAPI, LangChain, Azure resources and CI/CD",
+    "Linked from README"
+   ],
+   "labels": [
+    "phase-10",
+    "role:P4",
+    "priority:P0",
+    "type:docs"
+   ],
+   "milestone": "Phase 10 – Testing, operations & bonus"
+  },
+  {
+   "id": "T80",
+   "title": "Runbook with known limitations (docs/runbook.md)",
+   "role": "P5",
+   "priority": "P0",
+   "phase": 10,
+   "est": 3,
+   "target": "2026-10-13",
+   "deps": [
+    "T37",
+    "T75"
+   ],
+   "type": "docs",
+   "desc": "Anyone can rerun the solution.",
+   "ac": [
+    "Prerequisites, data generation, loading a batch, failed-batch recovery, semantic model refresh, deploy/rollback",
+    "Known limitations listed",
+    "A member who did not build the pipeline follows the runbook successfully"
+   ],
+   "labels": [
+    "phase-10",
+    "role:P5",
+    "priority:P0",
+    "type:docs"
+   ],
+   "milestone": "Phase 10 – Testing, operations & bonus"
+  },
+  {
+   "id": "T81",
+   "title": "Bonus: knowledge graph and supplier_alternatives_graph tool",
+   "role": "P3",
+   "priority": "P2",
+   "phase": 10,
+   "est": 5,
+   "target": "2026-10-13",
+   "deps": [
+    "T35",
+    "T67"
+   ],
+   "type": "feature",
+   "desc": "Only start if the full baseline works by Mon 12/10 noon.",
+   "ac": [
+    "networkx graph (Supplier, Product, Location, Shipment) built from Gold and stored as JSON",
+    "LangChain tool answers 'if SUP-017 stops, which critical products are affected and who is the alternate?'",
+    "`src/team4_sc/assistant/graph.py` with tests"
+   ],
+   "labels": [
+    "phase-10",
+    "role:P3",
+    "priority:P2",
+    "type:feature"
+   ],
+   "milestone": "Phase 10 – Testing, operations & bonus"
+  },
+  {
+   "id": "T82",
+   "title": "Build presentation deck (12 slides) from collected evidence",
+   "role": "P5",
+   "priority": "P0",
+   "phase": 11,
+   "est": 4,
+   "target": "2026-10-13",
+   "deps": [
+    "T47",
+    "T71",
+    "T76"
+   ],
+   "type": "docs",
+   "desc": "Deck supports the live demo; locked Tue 13/10.",
+   "ac": [
+    "12 slides per guide §11.0 with speaker notes and real screenshots from `docs/evidence/`",
+    "Each member owns their slides",
+    "Deck locked by end of Tue 13/10"
+   ],
+   "labels": [
+    "phase-11",
+    "role:P5",
+    "priority:P0",
+    "type:docs"
+   ],
+   "milestone": "Phase 11 – Final presentation & delivery"
+  },
+  {
+   "id": "T83",
+   "title": "Demo script, Plan B recording and environment warm-up checklist",
+   "role": "P5",
+   "priority": "P0",
+   "phase": 11,
+   "est": 2,
+   "target": "2026-10-13",
+   "deps": [
+    "T77"
+   ],
+   "type": "docs",
+   "desc": "15-minute live flow from raw file to assistant answer.",
+   "ac": [
+    "Minute-by-minute script with presenter per section",
+    "Backup video/screenshots for every live part",
+    "Warm-up checklist (cluster started 15 min before, tokens valid)"
+   ],
+   "labels": [
+    "phase-11",
+    "role:P5",
+    "priority:P0",
+    "type:docs"
+   ],
+   "milestone": "Phase 11 – Final presentation & delivery"
+  },
+  {
+   "id": "T84",
+   "title": "Two timed rehearsals and cross-role Q&A preparation",
+   "role": "P5",
+   "priority": "P0",
+   "phase": 11,
+   "est": 3,
+   "target": "2026-10-14",
+   "deps": [
+    "T82",
+    "T83"
+   ],
+   "type": "coordination",
+   "desc": "Shared understanding is graded.",
+   "ac": [
+    "Two full timed rehearsals on Wed 14/10",
+    "Each member prepares 2 questions on another member's area; common evaluator questions answered"
+   ],
+   "labels": [
+    "phase-11",
+    "role:P5",
+    "priority:P0",
+    "type:coordination"
+   ],
+   "milestone": "Phase 11 – Final presentation & delivery"
+  },
+  {
+   "id": "T85",
+   "title": "Final delivery checklist and repository clean-up",
+   "role": "P5",
+   "priority": "P0",
+   "phase": 11,
+   "est": 2,
+   "target": "2026-10-14",
+   "deps": [
+    "T80",
+    "T82"
+   ],
+   "type": "coordination",
+   "desc": "Run on Mon 12/10 and again Wed 14/10.",
+   "ac": [
+    "Every deliverable of spec §7 located in the repo",
+    "No secrets in repo (search + secret scanning enabled)",
+    "One-page README with links to every document",
+    "All issues Done or documented as out of scope via ADR"
+   ],
+   "labels": [
+    "phase-11",
+    "role:P5",
+    "priority:P0",
+    "type:coordination"
+   ],
+   "milestone": "Phase 11 – Final presentation & delivery"
+  }
+ ]
+}

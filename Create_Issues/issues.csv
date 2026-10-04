@@ -1,0 +1,1597 @@
+ID,Title,Owner role,Reviewer role,Priority,Phase,Milestone,Estimate (h),Target date,Dependencies,Labels,Acceptance criteria,Body
+T01,Create private repository and invite collaborators,P5,P2,P0,0,Phase 0 – Setup & ways of working,1,2026-10-03,,"phase-0,role:P5,priority:P0,type:chore",Private repo exists with README and Python `.gitignore` template | All 4 team members and the instructor are collaborators | Every member has cloned the repo and set `git config user.name/user.email`,"## What needs to be done
+Create `team4-supply-chain-analytics` on GitHub and give the whole team plus the instructor access.
+
+## Acceptance criteria
+- [ ] Private repo exists with README and Python `.gitignore` template
+- [ ] All 4 team members and the instructor are collaborators
+- [ ] Every member has cloned the repo and set `git config user.name/user.email`
+
+## Dependencies
+Requires: None
+
+## Owner / Reviewer
+Owner: P5 (Project Manager) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 0 · Estimate: 1h · Target date: 2026-10-03
+
+<!-- backlog-id: T01 -->
+"
+T02,Scaffold repository folder structure (src layout),P5,P2,P0,0,Phase 0 – Setup & ways of working,2,2026-10-03,T01,"phase-0,role:P5,priority:P0,type:chore","Folder tree matches guide §0.2; empty folders contain `.gitkeep` | `.gitignore` includes `.env`, `*.key`, `__pycache__/`, `.venv/` | `.env.example` lists variable names only (no values)","## What needs to be done
+Create the folder tree from guide §0.2 (`src/team4_sc/...`, `notebooks/`, `tests/`, `docs/`, `fabric/`, `postman/`, `infra/`, `.github/`).
+
+## Acceptance criteria
+- [ ] Folder tree matches guide §0.2; empty folders contain `.gitkeep`
+- [ ] `.gitignore` includes `.env`, `*.key`, `__pycache__/`, `.venv/`
+- [ ] `.env.example` lists variable names only (no values)
+
+## Dependencies
+Requires: T01
+
+## Owner / Reviewer
+Owner: P5 (Project Manager) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 0 · Estimate: 2h · Target date: 2026-10-03
+
+<!-- backlog-id: T02 -->
+"
+T03,Initialise Python project with uv (pyproject.toml + uv.lock),P5,P2,P0,0,Phase 0 – Setup & ways of working,2,2026-10-04,T02,"phase-0,role:P5,priority:P0,type:chore","`pyproject.toml`, `uv.lock` and `.python-version` (3.11) committed; no `requirements.txt` | ruff and pytest configured in `pyproject.toml`; `pyspark` is in the separate `spark` group | Every member runs `uv sync --all-groups`, `uv run pytest` and `uv run ruff check .` successfully","## What needs to be done
+Run `uv init --package --name team4-sc --python 3.11` and add runtime, dev and `spark` dependency groups as in guide §0.2a.
+
+## Acceptance criteria
+- [ ] `pyproject.toml`, `uv.lock` and `.python-version` (3.11) committed; no `requirements.txt`
+- [ ] ruff and pytest configured in `pyproject.toml`; `pyspark` is in the separate `spark` group
+- [ ] Every member runs `uv sync --all-groups`, `uv run pytest` and `uv run ruff check .` successfully
+
+## Dependencies
+Requires: T02
+
+## Owner / Reviewer
+Owner: P5 (Project Manager) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 0 · Estimate: 2h · Target date: 2026-10-04
+
+<!-- backlog-id: T03 -->
+"
+T04,Configure branch protection on main,P4,P3,P0,0,Phase 0 – Setup & ways of working,1,2026-10-04,T01,"phase-0,role:P4,priority:P0,type:chore","Pull request required before merging, with 1 approval | Force pushes blocked | Note added that required status checks will be enabled in the CI v1 issue","## What needs to be done
+Add a branch ruleset for `main` so nobody pushes directly.
+
+## Acceptance criteria
+- [ ] Pull request required before merging, with 1 approval
+- [ ] Force pushes blocked
+- [ ] Note added that required status checks will be enabled in the CI v1 issue
+
+## Dependencies
+Requires: T01
+
+## Owner / Reviewer
+Owner: P4 (Cloud & DevOps) · Reviewer: P3
+
+## Planning
+Priority: P0 · Phase: 0 · Estimate: 1h · Target date: 2026-10-04
+
+<!-- backlog-id: T04 -->
+"
+T05,Create GitHub Project board 'Team 4 Backlog',P5,P2,P0,0,Phase 0 – Setup & ways of working,1,2026-10-03,T01,"phase-0,role:P5,priority:P0,type:chore","Status: Backlog → Ready → In Progress → In Review → Done | Fields: Priority (P0/P1/P2), Phase (0–11), Estimate (number, hours), Iteration (1 week) | All backlog issues are added to the board with assignee, priority and phase","## What needs to be done
+Board view with Status columns and custom fields required by the spec (owner, priority, acceptance criteria, status).
+
+## Acceptance criteria
+- [ ] Status: Backlog → Ready → In Progress → In Review → Done
+- [ ] Fields: Priority (P0/P1/P2), Phase (0–11), Estimate (number, hours), Iteration (1 week)
+- [ ] All backlog issues are added to the board with assignee, priority and phase
+
+## Dependencies
+Requires: T01
+
+## Owner / Reviewer
+Owner: P5 (Project Manager) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 0 · Estimate: 1h · Target date: 2026-10-03
+
+<!-- backlog-id: T05 -->
+"
+T06,Add issue template and pull request template,P5,P2,P1,0,Phase 0 – Setup & ways of working,1,2026-10-04,T02,"phase-0,role:P5,priority:P1,type:chore","Issue template has: what to do, acceptance criteria, dependencies, owner/reviewer | PR template has: what changes, `Closes #`, how I tested (incl. 'no secrets'), evidence","## What needs to be done
+Add `.github/ISSUE_TEMPLATE/task.md` and `.github/pull_request_template.md` from guide §0.4–0.5.
+
+## Acceptance criteria
+- [ ] Issue template has: what to do, acceptance criteria, dependencies, owner/reviewer
+- [ ] PR template has: what changes, `Closes #`, how I tested (incl. 'no secrets'), evidence
+
+## Dependencies
+Requires: T02
+
+## Owner / Reviewer
+Owner: P5 (Project Manager) · Reviewer: P2
+
+## Planning
+Priority: P1 · Phase: 0 · Estimate: 1h · Target date: 2026-10-04
+
+<!-- backlog-id: T06 -->
+"
+T07,Record roles in README and complete first PR per member,P5,P2,P0,0,Phase 0 – Setup & ways of working,1,2026-10-04,T04;T06,"phase-0,role:P5,priority:P0,type:chore","README has a role table (P1–P5) with names | Each of the 5 members has at least one merged, reviewed PR | Branch naming convention `type/<issue>-<desc>` documented in README","## What needs to be done
+Every member practises the full PR flow (branch → PR → review → squash merge) by adding their name/role to the README.
+
+## Acceptance criteria
+- [ ] README has a role table (P1–P5) with names
+- [ ] Each of the 5 members has at least one merged, reviewed PR
+- [ ] Branch naming convention `type/<issue>-<desc>` documented in README
+
+## Dependencies
+Requires: T04, T06
+
+## Owner / Reviewer
+Owner: P5 (Project Manager) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 0 · Estimate: 1h · Target date: 2026-10-04
+
+<!-- backlog-id: T07 -->
+"
+T08,Set up ADR folder and risk log,P5,P2,P1,0,Phase 0 – Setup & ways of working,1,2026-10-04,T02,"phase-0,role:P5,priority:P1,type:docs",`docs/adr/0000-template.md` exists (Context / Decision / Alternatives / Consequences) | `docs/risk_log.md` contains R1–R3 from the guide with owner and status | Risk log review cadence (daily stand-up + weekly review) recorded,"## What needs to be done
+Create the ADR template and the initial risk log covering data availability, access, quality, integration and schedule.
+
+## Acceptance criteria
+- [ ] `docs/adr/0000-template.md` exists (Context / Decision / Alternatives / Consequences)
+- [ ] `docs/risk_log.md` contains R1–R3 from the guide with owner and status
+- [ ] Risk log review cadence (daily stand-up + weekly review) recorded
+
+## Dependencies
+Requires: T02
+
+## Owner / Reviewer
+Owner: P5 (Project Manager) · Reviewer: P2
+
+## Planning
+Priority: P1 · Phase: 0 · Estimate: 1h · Target date: 2026-10-04
+
+<!-- backlog-id: T08 -->
+"
+T09,Confirm platform access and Fabric access pattern with instructor,P5,P2,P0,0,Phase 0 – Setup & ways of working,2,2026-10-05,,"phase-0,role:P5,priority:P0,type:coordination",Azure subscription / Resource Group permissions confirmed and documented | Databricks workspace and Unity Catalog `team4` availability confirmed | Fabric access pattern (Mirrored catalog / OneLake shortcut / Import) agreed by Mon 5/10 | LLM provider and credential source known; outcomes logged in the risk log,"## What needs to be done
+Stakeholder task: secure Azure, Databricks (Unity Catalog), Fabric and LLM access early; this unblocks Phases 2, 5, 6 and 8.
+
+## Acceptance criteria
+- [ ] Azure subscription / Resource Group permissions confirmed and documented
+- [ ] Databricks workspace and Unity Catalog `team4` availability confirmed
+- [ ] Fabric access pattern (Mirrored catalog / OneLake shortcut / Import) agreed by Mon 5/10
+- [ ] LLM provider and credential source known; outcomes logged in the risk log
+
+## Dependencies
+Requires: None
+
+## Owner / Reviewer
+Owner: P5 (Project Manager) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 0 · Estimate: 2h · Target date: 2026-10-05
+
+<!-- backlog-id: T09 -->
+"
+T10,"PM cadence: daily stand-up, board hygiene and evening plan check",P5,P2,P1,0,Phase 0 – Setup & ways of working,4,2026-10-15,T05,"phase-0,role:P5,priority:P1,type:coordination",15-min stand-up held each working day; blockers captured on the board | Board statuses reflect reality every evening; slipped items re-planned using the cut order (bonus → 5th page/2nd endpoint → prod deploy) | Risk log updated at least weekly,"## What needs to be done
+Recurring PM task for the whole project (keep open until delivery).
+
+## Acceptance criteria
+- [ ] 15-min stand-up held each working day; blockers captured on the board
+- [ ] Board statuses reflect reality every evening; slipped items re-planned using the cut order (bonus → 5th page/2nd endpoint → prod deploy)
+- [ ] Risk log updated at least weekly
+
+## Dependencies
+Requires: T05
+
+## Owner / Reviewer
+Owner: P5 (Project Manager) · Reviewer: P2
+
+## Planning
+Priority: P1 · Phase: 0 · Estimate: 4h · Target date: 2026-10-15
+
+<!-- backlog-id: T10 -->
+"
+T11,Write business brief (docs/business_brief.md),P5,P2,P0,1,"Phase 1 – Discover: brief, KPIs, data",4,2026-10-05,T08,"phase-1,role:P5,priority:P0,type:docs","All 6 sections present, including users/decisions/KPI table | 5–8 business questions, each mapped to a KPI and the report page that answers it | Approved by the whole team in a PR (ideally shown to the instructor)","## What needs to be done
+Problem, users and decisions, business questions, KPI definitions, dataset inventory and success measures (guide §1.1).
+
+## Acceptance criteria
+- [ ] All 6 sections present, including users/decisions/KPI table
+- [ ] 5–8 business questions, each mapped to a KPI and the report page that answers it
+- [ ] Approved by the whole team in a PR (ideally shown to the instructor)
+
+## Dependencies
+Requires: T08
+
+## Owner / Reviewer
+Owner: P5 (Project Manager) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 1 · Estimate: 4h · Target date: 2026-10-05
+
+<!-- backlog-id: T11 -->
+"
+T12,Define KPI formulas and record ADR 0002,P2,P1,P0,1,"Phase 1 – Discover: brief, KPIs, data",3,2026-10-05,,"phase-1,role:P2,priority:P0,type:docs","Order value, on-time rate, avg delay, fill rate, exposed value, delayed qty, critical-item count, alternate-supplier coverage defined with formula and Gold source | `docs/adr/0002-kpi-definitions.md` merged | Reviewed by P1 (data) and P3 (API/assistant)","## What needs to be done
+Exact formulas for the 8 required KPIs; they are reused in Gold, DAX, the API and LangChain, so they must be identical everywhere.
+
+## Acceptance criteria
+- [ ] Order value, on-time rate, avg delay, fill rate, exposed value, delayed qty, critical-item count, alternate-supplier coverage defined with formula and Gold source
+- [ ] `docs/adr/0002-kpi-definitions.md` merged
+- [ ] Reviewed by P1 (data) and P3 (API/assistant)
+
+## Dependencies
+Requires: None
+
+## Owner / Reviewer
+Owner: P2 (Analytics) · Reviewer: P1
+
+## Planning
+Priority: P0 · Phase: 1 · Estimate: 3h · Target date: 2026-10-05
+
+<!-- backlog-id: T12 -->
+"
+T13,Lock raw file schemas (source contracts),P1,P2,P0,1,"Phase 1 – Discover: brief, KPIs, data",2,2026-10-05,,"phase-1,role:P1,priority:P0,type:design",Columns/types for all 5 files agreed with P2 and documented | Valid shipment status sequence documented | Schema declared frozen in the PR description,"## What needs to be done
+Agree columns and types for suppliers, products, purchase_orders, shipment_events (nested) and locations (guide §1.3). Changes after lock require an ADR.
+
+## Acceptance criteria
+- [ ] Columns/types for all 5 files agreed with P2 and documented
+- [ ] Valid shipment status sequence documented
+- [ ] Schema declared frozen in the PR description
+
+## Dependencies
+Requires: None
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 1 · Estimate: 2h · Target date: 2026-10-05
+
+<!-- backlog-id: T13 -->
+"
+T14,Build synthetic data generator,P1,P2,P0,1,"Phase 1 – Discover: brief, KPIs, data",6,2026-10-05,T03;T13,"phase-1,role:P1,priority:P0,type:feature","Uses faker with `random.seed(42)`; argparse for output folder; reproducible output | ≥10,000 transactional/event records in total; no real company or person names | batch_001 and batch_002 written under `data/raw/` and committed","## What needs to be done
+`src/team4_sc/data_generator/generate.py` producing batch_001 (~85%) and batch_002 (new orders, corrections, late events).
+
+## Acceptance criteria
+- [ ] Uses faker with `random.seed(42)`; argparse for output folder; reproducible output
+- [ ] ≥10,000 transactional/event records in total; no real company or person names
+- [ ] batch_001 and batch_002 written under `data/raw/` and committed
+
+## Dependencies
+Requires: T03, T13
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 1 · Estimate: 6h · Target date: 2026-10-05
+
+<!-- backlog-id: T14 -->
+"
+T15,Inject quality defects and write defects manifest,P1,P2,P0,1,"Phase 1 – Discover: brief, KPIs, data",3,2026-10-05,T14,"phase-1,role:P1,priority:P0,type:feature","Unknown supplier/product, negative qty, invalid status sequence, delivery before order, currency inconsistency, duplicate lines, bad date format all present | `data/raw/injected_defects_manifest.csv` lists file, record id and defect type | Summary count per defect type included in the PR","## What needs to be done
+Inject every defect type from guide §1.4 at the stated rates, including late-arriving events and corrected records in batch_002.
+
+## Acceptance criteria
+- [ ] Unknown supplier/product, negative qty, invalid status sequence, delivery before order, currency inconsistency, duplicate lines, bad date format all present
+- [ ] `data/raw/injected_defects_manifest.csv` lists file, record id and defect type
+- [ ] Summary count per defect type included in the PR
+
+## Dependencies
+Requires: T14
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 1 · Estimate: 3h · Target date: 2026-10-05
+
+<!-- backlog-id: T15 -->
+"
+T16,Data dictionary for raw files,P1,P2,P1,1,"Phase 1 – Discover: brief, KPIs, data",3,2026-10-05,T13,"phase-1,role:P1,priority:P1,type:docs","Every column has name, type, key (PK/FK), business meaning, example, sensitivity, allowed values/rules | Reviewed by P2","## What needs to be done
+`docs/data_dictionary.md`: one table per raw file (living document, extended in Phases 3 and 4).
+
+## Acceptance criteria
+- [ ] Every column has name, type, key (PK/FK), business meaning, example, sensitivity, allowed values/rules
+- [ ] Reviewed by P2
+
+## Dependencies
+Requires: T13
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P1 · Phase: 1 · Estimate: 3h · Target date: 2026-10-05
+
+<!-- backlog-id: T16 -->
+"
+T17,"Databricks setup: Git folder, catalog, schemas, landing volume",P1,P2,P0,2,Phase 2 – Bronze ingestion,2,2026-10-06,T09,"phase-2,role:P1,priority:P0,type:chore",Repo linked as Git folder; work happens on feature branches | Schemas `team4.bronze|silver|gold|ops` and volume `team4.bronze.landing` exist | batch_001 uploaded to the volume; batch_002 deliberately NOT uploaded,"## What needs to be done
+Link the repo as a Databricks Git folder and create `team4` catalog with bronze/silver/gold/ops schemas.
+
+## Acceptance criteria
+- [ ] Repo linked as Git folder; work happens on feature branches
+- [ ] Schemas `team4.bronze|silver|gold|ops` and volume `team4.bronze.landing` exist
+- [ ] batch_001 uploaded to the volume; batch_002 deliberately NOT uploaded
+
+## Dependencies
+Requires: T09
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 2 · Estimate: 2h · Target date: 2026-10-06
+
+<!-- backlog-id: T17 -->
+"
+T18,"Bronze ingestion module: audit columns, record hash, schema drift",P1,P2,P0,2,Phase 2 – Bronze ingestion,5,2026-10-06,T14;T17,"phase-2,role:P1,priority:P0,type:feature","Explicit StructType schemas (no inferSchema) | Adds `_ingest_ts`, `_batch_id`, `_source_file`, `_source_system`, `_record_hash`, `_load_status` | Missing column → batch FAILED; new column → warning + `_rescued_data` | Unit tests for pure functions in `tests/unit/`","## What needs to be done
+`src/team4_sc/ingestion/bronze.py` with reusable, testable functions.
+
+## Acceptance criteria
+- [ ] Explicit StructType schemas (no inferSchema)
+- [ ] Adds `_ingest_ts`, `_batch_id`, `_source_file`, `_source_system`, `_record_hash`, `_load_status`
+- [ ] Missing column → batch FAILED; new column → warning + `_rescued_data`
+- [ ] Unit tests for pure functions in `tests/unit/`
+
+## Dependencies
+Requires: T14, T17
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 2 · Estimate: 5h · Target date: 2026-10-06
+
+<!-- backlog-id: T18 -->
+"
+T19,Parameterised Bronze notebook with idempotent MERGE and load log,P1,P2,P0,2,Phase 2 – Bronze ingestion,5,2026-10-06,T18,"phase-2,role:P1,priority:P0,type:feature","Widgets: source_name, file_format, batch_id, landing_path; loads suppliers, products, purchase_orders, shipment_events (+locations) | MERGE on `_record_hash` + `_source_file`; second run of the same batch adds no rows | JSON kept nested (one row per shipment) | Every run writes a row to `team4.ops.bronze_load_log` (counts, duration, status, error)","## What needs to be done
+`notebooks/bronze/ingest.py` (thin notebook) for CSV and nested JSON sources.
+
+## Acceptance criteria
+- [ ] Widgets: source_name, file_format, batch_id, landing_path; loads suppliers, products, purchase_orders, shipment_events (+locations)
+- [ ] MERGE on `_record_hash` + `_source_file`; second run of the same batch adds no rows
+- [ ] JSON kept nested (one row per shipment)
+- [ ] Every run writes a row to `team4.ops.bronze_load_log` (counts, duration, status, error)
+
+## Dependencies
+Requires: T18
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 2 · Estimate: 5h · Target date: 2026-10-06
+
+<!-- backlog-id: T19 -->
+"
+T20,Bronze Databricks job and job JSON in repo,P1,P2,P1,2,Phase 2 – Bronze ingestion,2,2026-10-06,T19,"phase-2,role:P1,priority:P1,type:feature",Job runs all Bronze sources for a given batch | `databricks/jobs/bronze_job.json` committed,"## What needs to be done
+Workflow job with `batch_id` parameter.
+
+## Acceptance criteria
+- [ ] Job runs all Bronze sources for a given batch
+- [ ] `databricks/jobs/bronze_job.json` committed
+
+## Dependencies
+Requires: T19
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P1 · Phase: 2 · Estimate: 2h · Target date: 2026-10-06
+
+<!-- backlog-id: T20 -->
+"
+T21,Bronze verification evidence,P1,P2,P0,2,Phase 2 – Bronze ingestion,2,2026-10-06,T20,"phase-2,role:P1,priority:P0,type:test",Table counts match file line counts | Re-run of batch_001 leaves counts unchanged (idempotency) | File with a missing column is logged as FAILED (schema drift) | A random row is traced to source file and batch; screenshots in `docs/evidence/bronze/`,"## What needs to be done
+Prove the Bronze acceptance condition.
+
+## Acceptance criteria
+- [ ] Table counts match file line counts
+- [ ] Re-run of batch_001 leaves counts unchanged (idempotency)
+- [ ] File with a missing column is logged as FAILED (schema drift)
+- [ ] A random row is traced to source file and batch; screenshots in `docs/evidence/bronze/`
+
+## Dependencies
+Requires: T20
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 2 · Estimate: 2h · Target date: 2026-10-06
+
+<!-- backlog-id: T21 -->
+"
+T22,ADR: incremental vs full refresh + schema drift; refresh_strategy v1,P1,P2,P1,2,Phase 2 – Bronze ingestion,2,2026-10-06,T19,"phase-2,role:P1,priority:P1,type:docs","ADR for incremental/idempotent loading and ADR for schema-drift handling merged | `docs/refresh_strategy.md` v1: new batch, rerun, failure handling","## What needs to be done
+Document Bronze loading decisions.
+
+## Acceptance criteria
+- [ ] ADR for incremental/idempotent loading and ADR for schema-drift handling merged
+- [ ] `docs/refresh_strategy.md` v1: new batch, rerun, failure handling
+
+## Dependencies
+Requires: T19
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P1 · Phase: 2 · Estimate: 2h · Target date: 2026-10-06
+
+<!-- backlog-id: T22 -->
+"
+T23,"Silver cleaning functions, FX rates table and unit tests",P1,P2,P0,3,Phase 3 – Silver & data quality,4,2026-10-07,T18,"phase-3,role:P1,priority:P0,type:feature","snake_case names, type casting, multi-format date parsing, status upper-casing | Currency normalisation (EUR/eur/€/blank → supplier default); `team4.silver.fx_rates` with 3–4 currencies | pytest tests in `tests/unit/transforms/` pass (e.g. `normalize_currency('€') == 'EUR'`)","## What needs to be done
+Reusable standardisation logic in `src/team4_sc/transforms/`.
+
+## Acceptance criteria
+- [ ] snake_case names, type casting, multi-format date parsing, status upper-casing
+- [ ] Currency normalisation (EUR/eur/€/blank → supplier default); `team4.silver.fx_rates` with 3–4 currencies
+- [ ] pytest tests in `tests/unit/transforms/` pass (e.g. `normalize_currency('€') == 'EUR'`)
+
+## Dependencies
+Requires: T18
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 3 · Estimate: 4h · Target date: 2026-10-07
+
+<!-- backlog-id: T23 -->
+"
+T24,Data quality rules catalogue (docs/data_quality_rules.md),P1,P2,P1,3,Phase 3 – Silver & data quality,1,2026-10-07,,"phase-3,role:P1,priority:P1,type:docs","Each rule has ID, table, category, rule and action | Rule IDs match those written to quarantine","## What needs to be done
+Rules DQ01–DQ11 from guide §3.2.
+
+## Acceptance criteria
+- [ ] Each rule has ID, table, category, rule and action
+- [ ] Rule IDs match those written to quarantine
+
+## Dependencies
+Requires: None
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P1 · Phase: 3 · Estimate: 1h · Target date: 2026-10-07
+
+<!-- backlog-id: T24 -->
+"
+T25,Create quarantine and dq_results tables,P1,P2,P0,3,Phase 3 – Silver & data quality,2,2026-10-07,T17,"phase-3,role:P1,priority:P0,type:feature","`team4.ops.quarantine` with schema of §3.3 including `resolution_status` (OPEN/FIXED/ACCEPTED), resolved_by, resolved_ts | `team4.ops.dq_results` with run_id, table, rule_id, records_checked, records_failed, pass_rate","## What needs to be done
+Operational tables for rejected records and rule results.
+
+## Acceptance criteria
+- [ ] `team4.ops.quarantine` with schema of §3.3 including `resolution_status` (OPEN/FIXED/ACCEPTED), resolved_by, resolved_ts
+- [ ] `team4.ops.dq_results` with run_id, table, rule_id, records_checked, records_failed, pass_rate
+
+## Dependencies
+Requires: T17
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 3 · Estimate: 2h · Target date: 2026-10-07
+
+<!-- backlog-id: T25 -->
+"
+T26,Silver suppliers (SCD2) and products (SCD1),P1,P2,P0,3,Phase 3 – Silver & data quality,4,2026-10-07,T23;T25,"phase-3,role:P1,priority:P0,type:feature","`silver.suppliers` keeps history with valid_from, valid_to, is_current | `silver.products` overwrites changed attributes (SCD1) | DQ results written for completeness/uniqueness","## What needs to be done
+Reference-data Silver tables.
+
+## Acceptance criteria
+- [ ] `silver.suppliers` keeps history with valid_from, valid_to, is_current
+- [ ] `silver.products` overwrites changed attributes (SCD1)
+- [ ] DQ results written for completeness/uniqueness
+
+## Dependencies
+Requires: T23, T25
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 3 · Estimate: 4h · Target date: 2026-10-07
+
+<!-- backlog-id: T26 -->
+"
+T27,"Silver purchase_order_lines: DQ01–DQ08, dedup, MERGE",P1,P2,P0,3,Phase 3 – Silver & data quality,6,2026-10-08,T26,"phase-3,role:P1,priority:P0,type:feature",Reads only new Bronze records; keeps original price and `unit_price_eur` | Failing rows go to quarantine with rule_id and reason | Dedup keeps latest `last_modified_at` per po_id + po_line_number; older versions quarantined as DUPLICATE | MERGE on business key so batch_002 corrections update rows; dq_results written,"## What needs to be done
+Core transactional Silver table.
+
+## Acceptance criteria
+- [ ] Reads only new Bronze records; keeps original price and `unit_price_eur`
+- [ ] Failing rows go to quarantine with rule_id and reason
+- [ ] Dedup keeps latest `last_modified_at` per po_id + po_line_number; older versions quarantined as DUPLICATE
+- [ ] MERGE on business key so batch_002 corrections update rows; dq_results written
+
+## Dependencies
+Requires: T26
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 3 · Estimate: 6h · Target date: 2026-10-08
+
+<!-- backlog-id: T27 -->
+"
+T28,"Silver shipment_events and shipments: explode, DQ09–DQ11",P1,P2,P0,3,Phase 3 – Silver & data quality,5,2026-10-08,T25;T27,"phase-3,role:P1,priority:P0,type:feature","`silver.shipment_events`: one row per event with flattened location fields | `silver.shipments`: one row per shipment (latest status, first/last event_ts, delayed flag, delay_reason) | DQ09 status sequence check via `lag()`; DQ10 dedup on event_id; DQ11 orphans handled per ADR","## What needs to be done
+Flatten nested JSON into event and shipment grain.
+
+## Acceptance criteria
+- [ ] `silver.shipment_events`: one row per event with flattened location fields
+- [ ] `silver.shipments`: one row per shipment (latest status, first/last event_ts, delayed flag, delay_reason)
+- [ ] DQ09 status sequence check via `lag()`; DQ10 dedup on event_id; DQ11 orphans handled per ADR
+
+## Dependencies
+Requires: T25, T27
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 3 · Estimate: 5h · Target date: 2026-10-08
+
+<!-- backlog-id: T28 -->
+"
+T29,Silver validation: Injected vs Detected and count balance,P1,P2,P0,3,Phase 3 – Silver & data quality,2,2026-10-08,T15;T27;T28,"phase-3,role:P1,priority:P0,type:test",'Injected vs Detected' table per defect type = 100% | Bronze count = Silver count + quarantine count per table per batch | `notebooks/checks/dq_checks.py` committed; evidence in `docs/evidence/`,"## What needs to be done
+Prove every injected defect was caught.
+
+## Acceptance criteria
+- [ ] 'Injected vs Detected' table per defect type = 100%
+- [ ] Bronze count = Silver count + quarantine count per table per batch
+- [ ] `notebooks/checks/dq_checks.py` committed; evidence in `docs/evidence/`
+
+## Dependencies
+Requires: T15, T27, T28
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 3 · Estimate: 2h · Target date: 2026-10-08
+
+<!-- backlog-id: T29 -->
+"
+T30,ADRs for SCD strategy and orphan events; refresh_strategy update,P1,P2,P1,3,Phase 3 – Silver & data quality,2,2026-10-08,T26;T28,"phase-3,role:P1,priority:P1,type:docs",ADR: SCD2 suppliers / SCD1 products | ADR: orphan shipment events (flag vs quarantine) | `refresh_strategy.md` covers late-arriving events and corrected records,"## What needs to be done
+Document Silver design decisions.
+
+## Acceptance criteria
+- [ ] ADR: SCD2 suppliers / SCD1 products
+- [ ] ADR: orphan shipment events (flag vs quarantine)
+- [ ] `refresh_strategy.md` covers late-arriving events and corrected records
+
+## Dependencies
+Requires: T26, T28
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P1 · Phase: 3 · Estimate: 2h · Target date: 2026-10-08
+
+<!-- backlog-id: T30 -->
+"
+T31,Data dictionary (Silver) and source_to_target.md (Bronze → Silver),P1,P2,P1,3,Phase 3 – Silver & data quality,2,2026-10-08,T27;T28,"phase-3,role:P1,priority:P1,type:docs",Silver tables added to data dictionary | `docs/source_to_target.md` maps every Bronze column to Silver with transformation,"## What needs to be done
+Update living documentation.
+
+## Acceptance criteria
+- [ ] Silver tables added to data dictionary
+- [ ] `docs/source_to_target.md` maps every Bronze column to Silver with transformation
+
+## Dependencies
+Requires: T27, T28
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P1 · Phase: 3 · Estimate: 2h · Target date: 2026-10-08
+
+<!-- backlog-id: T31 -->
+"
+T32,Design star schema and grain statements,P2,P1,P0,4,Phase 4 – Gold dimensional model,3,2026-10-07,T12;T13,"phase-4,role:P2,priority:P0,type:design",`docs/diagrams/star_schema.png` with 3 facts and 6 dims | Grain statement for each fact table | Every KPI computable from facts/dims without logic in visuals; approved in PR,"## What needs to be done
+Paper design before code (guide §4.1–4.3).
+
+## Acceptance criteria
+- [ ] `docs/diagrams/star_schema.png` with 3 facts and 6 dims
+- [ ] Grain statement for each fact table
+- [ ] Every KPI computable from facts/dims without logic in visuals; approved in PR
+
+## Dependencies
+Requires: T12, T13
+
+## Owner / Reviewer
+Owner: P2 (Analytics) · Reviewer: P1
+
+## Planning
+Priority: P0 · Phase: 4 · Estimate: 3h · Target date: 2026-10-07
+
+<!-- backlog-id: T32 -->
+"
+T33,Build dim_date and dimensions with surrogate keys and unknown members,P2,P1,P0,4,Phase 4 – Gold dimensional model,5,2026-10-08,T32;T26,"phase-4,role:P2,priority:P0,type:feature","dim_date 2024-01-01..2027-12-31 with date_key yyyymmdd | dim_supplier (SCD2), dim_product, dim_location, dim_shipment_status, dim_risk_level built | Each dim has `_sk` and an Unknown member with `_sk = -1` | Table and column COMMENTs set","## What needs to be done
+Logic in `src/team4_sc/gold/`, thin notebooks in `notebooks/gold/`.
+
+## Acceptance criteria
+- [ ] dim_date 2024-01-01..2027-12-31 with date_key yyyymmdd
+- [ ] dim_supplier (SCD2), dim_product, dim_location, dim_shipment_status, dim_risk_level built
+- [ ] Each dim has `_sk` and an Unknown member with `_sk = -1`
+- [ ] Table and column COMMENTs set
+
+## Dependencies
+Requires: T32, T26
+
+## Owner / Reviewer
+Owner: P2 (Analytics) · Reviewer: P1
+
+## Planning
+Priority: P0 · Phase: 4 · Estimate: 5h · Target date: 2026-10-08
+
+<!-- backlog-id: T33 -->
+"
+T34,Build fact_purchase_order_line,P2,P1,P0,4,Phase 4 – Gold dimensional model,4,2026-10-09,T33;T27,"phase-4,role:P2,priority:P0,type:feature","Order/promised/delivery date keys (role-playing dim_date) | line_value_eur, delay_days, is_delivered, is_on_time, is_delayed, is_open | No NULL foreign keys (unmatched → -1); COMMENTs set","## What needs to be done
+Grain: one purchase-order line (latest version).
+
+## Acceptance criteria
+- [ ] Order/promised/delivery date keys (role-playing dim_date)
+- [ ] line_value_eur, delay_days, is_delivered, is_on_time, is_delayed, is_open
+- [ ] No NULL foreign keys (unmatched → -1); COMMENTs set
+
+## Dependencies
+Requires: T33, T27
+
+## Owner / Reviewer
+Owner: P2 (Analytics) · Reviewer: P1
+
+## Planning
+Priority: P0 · Phase: 4 · Estimate: 4h · Target date: 2026-10-09
+
+<!-- backlog-id: T34 -->
+"
+T35,Build fact_shipment_event and fact_inventory_exposure,P2,P1,P0,4,Phase 4 – Gold dimensional model,5,2026-10-09,T33;T28,"phase-4,role:P2,priority:P0,type:feature","fact_shipment_event at event grain with is_delay_event, is_late_arriving | fact_inventory_exposure at product/location/snapshot grain with exposed_value_eur, days_of_cover, has_alternate_supplier | Risk level assigned using the documented rule","## What needs to be done
+Remaining fact tables per guide §4.2.
+
+## Acceptance criteria
+- [ ] fact_shipment_event at event grain with is_delay_event, is_late_arriving
+- [ ] fact_inventory_exposure at product/location/snapshot grain with exposed_value_eur, days_of_cover, has_alternate_supplier
+- [ ] Risk level assigned using the documented rule
+
+## Dependencies
+Requires: T33, T28
+
+## Owner / Reviewer
+Owner: P2 (Analytics) · Reviewer: P1
+
+## Planning
+Priority: P0 · Phase: 4 · Estimate: 5h · Target date: 2026-10-09
+
+<!-- backlog-id: T35 -->
+"
+T36,Silver → Gold reconciliation,P2,P1,P0,4,Phase 4 – Gold dimensional model,3,2026-10-09,T34;T35,"phase-4,role:P2,priority:P0,type:test","Checks: row counts, total line value EUR, total ordered qty, shipment event count, unknown-supplier rows | Job fails if any check is FAIL | All checks PASS for batch_001","## What needs to be done
+`team4.ops.reconciliation` filled every run (with P1).
+
+## Acceptance criteria
+- [ ] Checks: row counts, total line value EUR, total ordered qty, shipment event count, unknown-supplier rows
+- [ ] Job fails if any check is FAIL
+- [ ] All checks PASS for batch_001
+
+## Dependencies
+Requires: T34, T35
+
+## Owner / Reviewer
+Owner: P2 (Analytics) · Reviewer: P1
+
+## Planning
+Priority: P0 · Phase: 4 · Estimate: 3h · Target date: 2026-10-09
+
+<!-- backlog-id: T36 -->
+"
+T37,End-to-end Databricks job and batch_002 incremental test,P1,P2,P0,4,Phase 4 – Gold dimensional model,3,2026-10-09,T36;T20,"phase-4,role:P1,priority:P0,type:feature",Job tasks have dependencies; job JSON in `databricks/jobs/` updated | Failure notification configured | batch_002 run: corrections and late events correctly reflected in Gold; reconciliation PASS,"## What needs to be done
+Chain bronze → silver → gold → reconciliation as dependent tasks.
+
+## Acceptance criteria
+- [ ] Job tasks have dependencies; job JSON in `databricks/jobs/` updated
+- [ ] Failure notification configured
+- [ ] batch_002 run: corrections and late events correctly reflected in Gold; reconciliation PASS
+
+## Dependencies
+Requires: T36, T20
+
+## Owner / Reviewer
+Owner: P1 (Data Engineering) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 4 · Estimate: 3h · Target date: 2026-10-09
+
+<!-- backlog-id: T37 -->
+"
+T38,"Dimensional model docs, Delta optimisation rationale, Gold data dictionary",P2,P1,P1,4,Phase 4 – Gold dimensional model,3,2026-10-09,T34;T35,"phase-4,role:P2,priority:P1,type:docs","`docs/dimensional_model.md`: grain, keys, unknown members, SCD handling | OPTIMIZE/ZORDER (or liquid clustering) applied with before/after query time and 3–4 line rationale | Gold tables in data dictionary; Silver → Gold in source_to_target.md","## What needs to be done
+Make the model usable by another analyst.
+
+## Acceptance criteria
+- [ ] `docs/dimensional_model.md`: grain, keys, unknown members, SCD handling
+- [ ] OPTIMIZE/ZORDER (or liquid clustering) applied with before/after query time and 3–4 line rationale
+- [ ] Gold tables in data dictionary; Silver → Gold in source_to_target.md
+
+## Dependencies
+Requires: T34, T35
+
+## Owner / Reviewer
+Owner: P2 (Analytics) · Reviewer: P1
+
+## Planning
+Priority: P1 · Phase: 4 · Estimate: 3h · Target date: 2026-10-09
+
+<!-- backlog-id: T38 -->
+"
+T39,Connect Microsoft Fabric to Gold and record ADR,P2,P1,P0,5,Phase 5 – Fabric semantic model & Power BI,3,2026-10-09,T09;T34,"phase-5,role:P2,priority:P0,type:feature",Gold tables accessible in Fabric (mirrored catalog / shortcut / import) | ADR documents the chosen pattern and alternatives,"## What needs to be done
+Use the access pattern agreed with the instructor.
+
+## Acceptance criteria
+- [ ] Gold tables accessible in Fabric (mirrored catalog / shortcut / import)
+- [ ] ADR documents the chosen pattern and alternatives
+
+## Dependencies
+Requires: T09, T34
+
+## Owner / Reviewer
+Owner: P2 (Analytics) · Reviewer: P1
+
+## Planning
+Priority: P0 · Phase: 5 · Estimate: 3h · Target date: 2026-10-09
+
+<!-- backlog-id: T39 -->
+"
+T40,"Semantic model: relationships, date table, hierarchies, measures table",P2,P1,P0,5,Phase 5 – Fabric semantic model & Power BI,4,2026-10-12,T39,"phase-5,role:P2,priority:P0,type:feature","One-to-many single-direction relationships; 1 active + 2 inactive date relationships | dim_date marked as date table; Date, Location, Product hierarchies | Business names, formats, descriptions; all `_sk`/technical fields hidden; `_Measures` table","## What needs to be done
+Hide technical complexity, expose business terminology (guide §5.2).
+
+## Acceptance criteria
+- [ ] One-to-many single-direction relationships; 1 active + 2 inactive date relationships
+- [ ] dim_date marked as date table; Date, Location, Product hierarchies
+- [ ] Business names, formats, descriptions; all `_sk`/technical fields hidden; `_Measures` table
+
+## Dependencies
+Requires: T39
+
+## Owner / Reviewer
+Owner: P2 (Analytics) · Reviewer: P1
+
+## Planning
+Priority: P0 · Phase: 5 · Estimate: 4h · Target date: 2026-10-12
+
+<!-- backlog-id: T40 -->
+"
+T41,DAX measures (≥8) and fabric/measures.dax,P2,P1,P0,5,Phase 5 – Fabric semantic model & Power BI,4,2026-10-12,T40;T12,"phase-5,role:P2,priority:P0,type:feature","≥8 explicit measures covering volume, rate/ratio, trend and exception | USERELATIONSHIP used for promised/delivery date measures | Each measure has format string and description; definitions match ADR 0002 | All measures saved in `fabric/measures.dax`","## What needs to be done
+Implement KPI ADR in DAX.
+
+## Acceptance criteria
+- [ ] ≥8 explicit measures covering volume, rate/ratio, trend and exception
+- [ ] USERELATIONSHIP used for promised/delivery date measures
+- [ ] Each measure has format string and description; definitions match ADR 0002
+- [ ] All measures saved in `fabric/measures.dax`
+
+## Dependencies
+Requires: T40, T12
+
+## Owner / Reviewer
+Owner: P2 (Analytics) · Reviewer: P1
+
+## Planning
+Priority: P0 · Phase: 5 · Estimate: 4h · Target date: 2026-10-12
+
+<!-- backlog-id: T41 -->
+"
+T42,Row-level security by region,P2,P1,P1,5,Phase 5 – Fabric semantic model & Power BI,2,2026-10-12,T40,"phase-5,role:P2,priority:P1,type:feature",Static or dynamic RLS (user_region_map + USERPRINCIPALNAME) implemented | Tested with 'View as role'; screenshots saved,"## What needs to be done
+Region is an ownership boundary, so RLS is required.
+
+## Acceptance criteria
+- [ ] Static or dynamic RLS (user_region_map + USERPRINCIPALNAME) implemented
+- [ ] Tested with 'View as role'; screenshots saved
+
+## Dependencies
+Requires: T40
+
+## Owner / Reviewer
+Owner: P2 (Analytics) · Reviewer: P1
+
+## Planning
+Priority: P1 · Phase: 5 · Estimate: 2h · Target date: 2026-10-12
+
+<!-- backlog-id: T42 -->
+"
+T43,"Report pages 1–3: Supply Overview, Delay & Exposure, Supplier Scorecard",P2,P1,P0,5,Phase 5 – Fabric semantic model & Power BI,6,2026-10-12,T41,"phase-5,role:P2,priority:P0,type:feature","Overview with KPI cards, on-time trend, region view | Delay & Exposure by risk level, delay reason and month | Supplier scorecard table with conditional formatting and on-time vs fill-rate scatter","## What needs to be done
+Core analytical pages (guide §5.5).
+
+## Acceptance criteria
+- [ ] Overview with KPI cards, on-time trend, region view
+- [ ] Delay & Exposure by risk level, delay reason and month
+- [ ] Supplier scorecard table with conditional formatting and on-time vs fill-rate scatter
+
+## Dependencies
+Requires: T41
+
+## Owner / Reviewer
+Owner: P2 (Analytics) · Reviewer: P1
+
+## Planning
+Priority: P0 · Phase: 5 · Estimate: 6h · Target date: 2026-10-12
+
+<!-- backlog-id: T43 -->
+"
+T44,Report page 4: Product/Location drill-through,P2,P1,P0,5,Phase 5 – Fabric semantic model & Power BI,3,2026-10-13,T43,"phase-5,role:P2,priority:P0,type:feature","Drill-through reachable from pages 1–3 | Shows order history, shipments and stock vs safety stock for the selected product/location","## What needs to be done
+Exceptions/drill-through page required by the spec.
+
+## Acceptance criteria
+- [ ] Drill-through reachable from pages 1–3
+- [ ] Shows order history, shipments and stock vs safety stock for the selected product/location
+
+## Dependencies
+Requires: T43
+
+## Owner / Reviewer
+Owner: P2 (Analytics) · Reviewer: P1
+
+## Planning
+Priority: P0 · Phase: 5 · Estimate: 3h · Target date: 2026-10-13
+
+<!-- backlog-id: T44 -->
+"
+T45,Report page 5: Mitigation Queue,P2,P1,P2,5,Phase 5 – Fabric semantic model & Power BI,3,2026-10-13,T43,"phase-5,role:P2,priority:P2,type:feature","Critical products with exposure and no alternate supplier, sorted by exposed value | Open quarantine records count shown","## What needs to be done
+Cuttable if behind schedule (see cut order).
+
+## Acceptance criteria
+- [ ] Critical products with exposure and no alternate supplier, sorted by exposed value
+- [ ] Open quarantine records count shown
+
+## Dependencies
+Requires: T43
+
+## Owner / Reviewer
+Owner: P2 (Analytics) · Reviewer: P1
+
+## Planning
+Priority: P2 · Phase: 5 · Estimate: 3h · Target date: 2026-10-13
+
+<!-- backlog-id: T45 -->
+"
+T46,Report usability polish and last-refresh indicator,P2,P1,P1,5,Phase 5 – Fabric semantic model & Power BI,2,2026-10-13,T43,"phase-5,role:P2,priority:P1,type:feature","Slicers (date, region, category), tooltips, accessible titles, clear units (€, days, %) | Visible last-refresh card driven by job log end_ts","## What needs to be done
+Spec requirements that apply to every page.
+
+## Acceptance criteria
+- [ ] Slicers (date, region, category), tooltips, accessible titles, clear units (€, days, %)
+- [ ] Visible last-refresh card driven by job log end_ts
+
+## Dependencies
+Requires: T43
+
+## Owner / Reviewer
+Owner: P2 (Analytics) · Reviewer: P1
+
+## Planning
+Priority: P1 · Phase: 5 · Estimate: 2h · Target date: 2026-10-13
+
+<!-- backlog-id: T46 -->
+"
+T47,"Report validation, performance and usability test",P2,P1,P0,5,Phase 5 – Fabric semantic model & Power BI,2,2026-10-13,T43;T44,"phase-5,role:P2,priority:P0,type:test",5–6 report values reproduced with SQL on Gold in `docs/evidence/report_validation.md` | Performance Analyzer timings recorded per page | A peer from another team answers 3 questions using only the report,"## What needs to be done
+Prove the report is correct.
+
+## Acceptance criteria
+- [ ] 5–6 report values reproduced with SQL on Gold in `docs/evidence/report_validation.md`
+- [ ] Performance Analyzer timings recorded per page
+- [ ] A peer from another team answers 3 questions using only the report
+
+## Dependencies
+Requires: T43, T44
+
+## Owner / Reviewer
+Owner: P2 (Analytics) · Reviewer: P1
+
+## Planning
+Priority: P0 · Phase: 5 · Estimate: 2h · Target date: 2026-10-13
+
+<!-- backlog-id: T47 -->
+"
+T48,Azure boundary and naming convention (azure_design.md v1),P4,P3,P0,6,Phase 6 – Azure foundation,2,2026-10-05,T09,"phase-6,role:P4,priority:P0,type:docs",Subscription/RG boundary and permissions recorded | Naming convention `type-project-env` and resource list for dev/prod,"## What needs to be done
+Document account, subscription and Resource Group boundary.
+
+## Acceptance criteria
+- [ ] Subscription/RG boundary and permissions recorded
+- [ ] Naming convention `type-project-env` and resource list for dev/prod
+
+## Dependencies
+Requires: T09
+
+## Owner / Reviewer
+Owner: P4 (Cloud & DevOps) · Reviewer: P3
+
+## Planning
+Priority: P0 · Phase: 6 · Estimate: 2h · Target date: 2026-10-05
+
+<!-- backlog-id: T48 -->
+"
+T49,Provision Azure resources with a repeatable script (infra/),P4,P3,P0,6,Phase 6 – Azure foundation,5,2026-10-06,T48,"phase-6,role:P4,priority:P0,type:feature","RG dev (+prod), Storage (ADLS Gen2), Key Vault, ACR, App Service (container), Log Analytics + App Insights | System/user-assigned managed identity on the App Service | Script is re-runnable without errors","## What needs to be done
+Azure CLI or Bicep in `infra/`.
+
+## Acceptance criteria
+- [ ] RG dev (+prod), Storage (ADLS Gen2), Key Vault, ACR, App Service (container), Log Analytics + App Insights
+- [ ] System/user-assigned managed identity on the App Service
+- [ ] Script is re-runnable without errors
+
+## Dependencies
+Requires: T48
+
+## Owner / Reviewer
+Owner: P4 (Cloud & DevOps) · Reviewer: P3
+
+## Planning
+Priority: P0 · Phase: 6 · Estimate: 5h · Target date: 2026-10-06
+
+<!-- backlog-id: T49 -->
+"
+T50,IAM least privilege and GitHub OIDC federated credential,P4,P3,P0,6,Phase 6 – Azure foundation,3,2026-10-06,T49,"phase-6,role:P4,priority:P0,type:feature","Developers: Contributor on dev, Reader on prod | API managed identity: Key Vault Secrets User (+ Storage Blob Data Reader if needed) | GitHub Actions uses OIDC federated credential (no stored password) scoped to deployment | IAM table in azure_design.md; screenshot of RG Access control","## What needs to be done
+Roles per guide §6.2.
+
+## Acceptance criteria
+- [ ] Developers: Contributor on dev, Reader on prod
+- [ ] API managed identity: Key Vault Secrets User (+ Storage Blob Data Reader if needed)
+- [ ] GitHub Actions uses OIDC federated credential (no stored password) scoped to deployment
+- [ ] IAM table in azure_design.md; screenshot of RG Access control
+
+## Dependencies
+Requires: T49
+
+## Owner / Reviewer
+Owner: P4 (Cloud & DevOps) · Reviewer: P3
+
+## Planning
+Priority: P0 · Phase: 6 · Estimate: 3h · Target date: 2026-10-06
+
+<!-- backlog-id: T50 -->
+"
+T51,"Secrets management: Key Vault, KV references, GitHub environments",P4,P3,P0,6,Phase 6 – Azure foundation,2,2026-10-06,T49,"phase-6,role:P4,priority:P0,type:feature","Secrets (Databricks token, LLM key, API key) stored in Key Vault | App Service settings use Key Vault references | GitHub environments `dev`/`prod` created with OIDC IDs as secrets; screenshot of secret names only","## What needs to be done
+No secret ever in source control.
+
+## Acceptance criteria
+- [ ] Secrets (Databricks token, LLM key, API key) stored in Key Vault
+- [ ] App Service settings use Key Vault references
+- [ ] GitHub environments `dev`/`prod` created with OIDC IDs as secrets; screenshot of secret names only
+
+## Dependencies
+Requires: T49
+
+## Owner / Reviewer
+Owner: P4 (Cloud & DevOps) · Reviewer: P3
+
+## Planning
+Priority: P0 · Phase: 6 · Estimate: 2h · Target date: 2026-10-06
+
+<!-- backlog-id: T51 -->
+"
+T52,"Networking choices, Azure environment diagram and resource inventory",P4,P3,P1,6,Phase 6 – Azure foundation,3,2026-10-07,T49;T50,"phase-6,role:P4,priority:P1,type:docs","HTTPS only, Key Vault RBAC, no public blob access; private endpoints/VNet listed as next step | `docs/diagrams/azure_environment.png` with official icons | Resource inventory with naming and configuration responsibility","## What needs to be done
+Select and justify, don't over-engineer.
+
+## Acceptance criteria
+- [ ] HTTPS only, Key Vault RBAC, no public blob access; private endpoints/VNet listed as next step
+- [ ] `docs/diagrams/azure_environment.png` with official icons
+- [ ] Resource inventory with naming and configuration responsibility
+
+## Dependencies
+Requires: T49, T50
+
+## Owner / Reviewer
+Owner: P4 (Cloud & DevOps) · Reviewer: P3
+
+## Planning
+Priority: P1 · Phase: 6 · Estimate: 3h · Target date: 2026-10-07
+
+<!-- backlog-id: T52 -->
+"
+T53,"FastAPI skeleton with config, routers, /health and /ready",P3,P4,P0,7,Phase 7 – FastAPI integration layer,3,2026-10-05,T03,"phase-7,role:P3,priority:P0,type:feature",App runs with `uv run uvicorn team4_sc.api.main:app --reload`; Swagger at /docs | `GET /health` returns status (and version); `GET /ready` checks backend connectivity | Settings from env via pydantic-settings,"## What needs to be done
+Structure from guide §7.2 under `src/team4_sc/api/`.
+
+## Acceptance criteria
+- [ ] App runs with `uv run uvicorn team4_sc.api.main:app --reload`; Swagger at /docs
+- [ ] `GET /health` returns status (and version); `GET /ready` checks backend connectivity
+- [ ] Settings from env via pydantic-settings
+
+## Dependencies
+Requires: T03
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P0 · Phase: 7 · Estimate: 3h · Target date: 2026-10-05
+
+<!-- backlog-id: T53 -->
+"
+T54,Pydantic models and repository pattern with mock backend,P3,P4,P0,7,Phase 7 – FastAPI integration layer,4,2026-10-06,T53;T12,"phase-7,role:P3,priority:P0,type:feature","Request/response models (AnalyticsQuery, AnalyticsResult, etc.) with examples | Repository interface with MockRepository; `DATA_BACKEND=mock|databricks` switch","## What needs to be done
+Lets API and assistant work before Gold exists.
+
+## Acceptance criteria
+- [ ] Request/response models (AnalyticsQuery, AnalyticsResult, etc.) with examples
+- [ ] Repository interface with MockRepository; `DATA_BACKEND=mock|databricks` switch
+
+## Dependencies
+Requires: T53, T12
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P0 · Phase: 7 · Estimate: 4h · Target date: 2026-10-06
+
+<!-- backlog-id: T54 -->
+"
+T55,POST /analytics/query with parameterised KPI templates,P3,P4,P0,7,Phase 7 – FastAPI integration layer,4,2026-10-07,T54,"phase-7,role:P3,priority:P0,type:feature","KPI enum → SQL template dictionary; bind parameters only | Returns value, unit, filters_applied, source, as_of | Definitions match KPI ADR / DAX","## What needs to be done
+No free SQL: each KPI maps to a fixed parameterised query.
+
+## Acceptance criteria
+- [ ] KPI enum → SQL template dictionary; bind parameters only
+- [ ] Returns value, unit, filters_applied, source, as_of
+- [ ] Definitions match KPI ADR / DAX
+
+## Dependencies
+Requires: T54
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P0 · Phase: 7 · Estimate: 4h · Target date: 2026-10-07
+
+<!-- backlog-id: T55 -->
+"
+T56,Domain endpoint: GET /suppliers/{supplier_id}/scorecard,P3,P4,P0,7,Phase 7 – FastAPI integration layer,2,2026-10-07,T54,"phase-7,role:P3,priority:P0,type:feature","Returns on-time rate, fill rate, average delay for one supplier | Unknown supplier → 404 in standard error format","## What needs to be done
+Required domain-specific endpoint.
+
+## Acceptance criteria
+- [ ] Returns on-time rate, fill rate, average delay for one supplier
+- [ ] Unknown supplier → 404 in standard error format
+
+## Dependencies
+Requires: T54
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P0 · Phase: 7 · Estimate: 2h · Target date: 2026-10-07
+
+<!-- backlog-id: T56 -->
+"
+T57,Optional endpoint: GET /mitigation-queue with pagination,P3,P4,P2,7,Phase 7 – FastAPI integration layer,2,2026-10-12,T54,"phase-7,role:P3,priority:P2,type:feature","risk_level filter, page and page_size with bounds | Response includes pagination metadata","## What needs to be done
+Cuttable if behind schedule.
+
+## Acceptance criteria
+- [ ] risk_level filter, page and page_size with bounds
+- [ ] Response includes pagination metadata
+
+## Dependencies
+Requires: T54
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P2 · Phase: 7 · Estimate: 2h · Target date: 2026-10-12
+
+<!-- backlog-id: T57 -->
+"
+T58,Uniform error handling (400/401/404/422/429/503),P3,P4,P0,7,Phase 7 – FastAPI integration layer,2,2026-10-07,T53,"phase-7,role:P3,priority:P0,type:feature","`{error:{code,message,correlation_id}}` for all handled errors | Logical validation (e.g. date_from > date_to) returns 400; upstream failure returns 503","## What needs to be done
+Consistent error body per guide §7.4.
+
+## Acceptance criteria
+- [ ] `{error:{code,message,correlation_id}}` for all handled errors
+- [ ] Logical validation (e.g. date_from > date_to) returns 400; upstream failure returns 503
+
+## Dependencies
+Requires: T53
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P0 · Phase: 7 · Estimate: 2h · Target date: 2026-10-07
+
+<!-- backlog-id: T58 -->
+"
+T59,API security: X-API-Key and JWT validation design,P3,P4,P0,7,Phase 7 – FastAPI integration layer,3,2026-10-07,T53,"phase-7,role:P3,priority:P0,type:feature","Protected routes require `X-API-Key` (value from env/Key Vault) | JWT validation (signature, aud, iss, exp) implemented; local-key mock clearly documented if App Registration unavailable | /health and /ready remain open","## What needs to be done
+Dev: API key; deployed design: OAuth2 bearer/JWT (Entra ID).
+
+## Acceptance criteria
+- [ ] Protected routes require `X-API-Key` (value from env/Key Vault)
+- [ ] JWT validation (signature, aud, iss, exp) implemented; local-key mock clearly documented if App Registration unavailable
+- [ ] /health and /ready remain open
+
+## Dependencies
+Requires: T53
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P0 · Phase: 7 · Estimate: 3h · Target date: 2026-10-07
+
+<!-- backlog-id: T59 -->
+"
+T60,"Correlation IDs, structured JSON logs, timeouts and bounded retries",P3,P4,P1,7,Phase 7 – FastAPI integration layer,3,2026-10-08,T53,"phase-7,role:P3,priority:P1,type:feature","Middleware reads/creates `X-Correlation-ID` and returns it | JSON logs with timestamp, level, correlation_id, path, status, duration_ms; no secrets/PII | Databricks/LLM calls: timeout, ≤3 retries with exponential backoff (tenacity), 429 Retry-After handling","## What needs to be done
+Observability and resilient outbound calls.
+
+## Acceptance criteria
+- [ ] Middleware reads/creates `X-Correlation-ID` and returns it
+- [ ] JSON logs with timestamp, level, correlation_id, path, status, duration_ms; no secrets/PII
+- [ ] Databricks/LLM calls: timeout, ≤3 retries with exponential backoff (tenacity), 429 Retry-After handling
+
+## Dependencies
+Requires: T53
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P1 · Phase: 7 · Estimate: 3h · Target date: 2026-10-08
+
+<!-- backlog-id: T60 -->
+"
+T61,API unit tests (pytest + TestClient),P3,P4,P0,7,Phase 7 – FastAPI integration layer,3,2026-10-08,T55;T58;T59,"phase-7,role:P3,priority:P0,type:test","health 200, missing key 401, bad KPI 422, invalid range 400, valid request 200 | Tests under `tests/unit/api/`; all green","## What needs to be done
+Run in CI with mock backend.
+
+## Acceptance criteria
+- [ ] health 200, missing key 401, bad KPI 422, invalid range 400, valid request 200
+- [ ] Tests under `tests/unit/api/`; all green
+
+## Dependencies
+Requires: T55, T58, T59
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P0 · Phase: 7 · Estimate: 3h · Target date: 2026-10-08
+
+<!-- backlog-id: T61 -->
+"
+T62,OpenAPI export and Postman collection,P3,P4,P1,7,Phase 7 – FastAPI integration layer,2,2026-10-12,T55;T56,"phase-7,role:P3,priority:P1,type:docs","`openapi.json` committed; Swagger has descriptions and examples | `postman/team4.postman_collection.json` with one request per endpoint and per error case, using `{{base_url}}`, `{{api_key}}`","## What needs to be done
+Executable API examples.
+
+## Acceptance criteria
+- [ ] `openapi.json` committed; Swagger has descriptions and examples
+- [ ] `postman/team4.postman_collection.json` with one request per endpoint and per error case, using `{{base_url}}`, `{{api_key}}`
+
+## Dependencies
+Requires: T55, T56
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P1 · Phase: 7 · Estimate: 2h · Target date: 2026-10-12
+
+<!-- backlog-id: T62 -->
+"
+T63,Dockerfile for the API (uv-based),P3,P4,P1,7,Phase 7 – FastAPI integration layer,1,2026-10-08,T53,"phase-7,role:P3,priority:P1,type:feature",`docker build` succeeds locally; container serves /health on port 8000 | `uv sync --locked --no-dev` used; no secrets baked in,"## What needs to be done
+Image uses the same uv.lock as CI.
+
+## Acceptance criteria
+- [ ] `docker build` succeeds locally; container serves /health on port 8000
+- [ ] `uv sync --locked --no-dev` used; no secrets baked in
+
+## Dependencies
+Requires: T53
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P1 · Phase: 7 · Estimate: 1h · Target date: 2026-10-08
+
+<!-- backlog-id: T63 -->
+"
+T64,Databricks repository backend: connect API to Gold,P3,P4,P0,7,Phase 7 – FastAPI integration layer,3,2026-10-12,T55;T37;T51,"phase-7,role:P3,priority:P0,type:feature",`DATA_BACKEND=databricks` queries Gold via SQL warehouse with bind parameters | Credentials come from env/Key Vault | At least 3 KPI values match the Power BI report,"## What needs to be done
+Switch from mock to real data (with P2 for KPI matching).
+
+## Acceptance criteria
+- [ ] `DATA_BACKEND=databricks` queries Gold via SQL warehouse with bind parameters
+- [ ] Credentials come from env/Key Vault
+- [ ] At least 3 KPI values match the Power BI report
+
+## Dependencies
+Requires: T55, T37, T51
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P0 · Phase: 7 · Estimate: 3h · Target date: 2026-10-12
+
+<!-- backlog-id: T64 -->
+"
+T65,Assistant prompt templates and system rules,P3,P4,P0,8,Phase 8 – LangChain Core assistant,2,2026-10-08,T12,"phase-8,role:P3,priority:P0,type:feature","System prompt defines business context, available evidence, response format and limitations | Rules: only use tools, never invent numbers, refuse out-of-scope and consequential actions","## What needs to be done
+ChatPromptTemplate with system and human messages.
+
+## Acceptance criteria
+- [ ] System prompt defines business context, available evidence, response format and limitations
+- [ ] Rules: only use tools, never invent numbers, refuse out-of-scope and consequential actions
+
+## Dependencies
+Requires: T12
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P0 · Phase: 8 · Estimate: 2h · Target date: 2026-10-08
+
+<!-- backlog-id: T65 -->
+"
+T66,Typed tools: get_kpi and list_delayed_orders,P3,P4,P0,8,Phase 8 – LangChain Core assistant,3,2026-10-08,T54,"phase-8,role:P3,priority:P0,type:feature",Pydantic argument schemas with enums/limits (e.g. limit ≤ 50) | Tools bound with `bind_tools` | Optional `get_dataset_metadata` tool,"## What needs to be done
+One KPI/aggregate tool and one filtered-detail tool, both using the API repository.
+
+## Acceptance criteria
+- [ ] Pydantic argument schemas with enums/limits (e.g. limit ≤ 50)
+- [ ] Tools bound with `bind_tools`
+- [ ] Optional `get_dataset_metadata` tool
+
+## Dependencies
+Requires: T54
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P0 · Phase: 8 · Estimate: 3h · Target date: 2026-10-08
+
+<!-- backlog-id: T66 -->
+"
+T67,"Agent loop: tool-call detection, allow-list, validation, ToolMessage",P3,P4,P0,8,Phase 8 – LangChain Core assistant,5,2026-10-09,T65;T66,"phase-8,role:P3,priority:P0,type:feature","Allow-list check and Pydantic validation of arguments; errors returned as ToolMessage | Tool execution with timeout; NO_DATA/NOT_FOUND returned, never fabricated | `ToolMessage(tool_call_id=...)` appended; max 3 rounds","## What needs to be done
+`src/team4_sc/assistant/agent.py` execution path (guide §8.3).
+
+## Acceptance criteria
+- [ ] Allow-list check and Pydantic validation of arguments; errors returned as ToolMessage
+- [ ] Tool execution with timeout; NO_DATA/NOT_FOUND returned, never fabricated
+- [ ] `ToolMessage(tool_call_id=...)` appended; max 3 rounds
+
+## Dependencies
+Requires: T65, T66
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P0 · Phase: 8 · Estimate: 5h · Target date: 2026-10-09
+
+<!-- backlog-id: T67 -->
+"
+T68,Structured output (AssistantAnswer) and execution-path logging,P3,P4,P0,8,Phase 8 – LangChain Core assistant,2,2026-10-09,T67,"phase-8,role:P3,priority:P0,type:feature","`with_structured_output(AssistantAnswer)` with answer, evidence, filters, source_or_measure, limitations, in_scope | Each step logged with the same correlation_id","## What needs to be done
+Evidence-based, traceable answers.
+
+## Acceptance criteria
+- [ ] `with_structured_output(AssistantAnswer)` with answer, evidence, filters, source_or_measure, limitations, in_scope
+- [ ] Each step logged with the same correlation_id
+
+## Dependencies
+Requires: T67
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P0 · Phase: 8 · Estimate: 2h · Target date: 2026-10-09
+
+<!-- backlog-id: T68 -->
+"
+T69,POST /assistant/query endpoint,P3,P4,P0,8,Phase 8 – LangChain Core assistant,2,2026-10-09,T68;T58,"phase-8,role:P3,priority:P0,type:feature",Accepts `{question}` and returns AssistantAnswer | Secured like other protected endpoints; errors in standard format,"## What needs to be done
+Expose the assistant through the API.
+
+## Acceptance criteria
+- [ ] Accepts `{question}` and returns AssistantAnswer
+- [ ] Secured like other protected endpoints; errors in standard format
+
+## Dependencies
+Requires: T68, T58
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P0 · Phase: 8 · Estimate: 2h · Target date: 2026-10-09
+
+<!-- backlog-id: T69 -->
+"
+T70,Assistant tests with fake LLM for the 7 scenarios,P3,P4,P0,8,Phase 8 – LangChain Core assistant,3,2026-10-12,T67;T68,"phase-8,role:P3,priority:P0,type:test","GenericFakeChatModel (or mock) returning predefined tool_calls | Covers KPI, detail, comparison, NOT_FOUND, forbidden action, out-of-scope, bad arguments | Tests under `tests/unit/assistant/`; green in CI","## What needs to be done
+Deterministic tests without an API key.
+
+## Acceptance criteria
+- [ ] GenericFakeChatModel (or mock) returning predefined tool_calls
+- [ ] Covers KPI, detail, comparison, NOT_FOUND, forbidden action, out-of-scope, bad arguments
+- [ ] Tests under `tests/unit/assistant/`; green in CI
+
+## Dependencies
+Requires: T67, T68
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P0 · Phase: 8 · Estimate: 3h · Target date: 2026-10-12
+
+<!-- backlog-id: T70 -->
+"
+T71,Grounded-response evidence on real Gold data,P3,P4,P1,8,Phase 8 – LangChain Core assistant,2,2026-10-13,T64;T69,"phase-8,role:P3,priority:P1,type:test",7 scenario outputs saved as JSON in `docs/evidence/assistant/` with full execution log | Numbers match Gold / Power BI,"## What needs to be done
+Demo-ready examples.
+
+## Acceptance criteria
+- [ ] 7 scenario outputs saved as JSON in `docs/evidence/assistant/` with full execution log
+- [ ] Numbers match Gold / Power BI
+
+## Dependencies
+Requires: T64, T69
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P1 · Phase: 8 · Estimate: 2h · Target date: 2026-10-13
+
+<!-- backlog-id: T71 -->
+"
+T72,CI v1: lint + test workflow and required status checks,P4,P3,P0,9,Phase 9 – CI/CD (GitHub Actions),2,2026-10-07,T03;T04,"phase-9,role:P4,priority:P0,type:feature","`.github/workflows/ci-cd.yml` triggers on pull_request and push to main | `lint` (ruff check + format check) and `test` (pytest, DATA_BACKEND=mock) jobs with `needs` | `lint` and `test` added as required status checks on main","## What needs to be done
+Start small and early (guide §9.1).
+
+## Acceptance criteria
+- [ ] `.github/workflows/ci-cd.yml` triggers on pull_request and push to main
+- [ ] `lint` (ruff check + format check) and `test` (pytest, DATA_BACKEND=mock) jobs with `needs`
+- [ ] `lint` and `test` added as required status checks on main
+
+## Dependencies
+Requires: T03, T04
+
+## Owner / Reviewer
+Owner: P4 (Cloud & DevOps) · Reviewer: P3
+
+## Planning
+Priority: P0 · Phase: 9 · Estimate: 2h · Target date: 2026-10-07
+
+<!-- backlog-id: T72 -->
+"
+T73,"Build job: Docker image tagged with SHA, pushed to ACR via OIDC",P4,P3,P0,9,Phase 9 – CI/CD (GitHub Actions),3,2026-10-08,T72;T63;T50,"phase-9,role:P4,priority:P0,type:feature",azure/login via OIDC; no stored credentials | Image tagged `${{ github.sha }}` pushed to ACR,"## What needs to be done
+Reproducible artifact on push to main only.
+
+## Acceptance criteria
+- [ ] azure/login via OIDC; no stored credentials
+- [ ] Image tagged `${{ github.sha }}` pushed to ACR
+
+## Dependencies
+Requires: T72, T63, T50
+
+## Owner / Reviewer
+Owner: P4 (Cloud & DevOps) · Reviewer: P3
+
+## Planning
+Priority: P0 · Phase: 9 · Estimate: 3h · Target date: 2026-10-08
+
+<!-- backlog-id: T73 -->
+"
+T74,deploy-dev job with smoke test,P4,P3,P0,9,Phase 9 – CI/CD (GitHub Actions),3,2026-10-09,T73;T51,"phase-9,role:P4,priority:P0,type:feature","Runs in environment `dev` after build | Smoke test `GET /health` returns 200, otherwise job fails","## What needs to be done
+Deploy the built image to App Service dev.
+
+## Acceptance criteria
+- [ ] Runs in environment `dev` after build
+- [ ] Smoke test `GET /health` returns 200, otherwise job fails
+
+## Dependencies
+Requires: T73, T51
+
+## Owner / Reviewer
+Owner: P4 (Cloud & DevOps) · Reviewer: P3
+
+## Planning
+Priority: P0 · Phase: 9 · Estimate: 3h · Target date: 2026-10-09
+
+<!-- backlog-id: T74 -->
+"
+T75,"deploy-prod with approval, rollback workflow and docs/cicd.md",P4,P3,P1,9,Phase 9 – CI/CD (GitHub Actions),4,2026-10-13,T74,"phase-9,role:P4,priority:P1,type:feature","Environment `prod` with required reviewers (P4, P5); same image tag as dev | `workflow_dispatch` rollback with `image_tag` input | `docs/cicd.md`: rollback, config promotion, evidence required before approval","## What needs to be done
+Staged release with approvals (prod deploy may remain pending approval).
+
+## Acceptance criteria
+- [ ] Environment `prod` with required reviewers (P4, P5); same image tag as dev
+- [ ] `workflow_dispatch` rollback with `image_tag` input
+- [ ] `docs/cicd.md`: rollback, config promotion, evidence required before approval
+
+## Dependencies
+Requires: T74
+
+## Owner / Reviewer
+Owner: P4 (Cloud & DevOps) · Reviewer: P3
+
+## Planning
+Priority: P1 · Phase: 9 · Estimate: 4h · Target date: 2026-10-13
+
+<!-- backlog-id: T75 -->
+"
+T76,CI/CD acceptance evidence,P4,P3,P0,9,Phase 9 – CI/CD (GitHub Actions),1,2026-10-13,T75,"phase-9,role:P4,priority:P0,type:test",Small change (e.g. version in /health) via PR: lint/test run automatically | After merge: build → deploy-dev → deploy-prod held for approval | Screenshots saved in `docs/evidence/`,"## What needs to be done
+Prove the acceptance condition with a controlled change.
+
+## Acceptance criteria
+- [ ] Small change (e.g. version in /health) via PR: lint/test run automatically
+- [ ] After merge: build → deploy-dev → deploy-prod held for approval
+- [ ] Screenshots saved in `docs/evidence/`
+
+## Dependencies
+Requires: T75
+
+## Owner / Reviewer
+Owner: P4 (Cloud & DevOps) · Reviewer: P3
+
+## Planning
+Priority: P0 · Phase: 9 · Estimate: 1h · Target date: 2026-10-13
+
+<!-- backlog-id: T76 -->
+"
+T77,End-to-end integration test (batch_002 → Gold → API → assistant),P4,P3,P0,10,"Phase 10 – Testing, operations & bonus",4,2026-10-13,T37;T64;T69,"phase-10,role:P4,priority:P0,type:test",Uploading batch_002 and running the job changes Gold values | API returns the new value and assistant cites it | Result documented with evidence,"## What needs to be done
+`tests/integration/e2e.sh` or notebook.
+
+## Acceptance criteria
+- [ ] Uploading batch_002 and running the job changes Gold values
+- [ ] API returns the new value and assistant cites it
+- [ ] Result documented with evidence
+
+## Dependencies
+Requires: T37, T64, T69
+
+## Owner / Reviewer
+Owner: P4 (Cloud & DevOps) · Reviewer: P3
+
+## Planning
+Priority: P0 · Phase: 10 · Estimate: 4h · Target date: 2026-10-13
+
+<!-- backlog-id: T77 -->
+"
+T78,Monitoring and log evidence,P4,P3,P1,10,"Phase 10 – Testing, operations & bonus",2,2026-10-13,T37;T74,"phase-10,role:P4,priority:P1,type:feature",Databricks job failure notification configured | Application Insights shows requests/failures; one request traced by correlation_id (screenshot) | Optional Pipeline Health page in Power BI,"## What needs to be done
+Operational visibility.
+
+## Acceptance criteria
+- [ ] Databricks job failure notification configured
+- [ ] Application Insights shows requests/failures; one request traced by correlation_id (screenshot)
+- [ ] Optional Pipeline Health page in Power BI
+
+## Dependencies
+Requires: T37, T74
+
+## Owner / Reviewer
+Owner: P4 (Cloud & DevOps) · Reviewer: P3
+
+## Planning
+Priority: P1 · Phase: 10 · Estimate: 2h · Target date: 2026-10-13
+
+<!-- backlog-id: T78 -->
+"
+T79,Architecture and lineage diagram (source → report → API),P4,P3,P0,10,"Phase 10 – Testing, operations & bonus",2,2026-10-09,T32;T48,"phase-10,role:P4,priority:P0,type:docs","Covers sources, Bronze/Silver/Gold, Fabric/Power BI, FastAPI, LangChain, Azure resources and CI/CD | Linked from README","## What needs to be done
+`docs/diagrams/architecture.png` (with P5).
+
+## Acceptance criteria
+- [ ] Covers sources, Bronze/Silver/Gold, Fabric/Power BI, FastAPI, LangChain, Azure resources and CI/CD
+- [ ] Linked from README
+
+## Dependencies
+Requires: T32, T48
+
+## Owner / Reviewer
+Owner: P4 (Cloud & DevOps) · Reviewer: P3
+
+## Planning
+Priority: P0 · Phase: 10 · Estimate: 2h · Target date: 2026-10-09
+
+<!-- backlog-id: T79 -->
+"
+T80,Runbook with known limitations (docs/runbook.md),P5,P2,P0,10,"Phase 10 – Testing, operations & bonus",3,2026-10-13,T37;T75,"phase-10,role:P5,priority:P0,type:docs","Prerequisites, data generation, loading a batch, failed-batch recovery, semantic model refresh, deploy/rollback | Known limitations listed | A member who did not build the pipeline follows the runbook successfully","## What needs to be done
+Anyone can rerun the solution.
+
+## Acceptance criteria
+- [ ] Prerequisites, data generation, loading a batch, failed-batch recovery, semantic model refresh, deploy/rollback
+- [ ] Known limitations listed
+- [ ] A member who did not build the pipeline follows the runbook successfully
+
+## Dependencies
+Requires: T37, T75
+
+## Owner / Reviewer
+Owner: P5 (Project Manager) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 10 · Estimate: 3h · Target date: 2026-10-13
+
+<!-- backlog-id: T80 -->
+"
+T81,Bonus: knowledge graph and supplier_alternatives_graph tool,P3,P4,P2,10,"Phase 10 – Testing, operations & bonus",5,2026-10-13,T35;T67,"phase-10,role:P3,priority:P2,type:feature","networkx graph (Supplier, Product, Location, Shipment) built from Gold and stored as JSON | LangChain tool answers 'if SUP-017 stops, which critical products are affected and who is the alternate?' | `src/team4_sc/assistant/graph.py` with tests","## What needs to be done
+Only start if the full baseline works by Mon 12/10 noon.
+
+## Acceptance criteria
+- [ ] networkx graph (Supplier, Product, Location, Shipment) built from Gold and stored as JSON
+- [ ] LangChain tool answers 'if SUP-017 stops, which critical products are affected and who is the alternate?'
+- [ ] `src/team4_sc/assistant/graph.py` with tests
+
+## Dependencies
+Requires: T35, T67
+
+## Owner / Reviewer
+Owner: P3 (AI & API) · Reviewer: P4
+
+## Planning
+Priority: P2 · Phase: 10 · Estimate: 5h · Target date: 2026-10-13
+
+<!-- backlog-id: T81 -->
+"
+T82,Build presentation deck (12 slides) from collected evidence,P5,P2,P0,11,Phase 11 – Final presentation & delivery,4,2026-10-13,T47;T71;T76,"phase-11,role:P5,priority:P0,type:docs",12 slides per guide §11.0 with speaker notes and real screenshots from `docs/evidence/` | Each member owns their slides | Deck locked by end of Tue 13/10,"## What needs to be done
+Deck supports the live demo; locked Tue 13/10.
+
+## Acceptance criteria
+- [ ] 12 slides per guide §11.0 with speaker notes and real screenshots from `docs/evidence/`
+- [ ] Each member owns their slides
+- [ ] Deck locked by end of Tue 13/10
+
+## Dependencies
+Requires: T47, T71, T76
+
+## Owner / Reviewer
+Owner: P5 (Project Manager) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 11 · Estimate: 4h · Target date: 2026-10-13
+
+<!-- backlog-id: T82 -->
+"
+T83,"Demo script, Plan B recording and environment warm-up checklist",P5,P2,P0,11,Phase 11 – Final presentation & delivery,2,2026-10-13,T77,"phase-11,role:P5,priority:P0,type:docs","Minute-by-minute script with presenter per section | Backup video/screenshots for every live part | Warm-up checklist (cluster started 15 min before, tokens valid)","## What needs to be done
+15-minute live flow from raw file to assistant answer.
+
+## Acceptance criteria
+- [ ] Minute-by-minute script with presenter per section
+- [ ] Backup video/screenshots for every live part
+- [ ] Warm-up checklist (cluster started 15 min before, tokens valid)
+
+## Dependencies
+Requires: T77
+
+## Owner / Reviewer
+Owner: P5 (Project Manager) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 11 · Estimate: 2h · Target date: 2026-10-13
+
+<!-- backlog-id: T83 -->
+"
+T84,Two timed rehearsals and cross-role Q&A preparation,P5,P2,P0,11,Phase 11 – Final presentation & delivery,3,2026-10-14,T82;T83,"phase-11,role:P5,priority:P0,type:coordination",Two full timed rehearsals on Wed 14/10 | Each member prepares 2 questions on another member's area; common evaluator questions answered,"## What needs to be done
+Shared understanding is graded.
+
+## Acceptance criteria
+- [ ] Two full timed rehearsals on Wed 14/10
+- [ ] Each member prepares 2 questions on another member's area; common evaluator questions answered
+
+## Dependencies
+Requires: T82, T83
+
+## Owner / Reviewer
+Owner: P5 (Project Manager) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 11 · Estimate: 3h · Target date: 2026-10-14
+
+<!-- backlog-id: T84 -->
+"
+T85,Final delivery checklist and repository clean-up,P5,P2,P0,11,Phase 11 – Final presentation & delivery,2,2026-10-14,T80;T82,"phase-11,role:P5,priority:P0,type:coordination",Every deliverable of spec §7 located in the repo | No secrets in repo (search + secret scanning enabled) | One-page README with links to every document | All issues Done or documented as out of scope via ADR,"## What needs to be done
+Run on Mon 12/10 and again Wed 14/10.
+
+## Acceptance criteria
+- [ ] Every deliverable of spec §7 located in the repo
+- [ ] No secrets in repo (search + secret scanning enabled)
+- [ ] One-page README with links to every document
+- [ ] All issues Done or documented as out of scope via ADR
+
+## Dependencies
+Requires: T80, T82
+
+## Owner / Reviewer
+Owner: P5 (Project Manager) · Reviewer: P2
+
+## Planning
+Priority: P0 · Phase: 11 · Estimate: 2h · Target date: 2026-10-14
+
+<!-- backlog-id: T85 -->
+"
