@@ -87,3 +87,16 @@ desktop.ini
 
 # --- Claude Code local settings ---
 .claude/settings.local.json
+
+# --- Team 4 ---
+.env
+*.key
+__pycache__/
+.venv/
+dist/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+test-results.xml
+.DS_Store
