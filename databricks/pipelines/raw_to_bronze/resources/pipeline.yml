@@ -1,0 +1,43 @@
+# Databricks Asset Bundle resources: Bronze ETL pipeline + job that runs it and the checks.
+# Deploy:  databricks bundle deploy -t dev      Run:  databricks bundle run bronze_job -t dev
+resources:
+  pipelines:
+    bronze_pipeline:
+      name: "team4-supply-chain-bronze-${bundle.target}"
+      catalog: data2026acc123456
+      schema: team4
+      serverless: true
+      continuous: false             # triggered: processes new files, then stops
+      channel: CURRENT
+      libraries:
+        - file:
+            path: ../pipelines/bronze_pipeline.py
+      configuration:
+        bronze.landing_root: /Volumes/data2026acc123456/team4/landing
+        bronze.src_path: ${workspace.file_path}/src
+      event_log:
+        catalog: data2026acc123456
+        schema: team4
+        name: ops_pipeline_event_log
+      notifications:
+        - email_recipients: ["team4-alerts@example.com"]
+          alerts: ["on-update-failure", "on-flow-failure"]
+
+  jobs:
+    bronze_job:
+      name: "team4-supply-chain-bronze-job-${bundle.target}"
+      max_concurrent_runs: 1
+      schedule:
+        quartz_cron_expression: "0 0 6 * * ?"   # daily 06:00 UTC
+        timezone_id: "UTC"
+        pause_status: PAUSED
+      tasks:
+        - task_key: run_bronze_pipeline
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.bronze_pipeline.id}
+            full_refresh: false
+        - task_key: bronze_checks
+          depends_on:
+            - task_key: run_bronze_pipeline
+          notebook_task:
+            notebook_path: ../notebooks/02_bronze_checks.py
