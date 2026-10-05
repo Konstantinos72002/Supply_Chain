@@ -1,0 +1,3 @@
+supplier_id,supplier_name,country_code,region,default_currency,contract_lead_time_days,risk_rating,is_active,onboarded_date,source_line_number,dq_rule,dq_description
+SUP-0007,Horizon Components Pvt Ltd,IN,APAC,EURO,44,LOW,true,2023-12-03,8,currency_inconsistency,default_currency 'EURO' is not a valid ISO 4217 code (expected INR)
+SUP-0050,Pioneer Metals S.L.,ES,EMEA,EUR,35,MEDIUM,true,2020-12-12,52,duplicate_supplier,Duplicate supplier_id SUP-0050 with conflicting attributes

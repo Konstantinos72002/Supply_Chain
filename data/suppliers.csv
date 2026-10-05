@@ -1,0 +1,52 @@
+supplier_id,supplier_name,country_code,region,default_currency,contract_lead_time_days,risk_rating,is_active,onboarded_date
+SUP-0001,"Vertex Supply Co., Ltd.",CN,APAC,CNY,41,LOW,true,2017-05-28
+SUP-0002,"Meridian Manufacturing Co., Ltd.",CN,APAC,CNY,52,MEDIUM,true,2019-11-29
+SUP-0003,Vertex Materials GmbH,DE,EMEA,EUR,8,LOW,true,2017-02-23
+SUP-0004,Silverline Electronics Ltd,GB,EMEA,GBP,17,MEDIUM,true,2015-09-15
+SUP-0005,Meridian Electronics Sp. z o.o.,PL,EMEA,PLN,8,MEDIUM,true,2018-09-07
+SUP-0006,"Orion Metals Co., Ltd.",CN,APAC,CNY,55,LOW,true,2019-07-16
+SUP-0007,Horizon Components Pvt Ltd,IN,APAC,EURO,44,LOW,true,2023-12-03
+SUP-0008,Crescent Components GmbH,DE,EMEA,EUR,11,MEDIUM,true,2015-05-22
+SUP-0009,Orion Industrial Sp. z o.o.,PL,EMEA,PLN,19,LOW,true,2023-03-03
+SUP-0010,"Pacific Manufacturing Co., Ltd.",TW,APAC,USD,35,LOW,true,2018-06-29
+SUP-0011,Atlas Supply JSC,VN,APAC,USD,51,HIGH,false,2015-09-28
+SUP-0012,Crescent Supply GmbH,DE,EMEA,EUR,18,HIGH,true,2016-05-01
+SUP-0013,Granite Precision K.K.,JP,APAC,JPY,55,LOW,true,2022-09-09
+SUP-0014,Vertex Supply S.p.A.,IT,EMEA,EUR,14,HIGH,false,2015-11-29
+SUP-0015,Meridian Packaging Inc.,US,AMER,USD,33,LOW,true,2022-09-23
+SUP-0016,Ironwood Components S.A. de C.V.,MX,AMER,MXN,27,LOW,true,2016-01-07
+SUP-0017,Summit Chemicals B.V.,NL,EMEA,EUR,14,LOW,true,2023-12-22
+SUP-0018,Silverline Electronics Inc.,US,AMER,USD,24,LOW,false,2016-12-22
+SUP-0019,Evergreen Precision GmbH,DE,EMEA,EUR,14,MEDIUM,true,2018-10-10
+SUP-0020,Orion Manufacturing B.V.,NL,EMEA,EUR,17,LOW,true,2018-07-15
+SUP-0021,Summit Chemicals S.A.,GR,EMEA,EUR,12,MEDIUM,true,2019-06-30
+SUP-0022,"Pioneer Supply Co., Ltd.",CN,APAC,CNY,32,LOW,true,2016-08-20
+SUP-0023,Crescent Components S.A.,GR,EMEA,EUR,14,HIGH,true,2022-07-12
+SUP-0024,Crescent Supply K.K.,JP,APAC,JPY,51,MEDIUM,true,2020-02-21
+SUP-0025,"Silverline Chemicals Co., Ltd.",CN,APAC,CNY,51,LOW,true,2024-11-22
+SUP-0026,Ironwood Chemicals Sp. z o.o.,PL,EMEA,PLN,19,LOW,true,2018-11-04
+SUP-0027,Ironwood Manufacturing Pvt Ltd,IN,APAC,INR,51,LOW,true,2017-04-17
+SUP-0028,Ironwood Precision Inc.,US,AMER,USD,22,LOW,false,2022-06-26
+SUP-0029,Granite Materials B.V.,NL,EMEA,EUR,14,MEDIUM,true,2015-09-10
+SUP-0030,Orion Precision GmbH,DE,EMEA,EUR,17,LOW,true,2022-01-02
+SUP-0031,"Silverline Supply Co., Ltd.",KR,APAC,KRW,53,LOW,true,2019-09-05
+SUP-0032,Apex Electronics GmbH,DE,EMEA,EUR,12,LOW,true,2016-01-29
+SUP-0033,Vertex Materials S.A. de C.V.,MX,AMER,MXN,26,MEDIUM,true,2022-06-15
+SUP-0034,Vertex Manufacturing Pvt Ltd,IN,APAC,INR,34,LOW,true,2020-10-16
+SUP-0035,Lumen Electronics Inc.,US,AMER,USD,24,MEDIUM,false,2018-09-25
+SUP-0036,Lumen Materials Inc.,US,AMER,USD,39,MEDIUM,true,2016-03-25
+SUP-0037,Nordic Manufacturing SAS,FR,EMEA,EUR,16,MEDIUM,true,2021-11-16
+SUP-0038,"Summit Components Co., Ltd.",CN,APAC,CNY,33,LOW,true,2016-01-30
+SUP-0039,Pioneer Materials S.L.,ES,EMEA,EUR,18,MEDIUM,true,2019-04-02
+SUP-0040,Silverline Components SAS,FR,EMEA,EUR,10,LOW,true,2020-04-06
+SUP-0041,Horizon Materials B.V.,NL,EMEA,EUR,16,LOW,true,2025-05-19
+SUP-0042,Orion Components S.p.A.,IT,EMEA,EUR,19,HIGH,true,2015-06-07
+SUP-0043,Lumen Chemicals S.p.A.,IT,EMEA,EUR,7,MEDIUM,true,2017-11-08
+SUP-0044,"Granite Packaging Co., Ltd.",CN,APAC,CNY,54,MEDIUM,false,2021-12-02
+SUP-0045,Orion Components Inc.,US,AMER,USD,35,MEDIUM,true,2022-06-01
+SUP-0046,Keystone Components GmbH,DE,EMEA,EUR,20,HIGH,true,2015-08-21
+SUP-0047,Evergreen Materials S.p.A.,IT,EMEA,EUR,14,HIGH,true,2025-04-13
+SUP-0048,Horizon Manufacturing Pvt Ltd,IN,APAC,INR,38,LOW,true,2017-05-28
+SUP-0049,Meridian Metals K.K.,JP,APAC,JPY,34,MEDIUM,true,2020-06-21
+SUP-0050,Pioneer Metals S.L.,ES,EMEA,EUR,21,HIGH,true,2020-12-12
+SUP-0050,Pioneer Metals S.L.,ES,EMEA,EUR,35,MEDIUM,true,2020-12-12
