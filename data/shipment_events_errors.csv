@@ -1,0 +1,306 @@
+event_id,shipment_id,po_id,status,event_ts,po_line_number,product_id,quantity,source_line_number,dq_rule,dq_description
+EVT-0000002,SHP-000019,PO-2025-00017,CREATED,2025-10-05T09:32:00+01:00,2,PRD-95922,7068.0,2,unknown_product,items[1].product_id PRD-95922 does not exist in products.csv (inherited from purchase order line)
+EVT-0000004,SHP-000019,PO-2025-00017,PICKED_UP,2025-10-06T18:35:00+01:00,2,PRD-95922,7068.0,4,unknown_product,items[1].product_id PRD-95922 does not exist in products.csv (inherited from purchase order line)
+EVT-0000010,SHP-000019,PO-2025-00017,IN_TRANSIT,2025-10-08T16:45:48+02:00,2,PRD-95922,7068.0,10,unknown_product,items[1].product_id PRD-95922 does not exist in products.csv (inherited from purchase order line)
+EVT-0000024,SHP-000019,PO-2025-00017,OUT_FOR_DELIVERY,2025-10-11T09:32:00+02:00,2,PRD-95922,7068.0,24,unknown_product,items[1].product_id PRD-95922 does not exist in products.csv (inherited from purchase order line)
+EVT-0000025,SHP-000019,PO-2025-00017,DELIVERED,2025-10-11T12:32:00+02:00,2,PRD-95922,7068.0,25,unknown_product,items[1].product_id PRD-95922 does not exist in products.csv (inherited from purchase order line)
+EVT-0000032,SHP-000056,PO-2025-00054,CREATED,2025-10-13T08:48:00+05:30,1,PRD-99059,785.0,32,unknown_product,items[0].product_id PRD-99059 does not exist in products.csv (inherited from purchase order line)
+EVT-0000055,SHP-000056,PO-2025-00054,PICKED_UP,2025-10-16T12:47:00+05:30,1,PRD-99059,785.0,55,unknown_product,items[0].product_id PRD-99059 does not exist in products.csv (inherited from purchase order line)
+EVT-0000087,SHP-000056,PO-2025-00054,IN_TRANSIT,2025-10-18T23:02:31+05:30,1,PRD-99059,785.0,87,unknown_product,items[0].product_id PRD-99059 does not exist in products.csv (inherited from purchase order line)
+EVT-0000306,SHP-000106,PO-2025-00101,CREATED,2025-11-02T07:03:00+01:00,1,PRD-00126,-18375.0,306,negative_quantity,items[0].quantity is negative (-18375.0)
+EVT-0000357,SHP-000090,PO-2025-00085,CREATED,2025-11-05T08:08:00+01:00,2,PRD-93744,4388.0,357,unknown_product,items[1].product_id PRD-93744 does not exist in products.csv
+EVT-0000380,SHP-000111,PO-2025-00106,DELIVERED,2025-11-06T10:46:00+01:00,2,PRD-00109,-5657.0,380,negative_quantity,items[1].quantity is negative (-5657.0)
+EVT-0000391,SHP-000015,PO-2025-00013,CUSTOMS,2025-11-06T20:21:43+02:00,1,PRD-00076,-6576.0,391,negative_quantity,items[0].quantity is negative (-6576.0)
+EVT-0009382,SHP-000110,PO-2025-00105,IN_TRANSIT,2025-11-07T22:42:00+01:00,1,PRD-00167,13419.39,405,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0000396,SHP-000097,PO-2025-00091,CREATED,2025-11-07T07:48:00+02:00,1,PRD-00160,207.0,430,duplicate_event,Exact duplicate of event_id EVT-0000396
+EVT-0000458,SHP-000056,PO-2025-00054,IN_TRANSIT,2025-11-09T14:52:12+01:00,1,PRD-99059,785.0,460,unknown_product,items[0].product_id PRD-99059 does not exist in products.csv (inherited from purchase order line)
+EVT-0009393,SHP-000028,PO-2025-00026,IN_TRANSIT,2025-11-11T11:43:00+01:00,1,PRD-00256,448.8,482,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0000500,SHP-000056,PO-2025-00054,CUSTOMS,2025-11-12T01:07:43+01:00,1,PRD-99059,785.0,503,unknown_product,items[0].product_id PRD-99059 does not exist in products.csv (inherited from purchase order line)
+EVT-0000563,SHP-000056,PO-2025-00054,OUT_FOR_DELIVERY,2025-11-15T12:31:00+01:00,1,PRD-99059,785.0,566,unknown_product,items[0].product_id PRD-99059 does not exist in products.csv (inherited from purchase order line)
+EVT-0000570,SHP-000056,PO-2025-00054,DELIVERED,2025-11-15T16:31:00+01:00,1,PRD-99059,785.0,573,unknown_product,items[0].product_id PRD-99059 does not exist in products.csv (inherited from purchase order line)
+EVT-0000613,SHP-000152,PO-2025-00145,PICKED_UP,2025-11-17T17:43:00+01:00,1,PRD-92265,6102.01,616,unknown_product,items[0].product_id PRD-92265 does not exist in products.csv
+EVT-0000648,SHP-000193,PO-2025-00184,CREATED,2025-11-19T07:15:00+02:00,1,PRD-91910,12995.0,651,unknown_product,items[0].product_id PRD-91910 does not exist in products.csv (inherited from purchase order line)
+EVT-0000668,SHP-000218,PO-2025-00207,CREATED,2025-11-20T07:06:00+01:00,2,PRD-94359,345.0,671,unknown_product,items[1].product_id PRD-94359 does not exist in products.csv (inherited from purchase order line)
+EVT-0000728,SHP-000193,PO-2025-00184,PICKED_UP,2025-11-22T15:25:00+02:00,1,PRD-91910,12995.0,731,unknown_product,items[0].product_id PRD-91910 does not exist in products.csv (inherited from purchase order line)
+EVT-0000731,SHP-000218,PO-2025-00207,PICKED_UP,2025-11-22T15:27:00+01:00,2,PRD-94359,345.0,734,unknown_product,items[1].product_id PRD-94359 does not exist in products.csv (inherited from purchase order line)
+EVT-0000750,SHP-000087,PO-2025-00082,DELIVERED,2025-10-08T11:37:00+01:00,1,PRD-00099,2451.73,753,delivery_before_order,DELIVERED event_ts is before PO order_date 2025-10-18 (also breaks the status sequence)
+EVT-0000768,SHP-000218,PO-2025-00207,IN_TRANSIT,2025-11-24T13:03:00+01:00,2,PRD-94359,345.0,771,unknown_product,items[1].product_id PRD-94359 does not exist in products.csv (inherited from purchase order line)
+EVT-0000773,SHP-000193,PO-2025-00184,IN_TRANSIT,2025-11-24T23:52:12+01:00,1,PRD-91910,12995.0,776,unknown_product,items[0].product_id PRD-91910 does not exist in products.csv (inherited from purchase order line)
+EVT-0000783,SHP-000182,PO-2025-00173,DELIVERED,2025-10-31T13:44:00+02:00,1,PRD-00262,1668.22,786,delivery_before_order,DELIVERED event_ts is before PO order_date 2025-11-11 (also breaks the status sequence)
+EVT-0000818,SHP-000218,PO-2025-00207,OUT_FOR_DELIVERY,2025-11-27T03:27:00+01:00,2,PRD-94359,345.0,821,unknown_product,items[1].product_id PRD-94359 does not exist in products.csv (inherited from purchase order line)
+EVT-0000823,SHP-000218,PO-2025-00207,DELIVERED,2025-11-27T09:27:00+01:00,2,PRD-94359,345.0,826,unknown_product,items[1].product_id PRD-94359 does not exist in products.csv (inherited from purchase order line)
+EVT-0000842,SHP-000193,PO-2025-00184,OUT_FOR_DELIVERY,2025-11-28T07:03:00+01:00,1,PRD-91910,12995.0,845,unknown_product,items[0].product_id PRD-91910 does not exist in products.csv (inherited from purchase order line)
+EVT-0000803,SHP-000134,PO-2025-00127,CREATED,2025-11-26T11:01:00+05:30,1,PRD-00088,2167.0,849,duplicate_event,Exact duplicate of event_id EVT-0000803
+EVT-0000849,SHP-000036,PO-2025-00034,DELIVERED,2025-11-28T15:01:00+02:00,4,PRD-95029,7572.0,853,unknown_product,items[3].product_id PRD-95029 does not exist in products.csv
+EVT-0000850,SHP-000193,PO-2025-00184,DELIVERED,2025-11-28T14:03:00+01:00,1,PRD-91910,12995.0,854,unknown_product,items[0].product_id PRD-91910 does not exist in products.csv (inherited from purchase order line)
+EVT-0000888,SHP-000198,PO-2025-00189,CREATED,2025-11-30T08:22:00+01:00,1,PRD-00279,-534.27,892,negative_quantity,items[0].quantity is negative (-534.27)
+EVT-0000891,SHP-000119,PO-2025-00114,DELIVERED,2025-11-30T11:31:00+02:00,1,PRD-95617,318.0,895,unknown_product,items[0].product_id PRD-95617 does not exist in products.csv
+EVT-0000967,SHP-000168,PO-2025-00160,IN_TRANSIT,2025-12-04T07:42:24+01:00,1,PRD-92072,5515.0,971,unknown_product,items[0].product_id PRD-92072 does not exist in products.csv
+EVT-0001031,SHP-000023,PO-2025-00021,DELIVERED,2025-11-04T15:06:00+01:00,1,PRD-00049,248.0,1035,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0001057,SHP-000217,PO-2025-00206,DELIVERED,2025-12-07T10:25:00+02:00,4,PRD-95173,4931.0,1061,unknown_product,items[3].product_id PRD-95173 does not exist in products.csv
+EVT-0001051,SHP-000231,PO-2025-00218,OUT_FOR_DELIVERY,2025-12-07T06:08:00+01:00,1,PRD-00183,3077.0,1063,duplicate_event,Exact duplicate of event_id EVT-0001051
+EVT-0001059,SHP-000276,PO-2025-00260,PICKED_UP,2025-12-07T14:15:00+05:30,2,PRD-00061,2877.0,1106,duplicate_event,Exact duplicate of event_id EVT-0001059
+EVT-0001152,SHP-000142,PO-2025-00135,IN_TRANSIT,2025-12-10T12:50:24+02:00,1,PRD-00181,-51.0,1158,negative_quantity,items[0].quantity is negative (-51.0)
+EVT-0009381,SHP-000219,PO-2025-00208,IN_TRANSIT,2025-12-12T15:37:00+02:00,1,PRD-00295,10417.0,1199,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0001324,SHP-000303,PO-2025-00282,DELIVERED,2025-12-16T11:41:00+01:00,1,PRD-92696,1056.0,1331,unknown_product,items[0].product_id PRD-92696 does not exist in products.csv
+EVT-0001345,SHP-000336,PO-2025-00313,CREATED,2025-12-17T10:35:00+02:00,1,PRD-00275,-59.0,1352,negative_quantity,items[0].quantity is negative (-59.0)
+EVT-0001327,SHP-000311,PO-2025-00290,DELAYED,2025-12-16T14:22:30+02:00,1,PRD-00009,1300.0,1362,duplicate_event,Exact duplicate of event_id EVT-0001327
+EVT-0001393,SHP-000259,PO-2025-00245,DELIVERED,2025-12-19T08:08:00+02:00,1,PRD-00044,-182.0,1401,negative_quantity,items[0].quantity is negative (-182.0)
+EVT-0001424,SHP-000327,PO-2025-00305,DELIVERED,2025-12-02T10:12:00+01:00,1,PRD-00199,167.0,1432,delivery_before_order,DELIVERED event_ts is before PO order_date 2025-12-11 (also breaks the status sequence)
+EVT-0001467,SHP-000095,PO-2025-00089,DELIVERED,2025-10-14T12:54:00+01:00,1,PRD-00277,1659.68,1475,delivery_before_order,DELIVERED event_ts is before PO order_date 2025-10-20 (also breaks the status sequence)
+EVT-0001531,SHP-000373,PO-2025-00344,CREATED,2025-12-24T09:45:00+01:00,1,PRD-99661,15869.0,1539,unknown_product,items[0].product_id PRD-99661 does not exist in products.csv (inherited from purchase order line)
+EVT-0001546,SHP-000145,PO-2025-00138,CUSTOMS,2025-12-24T22:24:55+01:00,2,PRD-00123,-617.0,1554,negative_quantity,items[1].quantity is negative (-617.0)
+EVT-0001560,SHP-000373,PO-2025-00344,PICKED_UP,2025-12-25T14:07:00+01:00,1,PRD-99661,15869.0,1568,unknown_product,items[0].product_id PRD-99661 does not exist in products.csv (inherited from purchase order line)
+EVT-0001564,SHP-000299,PO-2025-00279,DELIVERED,2025-11-27T16:42:00+01:00,1,PRD-00230,3660.0,1572,delivery_before_order,DELIVERED event_ts is before PO order_date 2025-12-05 (also breaks the status sequence)
+EVT-0001610,SHP-000373,PO-2025-00344,IN_TRANSIT,2025-12-27T12:44:12+02:00,1,PRD-99661,15869.0,1618,unknown_product,items[0].product_id PRD-99661 does not exist in products.csv (inherited from purchase order line)
+EVT-0001626,SHP-000381,PO-2025-00351,DELIVERED,2025-12-23T23:25:30+01:00,1,PRD-00114,6436.0,1634,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0001665,SHP-000129,PO-2025-00122,DELIVERED,2025-10-18T17:05:00+02:00,4,PRD-00020,19524.35,1673,delivery_before_order,DELIVERED event_ts is before PO order_date 2025-10-29 (also breaks the status sequence)
+EVT-0001675,SHP-000373,PO-2025-00344,OUT_FOR_DELIVERY,2025-12-30T05:10:00+02:00,1,PRD-99661,15869.0,1683,unknown_product,items[0].product_id PRD-99661 does not exist in products.csv (inherited from purchase order line)
+EVT-0001677,SHP-000348,PO-2025-00324,IN_TRANSIT,2025-12-30T05:59:48+01:00,1,PRD-00040,-303.0,1685,negative_quantity,items[0].quantity is negative (-303.0)
+EVT-0001681,SHP-000373,PO-2025-00344,DELIVERED,2025-12-30T09:10:00+02:00,1,PRD-99661,15869.0,1689,unknown_product,items[0].product_id PRD-99661 does not exist in products.csv (inherited from purchase order line)
+EVT-0001724,SHP-000385,PO-2025-00355,DELIVERED,2025-12-12T11:30:00+01:00,1,PRD-00025,14412.0,1732,delivery_before_order,DELIVERED event_ts is before PO order_date 2025-12-21 (also breaks the status sequence)
+EVT-0009390,SHP-000244,PO-2025-00230,IN_TRANSIT,2026-01-01T18:12:00+02:00,1,PRD-00006,207.0,1744,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0001800,SHP-000376,PO-2025-00346,PICKED_UP,2026-01-02T14:39:00+01:00,1,PRD-98521,4843.56,1809,unknown_product,items[0].product_id PRD-98521 does not exist in products.csv
+EVT-0001818,SHP-000393,PO-2025-00363,CREATED,2026-01-03T08:17:00+01:00,2,PRD-00021,-335.0,1827,negative_quantity,items[1].quantity is negative (-335.0)
+EVT-0001843,SHP-000426,PO-2025-00393,CREATED,2026-01-04T08:34:00+01:00,1,PRD-99141,322.0,1852,unknown_product,items[0].product_id PRD-99141 does not exist in products.csv
+EVT-0001918,SHP-000196,PO-2025-00187,DELIVERED,2025-12-09T17:47:00+01:00,1,PRD-00118,4670.96,1927,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0009377,SHP-000433,PO-2025-00399,IN_TRANSIT,2026-01-08T07:09:00+01:00,1,PRD-00253,341.9,1960,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0001949,SHP-000358,PO-2025-00333,DELAYED,2026-01-07T13:43:00+02:00,1,PRD-00202,4540.0,2002,duplicate_event,Exact duplicate of event_id EVT-0001949
+EVT-0002000,SHP-000409,PO-2025-00376,IN_TRANSIT,2026-01-09T06:36:48+01:00,2,PRD-95595,2399.0,2011,unknown_product,items[1].product_id PRD-95595 does not exist in products.csv
+EVT-0002012,SHP-000397,PO-2025-00366,DELIVERED,2026-01-09T16:47:00+01:00,1,PRD-00242,4042.0,2055,duplicate_event,Exact duplicate of event_id EVT-0002012
+EVT-0002119,SHP-000383,PO-2025-00353,DELIVERED,2025-12-17T13:38:00+02:00,1,PRD-00169,2600.95,2131,delivery_before_order,DELIVERED event_ts is before PO order_date 2025-12-20 (also breaks the status sequence)
+EVT-0009379,SHP-000194,PO-2025-00185,IN_TRANSIT,2026-01-14T00:31:00+01:00,1,PRD-00221,794.0,2135,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0009376,SHP-000410,PO-2025-00377,IN_TRANSIT,2026-01-17T00:10:00+02:00,1,PRD-00050,944.0,2202,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0002216,SHP-000405,PO-2025-00373,DELIVERED,2026-01-17T09:35:00+02:00,1,PRD-00266,-1404.0,2230,negative_quantity,items[0].quantity is negative (-1404.0)
+EVT-0002227,SHP-000363,PO-2025-00336,CUSTOMS,2026-01-17T18:41:14+01:00,1,PRD-91194,125.84,2241,unknown_product,items[0].product_id PRD-91194 does not exist in products.csv
+EVT-0002214,SHP-000278,PO-2025-00261,DELIVERED,2026-01-17T08:23:00+02:00,1,PRD-00266,1353.0,2263,duplicate_event,Exact duplicate of event_id EVT-0002214
+EVT-0002258,SHP-000506,PO-2026-00469,IN_TRANSIT,2026-01-19T06:14:36+02:00,4,PRD-94649,64.0,2273,unknown_product,items[3].product_id PRD-94649 does not exist in products.csv
+EVT-0002383,SHP-000455,PO-2026-00419,DELIVERED,2025-12-27T10:43:00+01:00,1,PRD-00224,854.0,2398,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-01-04 (also breaks the status sequence)
+EVT-0002573,SHP-000418,PO-2025-00385,PICKED_UP,2026-01-31T12:18:00+09:00,3,PRD-92304,1287.0,2588,unknown_product,items[2].product_id PRD-92304 does not exist in products.csv
+EVT-0002639,SHP-000487,PO-2026-00450,DELIVERED,2026-01-28T23:14:00+02:00,1,PRD-00276,14749.0,2654,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0002684,SHP-000531,PO-2026-00492,CREATED,2026-02-04T11:13:00+01:00,2,PRD-98082,2437.0,2699,unknown_product,items[0].product_id PRD-98082 does not exist in products.csv (inherited from purchase order line)
+EVT-0002707,SHP-000531,PO-2026-00492,PICKED_UP,2026-02-05T18:44:00+01:00,2,PRD-98082,2437.0,2722,unknown_product,items[0].product_id PRD-98082 does not exist in products.csv (inherited from purchase order line)
+EVT-0002689,SHP-000539,PO-2026-00499,DELIVERED,2026-02-04T16:03:00+01:00,1,PRD-00292,2549.0,2749,duplicate_event,Exact duplicate of event_id EVT-0002689
+EVT-0002752,SHP-000531,PO-2026-00492,IN_TRANSIT,2026-02-08T00:14:00+01:00,2,PRD-98082,2437.0,2768,unknown_product,items[0].product_id PRD-98082 does not exist in products.csv (inherited from purchase order line)
+EVT-0002770,SHP-000531,PO-2026-00492,DELAYED,2026-02-08T13:36:30+01:00,2,PRD-98082,2437.0,2786,unknown_product,items[0].product_id PRD-98082 does not exist in products.csv (inherited from purchase order line)
+EVT-0002771,SHP-000558,PO-2026-00514,CREATED,2026-02-08T07:23:00-06:00,1,PRD-00121,6983.0,2814,duplicate_event,Exact duplicate of event_id EVT-0002771
+EVT-0002828,SHP-000531,PO-2026-00492,OUT_FOR_DELIVERY,2026-02-11T01:29:00+01:00,2,PRD-98082,2437.0,2845,unknown_product,items[0].product_id PRD-98082 does not exist in products.csv (inherited from purchase order line)
+EVT-0002831,SHP-000531,PO-2026-00492,DELIVERED,2026-02-11T08:29:00+01:00,2,PRD-98082,2437.0,2848,unknown_product,items[0].product_id PRD-98082 does not exist in products.csv (inherited from purchase order line)
+EVT-0002903,SHP-000597,PO-2026-00548,CREATED,2026-02-14T07:05:00+01:00,1,PRD-00050,1127.0,2926,duplicate_event,Exact duplicate of event_id EVT-0002903
+EVT-0002975,SHP-000611,PO-2026-00562,DELIVERED,2026-01-27T16:49:00+01:00,1,PRD-00180,2420.0,2993,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-02-06 (also breaks the status sequence)
+EVT-0003045,SHP-000590,PO-2026-00542,DELIVERED,2026-02-16T23:11:00+01:00,1,PRD-00078,1415.0,3063,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0003089,SHP-000587,PO-2026-00539,DELIVERED,2026-01-24T08:25:00+01:00,1,PRD-00189,1064.4,3107,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-01-31 (also breaks the status sequence)
+EVT-0003127,SHP-000471,PO-2026-00435,DELIVERED,2025-12-27T16:44:00+01:00,2,PRD-00088,6227.0,3145,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-01-08 (also breaks the status sequence)
+EVT-0003137,SHP-000664,PO-2026-00609,CREATED,2026-02-23T10:08:00+05:30,1,PRD-00216,5213.73,3163,duplicate_event,Exact duplicate of event_id EVT-0003137
+EVT-0003151,SHP-000403,PO-2025-00371,DELIVERED,2025-12-22T17:21:00+02:00,1,PRD-00036,9709.0,3170,delivery_before_order,DELIVERED event_ts is before PO order_date 2025-12-25 (also breaks the status sequence)
+EVT-0003174,SHP-000462,PO-2026-00426,DELIVERED,2026-02-08T09:02:00+01:00,1,PRD-00100,2618.94,3193,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0003192,SHP-000544,PO-2026-00502,DELIVERED,2026-01-18T10:15:00+02:00,1,PRD-00154,1909.68,3211,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-01-24 (also breaks the status sequence)
+EVT-0003255,SHP-000585,PO-2026-00537,DELIVERED,2026-01-21T15:45:00+01:00,1,PRD-00208,11238.0,3274,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-01-31 (also breaks the status sequence)
+EVT-0003352,SHP-000716,PO-2026-00659,CREATED,2026-03-03T09:44:00+01:00,1,PRD-00199,-350.0,3371,negative_quantity,items[0].quantity is negative (-350.0)
+EVT-0003354,SHP-000638,PO-2026-00585,IN_TRANSIT,2026-03-03T04:35:50-05:00,2,PRD-00013,-432.0,3373,negative_quantity,items[1].quantity is negative (-432.0)
+EVT-0003395,SHP-000625,PO-2026-00575,DELIVERED,2026-02-28T23:49:00+02:00,1,PRD-00022,1637.0,3414,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0003397,SHP-000575,PO-2026-00530,DELIVERED,2026-03-04T17:53:00+02:00,1,PRD-00190,-12517.0,3416,negative_quantity,items[0].quantity is negative (-12517.0)
+EVT-0003401,SHP-000598,PO-2026-00549,CREATED,2026-03-05T09:57:00+09:00,1,PRD-00123,594.0,3453,duplicate_event,Exact duplicate of event_id EVT-0003401
+EVT-0003450,SHP-000632,PO-2026-00580,DELIVERED,2026-02-04T15:09:00+01:00,1,PRD-00196,1623.92,3470,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-02-11 (also breaks the status sequence)
+EVT-0003452,SHP-000672,PO-2026-00617,DELIVERED,2026-02-16T17:59:00+02:00,1,PRD-00136,12806.0,3472,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-02-19 (also breaks the status sequence)
+EVT-0003433,SHP-000485,PO-2026-00448,IN_TRANSIT,2026-03-06T05:42:36+02:00,1,PRD-00095,1959.0,3495,duplicate_event,Exact duplicate of event_id EVT-0003433
+EVT-0003497,SHP-000628,PO-2026-00576,DELIVERED,2026-02-09T20:01:30+02:00,1,PRD-00207,1369.65,3518,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0003600,SHP-000484,PO-2026-00447,DELIVERED,2026-01-02T12:25:00+02:00,1,PRD-00271,15655.0,3621,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-01-11 (also breaks the status sequence)
+EVT-0009388,SHP-000711,PO-2026-00655,IN_TRANSIT,2026-03-15T09:39:00+01:00,1,PRD-00002,7226.0,3666,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0003775,SHP-000662,PO-2026-00607,CREATED,2026-03-20T09:56:00+09:00,3,PRD-92712,3420.17,3797,unknown_product,items[2].product_id PRD-92712 does not exist in products.csv
+EVT-0003783,SHP-000746,PO-2026-00690,DELIVERED,2026-03-14T00:26:00+01:00,1,PRD-00065,728.0,3805,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0003827,SHP-000751,PO-2026-00696,DELIVERED,2026-03-19T12:00:00+01:00,1,PRD-00264,8582.0,3849,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0003951,SHP-000769,PO-2026-00713,CREATED,2026-03-27T11:01:00-06:00,1,PRD-00249,-6079.0,3973,negative_quantity,items[0].quantity is negative (-6079.0)
+EVT-0003961,SHP-000618,PO-2026-00569,IN_TRANSIT,2026-03-28T07:03:12+02:00,4,PRD-00088,-3532.0,3983,negative_quantity,items[2].quantity is negative (-3532.0)
+EVT-0003997,SHP-000798,PO-2026-00734,DELIVERED,2026-03-17T11:39:00+01:00,1,PRD-00058,4734.8,4019,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-03-21 (also breaks the status sequence)
+EVT-0004027,SHP-000678,PO-2026-00622,DELIVERED,2026-02-09T13:00:00+02:00,1,PRD-00159,7795.0,4049,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-02-20 (also breaks the status sequence)
+EVT-0009385,SHP-000765,PO-2026-00709,IN_TRANSIT,2026-04-02T02:42:00+01:00,1,PRD-00167,11738.46,4115,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0004104,SHP-000818,PO-2026-00751,DELIVERED,2026-03-14T09:13:00+02:00,1,PRD-00095,2812.0,4127,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-03-24 (also breaks the status sequence)
+EVT-0009387,SHP-000616,PO-2026-00567,IN_TRANSIT,2026-04-03T19:22:00+02:00,1,PRD-00276,11670.0,4168,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0004182,SHP-000737,PO-2026-00680,CUSTOMS,2026-04-05T06:27:19+01:00,1,PRD-00288,-212.0,4206,negative_quantity,items[0].quantity is negative (-212.0)
+EVT-0004195,SHP-000780,PO-2026-00721,CREATED,2026-04-05T10:46:00-05:00,2,PRD-95246,4204.0,4219,unknown_product,items[1].product_id PRD-95246 does not exist in products.csv (inherited from purchase order line)
+EVT-0004226,SHP-000780,PO-2026-00721,PICKED_UP,2026-04-06T13:54:00-05:00,2,PRD-95246,4204.0,4250,unknown_product,items[1].product_id PRD-95246 does not exist in products.csv (inherited from purchase order line)
+EVT-0004257,SHP-000780,PO-2026-00721,IN_TRANSIT,2026-04-07T15:51:45-05:00,2,PRD-95246,4204.0,4281,unknown_product,items[1].product_id PRD-95246 does not exist in products.csv (inherited from purchase order line)
+EVT-0004314,SHP-000796,PO-2026-00733,DELIVERED,2026-03-13T15:20:00+01:00,1,PRD-00173,2268.17,4338,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-03-21 (also breaks the status sequence)
+EVT-0004332,SHP-000773,PO-2026-00715,DELIVERED,2026-04-04T01:21:30+02:00,3,PRD-00136,7930.0,4356,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0004361,SHP-000684,PO-2026-00628,CUSTOMS,2026-04-11T16:44:48+02:00,3,PRD-97645,292.0,4385,unknown_product,items[2].product_id PRD-97645 does not exist in products.csv
+EVT-0004369,SHP-000832,PO-2026-00764,CREATED,2026-04-12T08:22:00+09:00,3,PRD-93424,136.0,4393,unknown_product,items[2].product_id PRD-93424 does not exist in products.csv (inherited from purchase order line)
+EVT-0004424,SHP-000857,PO-2026-00781,DELIVERED,2026-04-06T01:45:30+01:00,1,PRD-00222,5804.49,4448,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0004451,SHP-000767,PO-2026-00711,IN_TRANSIT,2026-04-14T20:24:48+01:00,2,PRD-94295,5988.0,4475,unknown_product,items[1].product_id PRD-94295 does not exist in products.csv
+EVT-0004467,SHP-000832,PO-2026-00764,PICKED_UP,2026-04-15T16:57:00+09:00,3,PRD-93424,136.0,4491,unknown_product,items[2].product_id PRD-93424 does not exist in products.csv (inherited from purchase order line)
+EVT-0004474,SHP-000680,PO-2026-00624,DELIVERED,2026-04-15T12:43:00+01:00,2,PRD-93193,770.0,4498,unknown_product,items[1].product_id PRD-93193 does not exist in products.csv
+EVT-0004512,SHP-000831,PO-2026-00763,DELIVERED,2026-03-13T13:56:00+02:00,1,PRD-00229,5786.0,4536,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-03-26 (also breaks the status sequence)
+EVT-0004523,SHP-000828,PO-2026-00760,OUT_FOR_DELIVERY,2026-04-17T01:56:00+02:00,4,PRD-98266,915.53,4547,unknown_product,items[3].product_id PRD-98266 does not exist in products.csv
+EVT-0004539,SHP-000771,PO-2026-00715,DELIVERED,2026-04-17T12:47:00+02:00,1,PRD-00028,393.89,4564,duplicate_event,Exact duplicate of event_id EVT-0004539
+EVT-0004545,SHP-000780,PO-2026-00721,IN_TRANSIT,2026-04-17T16:31:36+02:00,2,PRD-95246,4204.0,4570,unknown_product,items[1].product_id PRD-95246 does not exist in products.csv (inherited from purchase order line)
+EVT-0004551,SHP-000832,PO-2026-00764,IN_TRANSIT,2026-04-18T06:31:38+09:00,3,PRD-93424,136.0,4576,unknown_product,items[2].product_id PRD-93424 does not exist in products.csv (inherited from purchase order line)
+EVT-0004565,SHP-000836,PO-2026-00768,DELIVERED,2026-04-13T11:22:00+01:00,1,PRD-00255,1139.0,4590,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0004570,SHP-000780,PO-2026-00721,CUSTOMS,2026-04-18T18:29:21+02:00,2,PRD-95246,4204.0,4595,unknown_product,items[1].product_id PRD-95246 does not exist in products.csv (inherited from purchase order line)
+EVT-0004600,SHP-000780,PO-2026-00721,OUT_FOR_DELIVERY,2026-04-20T04:26:00+02:00,2,PRD-95246,4204.0,4625,unknown_product,items[1].product_id PRD-95246 does not exist in products.csv (inherited from purchase order line)
+EVT-0004604,SHP-000780,PO-2026-00721,DELIVERED,2026-04-20T09:26:00+02:00,2,PRD-95246,4204.0,4629,unknown_product,items[1].product_id PRD-95246 does not exist in products.csv (inherited from purchase order line)
+EVT-0004609,SHP-000917,PO-2026-00835,CREATED,2026-04-20T11:59:00+01:00,1,PRD-94600,1441.0,4634,unknown_product,items[0].product_id PRD-94600 does not exist in products.csv (inherited from purchase order line)
+EVT-0004650,SHP-000735,PO-2026-00678,IN_TRANSIT,2026-04-22T09:08:12+02:00,2,PRD-95769,698.69,4675,unknown_product,items[1].product_id PRD-95769 does not exist in products.csv
+EVT-0004664,SHP-000900,PO-2026-00817,IN_TRANSIT,2026-04-22T21:46:24+02:00,2,PRD-98991,3425.43,4689,unknown_product,items[1].product_id PRD-98991 does not exist in products.csv
+EVT-0004684,SHP-000917,PO-2026-00835,PICKED_UP,2026-04-23T18:11:00+01:00,1,PRD-94600,1441.0,4709,unknown_product,items[0].product_id PRD-94600 does not exist in products.csv (inherited from purchase order line)
+EVT-0004702,SHP-000907,PO-2026-00824,IN_TRANSIT,2026-04-24T16:31:12+01:00,1,PRD-00150,15881.0,4731,duplicate_event,Exact duplicate of event_id EVT-0004702
+EVT-0004726,SHP-000837,PO-2026-00769,DELIVERED,2026-03-21T16:07:00+01:00,1,PRD-00017,1354.5,4752,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-03-27 (also breaks the status sequence)
+EVT-0004727,SHP-000917,PO-2026-00835,IN_TRANSIT,2026-04-25T16:23:00+01:00,1,PRD-94600,1441.0,4753,unknown_product,items[0].product_id PRD-94600 does not exist in products.csv (inherited from purchase order line)
+EVT-0004760,SHP-000770,PO-2026-00714,IN_TRANSIT,2026-04-27T17:27:52+08:00,3,PRD-00020,-9528.06,4786,negative_quantity,items[2].quantity is negative (-9528.06)
+EVT-0004780,SHP-000917,PO-2026-00835,OUT_FOR_DELIVERY,2026-04-28T08:41:00+01:00,1,PRD-94600,1441.0,4806,unknown_product,items[0].product_id PRD-94600 does not exist in products.csv (inherited from purchase order line)
+EVT-0004789,SHP-000917,PO-2026-00835,DELIVERED,2026-04-28T13:41:00+01:00,1,PRD-94600,1441.0,4815,unknown_product,items[0].product_id PRD-94600 does not exist in products.csv (inherited from purchase order line)
+EVT-0004801,SHP-000915,PO-2026-00832,IN_TRANSIT,2026-04-29T17:15:12+01:00,2,PRD-98787,8191.0,4827,unknown_product,items[1].product_id PRD-98787 does not exist in products.csv
+EVT-0004836,SHP-000832,PO-2026-00764,DELAYED,2026-05-01T17:48:30+09:00,3,PRD-93424,136.0,4862,unknown_product,items[2].product_id PRD-93424 does not exist in products.csv (inherited from purchase order line)
+EVT-0004934,SHP-000814,PO-2026-00747,DELIVERED,2026-05-03T02:40:00+02:00,3,PRD-00064,701.11,4960,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0009386,SHP-000778,PO-2026-00720,IN_TRANSIT,2026-05-07T15:38:00+01:00,1,PRD-00067,1705.0,4983,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0004975,SHP-000841,PO-2026-00771,DELIVERED,2026-05-07T11:38:00+01:00,4,PRD-96845,4031.25,5002,unknown_product,items[2].product_id PRD-96845 does not exist in products.csv
+EVT-0005064,SHP-000832,PO-2026-00764,IN_TRANSIT,2026-05-11T00:43:24+01:00,3,PRD-93424,136.0,5091,unknown_product,items[2].product_id PRD-93424 does not exist in products.csv (inherited from purchase order line)
+EVT-0005093,SHP-000953,PO-2026-00871,DELIVERED,2026-05-05T13:25:00+02:00,1,PRD-00202,2116.0,5120,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0005133,SHP-000832,PO-2026-00764,CUSTOMS,2026-05-13T14:18:02+01:00,3,PRD-93424,136.0,5160,unknown_product,items[2].product_id PRD-93424 does not exist in products.csv (inherited from purchase order line)
+EVT-0005173,SHP-000956,PO-2026-00874,OUT_FOR_DELIVERY,2026-05-15T08:38:00+01:00,1,PRD-00021,415.0,5224,duplicate_event,Exact duplicate of event_id EVT-0005173
+EVT-0005226,SHP-000832,PO-2026-00764,OUT_FOR_DELIVERY,2026-05-17T07:40:00+01:00,3,PRD-93424,136.0,5254,unknown_product,items[2].product_id PRD-93424 does not exist in products.csv (inherited from purchase order line)
+EVT-0005231,SHP-000832,PO-2026-00764,DELIVERED,2026-05-17T10:40:00+01:00,3,PRD-93424,136.0,5259,unknown_product,items[2].product_id PRD-93424 does not exist in products.csv (inherited from purchase order line)
+EVT-0005249,SHP-000869,PO-2026-00790,CUSTOMS,2026-05-18T06:04:31+01:00,1,PRD-00181,-59.0,5277,negative_quantity,items[0].quantity is negative (-59.0)
+EVT-0005250,SHP-001060,PO-2026-00970,CREATED,2026-05-18T07:37:00+01:00,1,PRD-97141,836.0,5278,unknown_product,items[0].product_id PRD-97141 does not exist in products.csv (inherited from purchase order line)
+EVT-0005264,SHP-000943,PO-2026-00862,DELIVERED,2026-04-07T14:06:00+01:00,1,PRD-00104,4924.31,5292,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-04-21 (also breaks the status sequence)
+EVT-0005318,SHP-001060,PO-2026-00970,PICKED_UP,2026-05-20T13:10:00+01:00,1,PRD-97141,836.0,5346,unknown_product,items[0].product_id PRD-97141 does not exist in products.csv (inherited from purchase order line)
+EVT-0005341,SHP-000980,PO-2026-00896,DELIVERED,2026-04-23T15:23:00+01:00,1,PRD-00144,53.76,5369,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-04-30 (also breaks the status sequence)
+EVT-0005363,SHP-001060,PO-2026-00970,IN_TRANSIT,2026-05-22T23:22:48+02:00,1,PRD-97141,836.0,5391,unknown_product,items[0].product_id PRD-97141 does not exist in products.csv (inherited from purchase order line)
+EVT-0005368,SHP-000991,PO-2026-00906,OUT_FOR_DELIVERY,2026-05-23T07:12:00+01:00,1,PRD-00084,4135.21,5407,duplicate_event,Exact duplicate of event_id EVT-0005368
+EVT-0005433,SHP-001060,PO-2026-00970,OUT_FOR_DELIVERY,2026-05-26T08:12:00+02:00,1,PRD-97141,836.0,5462,unknown_product,items[0].product_id PRD-97141 does not exist in products.csv (inherited from purchase order line)
+EVT-0005388,SHP-000954,PO-2026-00872,DELIVERED,2026-05-24T08:10:00+02:00,1,PRD-00186,1657.0,5466,duplicate_event,Exact duplicate of event_id EVT-0005388
+EVT-0005440,SHP-001060,PO-2026-00970,DELIVERED,2026-05-26T13:12:00+02:00,1,PRD-97141,836.0,5470,unknown_product,items[0].product_id PRD-97141 does not exist in products.csv (inherited from purchase order line)
+EVT-0005408,SHP-000882,PO-2026-00803,IN_TRANSIT,2026-05-25T00:21:48+01:00,1,PRD-00014,1557.56,5478,duplicate_event,Exact duplicate of event_id EVT-0005408
+EVT-0005519,SHP-001039,PO-2026-00952,CREATED,2026-05-29T11:04:00-06:00,4,PRD-91067,284.0,5550,unknown_product,items[3].product_id PRD-91067 does not exist in products.csv (inherited from purchase order line)
+EVT-0005520,SHP-001027,PO-2026-00940,PICKED_UP,2026-05-30T12:02:00+09:00,1,PRD-97518,669.43,5551,unknown_product,items[0].product_id PRD-97518 does not exist in products.csv
+EVT-0005568,SHP-001039,PO-2026-00952,PICKED_UP,2026-05-31T16:26:00-06:00,4,PRD-91067,284.0,5599,unknown_product,items[3].product_id PRD-91067 does not exist in products.csv (inherited from purchase order line)
+EVT-0005586,SHP-000981,PO-2026-00897,DELIVERED,2026-04-16T08:49:00+01:00,1,PRD-00150,13824.0,5617,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-05-01 (also breaks the status sequence)
+EVT-0005611,SHP-001039,PO-2026-00952,IN_TRANSIT,2026-06-01T16:18:00-06:00,4,PRD-91067,284.0,5642,unknown_product,items[3].product_id PRD-91067 does not exist in products.csv (inherited from purchase order line)
+EVT-0005695,SHP-001052,PO-2026-00962,DELIVERED,2026-06-04T09:50:00+01:00,1,PRD-00051,-16530.0,5726,negative_quantity,items[0].quantity is negative (-16530.0)
+EVT-0005739,SHP-001130,PO-2026-01034,CREATED,2026-06-06T08:02:00+08:00,2,PRD-93545,6856.0,5770,unknown_product,items[1].product_id PRD-93545 does not exist in products.csv
+EVT-0005741,SHP-001079,PO-2026-00987,OUT_FOR_DELIVERY,2026-06-06T09:09:00+02:00,1,PRD-00125,-429.0,5772,negative_quantity,items[0].quantity is negative (-429.0)
+EVT-0005760,SHP-001039,PO-2026-00952,DELAYED,2026-06-06T21:36:00-06:00,4,PRD-91067,284.0,5791,unknown_product,items[3].product_id PRD-91067 does not exist in products.csv (inherited from purchase order line)
+EVT-0005779,SHP-001038,PO-2026-00951,IN_TRANSIT,2026-06-07T21:48:14+09:00,3,PRD-90402,600.0,5810,unknown_product,items[2].product_id PRD-90402 does not exist in products.csv
+EVT-0005748,SHP-001072,PO-2026-00980,OUT_FOR_DELIVERY,2026-06-06T13:14:00+01:00,1,PRD-00157,15561.0,5815,duplicate_event,Exact duplicate of event_id EVT-0005748
+EVT-0005789,SHP-001098,PO-2026-01007,CREATED,2026-06-08T08:21:00+05:30,2,PRD-97676,6852.0,5821,unknown_product,items[1].product_id PRD-97676 does not exist in products.csv (inherited from purchase order line)
+EVT-0005818,SHP-001098,PO-2026-01007,PICKED_UP,2026-06-09T13:18:00+05:30,2,PRD-97676,6852.0,5850,unknown_product,items[1].product_id PRD-97676 does not exist in products.csv (inherited from purchase order line)
+EVT-0005851,SHP-001039,PO-2026-00952,IN_TRANSIT,2026-06-10T22:06:00+01:00,4,PRD-91067,284.0,5883,unknown_product,items[3].product_id PRD-91067 does not exist in products.csv (inherited from purchase order line)
+EVT-0005871,SHP-001156,PO-2026-01060,CREATED,2026-06-11T10:37:00+01:00,1,PRD-98202,5583.0,5903,unknown_product,items[0].product_id PRD-98202 does not exist in products.csv (inherited from purchase order line)
+EVT-0005875,SHP-000987,PO-2026-00903,DELIVERED,2026-04-24T15:27:00+02:00,1,PRD-00080,268.0,5907,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-05-02 (also breaks the status sequence)
+EVT-0005876,SHP-001098,PO-2026-01007,IN_TRANSIT,2026-06-11T19:07:36+05:30,2,PRD-97676,6852.0,5908,unknown_product,items[1].product_id PRD-97676 does not exist in products.csv (inherited from purchase order line)
+EVT-0005883,SHP-001039,PO-2026-00952,CUSTOMS,2026-06-11T21:58:00+01:00,4,PRD-91067,284.0,5915,unknown_product,items[3].product_id PRD-91067 does not exist in products.csv (inherited from purchase order line)
+EVT-0005910,SHP-001156,PO-2026-01060,PICKED_UP,2026-06-12T15:06:00+01:00,1,PRD-98202,5583.0,5942,unknown_product,items[0].product_id PRD-98202 does not exist in products.csv (inherited from purchase order line)
+EVT-0005913,SHP-001111,PO-2026-01021,IN_TRANSIT,2026-06-13T01:25:28+08:00,2,PRD-00181,-32.0,5945,negative_quantity,items[1].quantity is negative (-32.0)
+EVT-0005917,SHP-001039,PO-2026-00952,OUT_FOR_DELIVERY,2026-06-13T02:46:00+01:00,4,PRD-91067,284.0,5949,unknown_product,items[3].product_id PRD-91067 does not exist in products.csv (inherited from purchase order line)
+EVT-0005901,SHP-001099,PO-2026-01008,PICKED_UP,2026-06-12T16:33:00+08:00,1,PRD-00181,26.0,5956,duplicate_event,Exact duplicate of event_id EVT-0005901
+EVT-0005925,SHP-001039,PO-2026-00952,DELIVERED,2026-06-13T09:46:00+01:00,4,PRD-91067,284.0,5958,unknown_product,items[3].product_id PRD-91067 does not exist in products.csv (inherited from purchase order line)
+EVT-0005974,SHP-000951,PO-2026-00869,DELIVERED,2026-04-17T16:39:00+02:00,1,PRD-00225,602.56,6007,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-04-22 (also breaks the status sequence)
+EVT-0005979,SHP-001156,PO-2026-01060,IN_TRANSIT,2026-06-14T22:46:00+01:00,1,PRD-98202,5583.0,6012,unknown_product,items[0].product_id PRD-98202 does not exist in products.csv (inherited from purchase order line)
+EVT-0009392,SHP-000944,PO-2026-00863,IN_TRANSIT,2026-06-16T06:20:00+02:00,1,PRD-00276,4579.0,6035,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0009384,SHP-001134,PO-2026-01038,IN_TRANSIT,2026-06-16T17:29:00+02:00,1,PRD-00175,11245.0,6037,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0006042,SHP-001029,PO-2026-00942,IN_TRANSIT,2026-06-17T05:56:12+01:00,1,PRD-00060,-21408.0,6077,negative_quantity,items[0].quantity is negative (-21408.0)
+EVT-0006063,SHP-001156,PO-2026-01060,OUT_FOR_DELIVERY,2026-06-18T07:16:00+01:00,1,PRD-98202,5583.0,6098,unknown_product,items[0].product_id PRD-98202 does not exist in products.csv (inherited from purchase order line)
+EVT-0006068,SHP-001156,PO-2026-01060,DELIVERED,2026-06-18T10:16:00+01:00,1,PRD-98202,5583.0,6103,unknown_product,items[0].product_id PRD-98202 does not exist in products.csv (inherited from purchase order line)
+EVT-0006156,SHP-001136,PO-2026-01040,CREATED,2026-06-23T10:24:00+05:30,1,PRD-92974,3936.4,6191,unknown_product,items[0].product_id PRD-92974 does not exist in products.csv
+EVT-0006161,SHP-001098,PO-2026-01007,DELAYED,2026-06-23T13:43:00+05:30,2,PRD-97676,6852.0,6196,unknown_product,items[1].product_id PRD-97676 does not exist in products.csv (inherited from purchase order line)
+EVT-0006172,SHP-001138,PO-2026-01042,DELIVERED,2026-06-15T01:15:30+01:00,1,PRD-00071,393.0,6207,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0006257,SHP-001206,PO-2026-01102,OUT_FOR_DELIVERY,2026-06-27T08:41:00+01:00,3,PRD-00063,-1685.39,6292,negative_quantity,items[2].quantity is negative (-1685.39)
+EVT-0006261,SHP-001219,PO-2026-01115,PICKED_UP,2026-06-27T18:09:00+08:00,2,PRD-96921,12966.0,6296,unknown_product,items[1].product_id PRD-96921 does not exist in products.csv
+EVT-0006281,SHP-001117,PO-2026-01026,IN_TRANSIT,2026-06-28T03:29:12+02:00,1,PRD-00186,1285.0,6333,duplicate_event,Exact duplicate of event_id EVT-0006281
+EVT-0006309,SHP-001103,PO-2026-01012,OUT_FOR_DELIVERY,2026-06-29T04:15:00+01:00,1,PRD-00073,-1816.45,6345,negative_quantity,items[0].quantity is negative (-1816.45)
+EVT-0006385,SHP-001124,PO-2026-01031,OUT_FOR_DELIVERY,2026-07-01T09:26:00+01:00,1,PRD-00108,2667.0,6433,duplicate_event,Exact duplicate of event_id EVT-0006385
+EVT-0006402,SHP-001098,PO-2026-01007,IN_TRANSIT,2026-07-01T20:04:00+02:00,2,PRD-97676,6852.0,6439,unknown_product,items[1].product_id PRD-97676 does not exist in products.csv (inherited from purchase order line)
+EVT-0006421,SHP-001225,PO-2026-01119,IN_TRANSIT,2026-07-02T15:16:48+02:00,1,PRD-92679,549.0,6458,unknown_product,items[0].product_id PRD-92679 does not exist in products.csv
+EVT-0006423,SHP-001212,PO-2026-01108,DELIVERED,2026-06-18T15:32:00+02:00,1,PRD-00128,7681.0,6460,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-06-19 (also breaks the status sequence)
+EVT-0006454,SHP-001098,PO-2026-01007,CUSTOMS,2026-07-04T01:53:36+02:00,2,PRD-97676,6852.0,6491,unknown_product,items[1].product_id PRD-97676 does not exist in products.csv (inherited from purchase order line)
+EVT-0006520,SHP-001216,PO-2026-01112,CREATED,2026-07-06T09:23:00+05:30,2,PRD-95377,2315.0,6557,unknown_product,items[1].product_id PRD-95377 does not exist in products.csv (inherited from purchase order line)
+EVT-0006544,SHP-001098,PO-2026-01007,OUT_FOR_DELIVERY,2026-07-07T04:38:00+02:00,2,PRD-97676,6852.0,6581,unknown_product,items[1].product_id PRD-97676 does not exist in products.csv (inherited from purchase order line)
+EVT-0006549,SHP-001098,PO-2026-01007,DELIVERED,2026-07-07T10:38:00+02:00,2,PRD-97676,6852.0,6586,unknown_product,items[1].product_id PRD-97676 does not exist in products.csv (inherited from purchase order line)
+EVT-0006603,SHP-001216,PO-2026-01112,PICKED_UP,2026-07-09T13:56:00+05:30,2,PRD-95377,2315.0,6640,unknown_product,items[1].product_id PRD-95377 does not exist in products.csv (inherited from purchase order line)
+EVT-0006562,SHP-001097,PO-2026-01006,DELIVERED,2026-07-07T16:51:00+01:00,1,PRD-00098,1407.47,6650,duplicate_event,Exact duplicate of event_id EVT-0006562
+EVT-0006632,SHP-001282,PO-2026-01166,CREATED,2026-07-10T11:40:00+01:00,1,PRD-00296,-1104.0,6670,negative_quantity,items[0].quantity is negative (-1104.0)
+EVT-0006670,SHP-001216,PO-2026-01112,IN_TRANSIT,2026-07-11T21:45:40+05:30,2,PRD-95377,2315.0,6708,unknown_product,items[1].product_id PRD-95377 does not exist in products.csv (inherited from purchase order line)
+EVT-0006711,SHP-001168,PO-2026-01070,DELIVERED,2026-07-13T12:21:00+02:00,1,PRD-00168,1317.0,6759,duplicate_event,Exact duplicate of event_id EVT-0006711
+EVT-0006786,SHP-001197,PO-2026-01094,IN_TRANSIT,2026-07-16T04:39:12+01:00,1,PRD-00256,-519.81,6825,negative_quantity,items[0].quantity is negative (-519.81)
+EVT-0006759,SHP-001246,PO-2026-01134,CREATED,2026-07-15T10:13:00+09:00,2,PRD-00096,12624.0,6840,duplicate_event,Exact duplicate of event_id EVT-0006759
+EVT-0006831,SHP-001241,PO-2026-01131,DELAYED,2026-07-17T13:30:00+02:00,3,PRD-00087,-7555.0,6871,negative_quantity,items[2].quantity is negative (-7555.0)
+EVT-0009389,SHP-001329,PO-2026-01208,IN_TRANSIT,2026-07-19T22:10:00+02:00,1,PRD-00214,1018.0,6920,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0006949,SHP-001268,PO-2026-01153,OUT_FOR_DELIVERY,2026-07-22T06:51:00+02:00,1,PRD-00294,-11276.0,6990,negative_quantity,items[0].quantity is negative (-11276.0)
+EVT-0006981,SHP-001222,PO-2026-01116,OUT_FOR_DELIVERY,2026-07-23T11:54:00+02:00,2,PRD-00184,-11670.0,7022,negative_quantity,items[0].quantity is negative (-11670.0)
+EVT-0006989,SHP-001216,PO-2026-01112,DELAYED,2026-07-24T02:51:30+05:30,2,PRD-95377,2315.0,7030,unknown_product,items[1].product_id PRD-95377 does not exist in products.csv (inherited from purchase order line)
+EVT-0007040,SHP-001101,PO-2026-01010,DELIVERED,2026-07-26T08:55:00+02:00,2,PRD-00123,-2071.0,7081,negative_quantity,items[1].quantity is negative (-2071.0)
+EVT-0007068,SHP-001302,PO-2026-01184,CREATED,2026-07-27T09:50:00+01:00,1,PRD-97000,2203.85,7109,unknown_product,items[0].product_id PRD-97000 does not exist in products.csv
+EVT-0007089,SHP-001353,PO-2026-01229,CREATED,2026-07-28T08:45:00+01:00,2,PRD-91286,378.0,7130,unknown_product,items[1].product_id PRD-91286 does not exist in products.csv (inherited from purchase order line)
+EVT-0007143,SHP-001353,PO-2026-01229,PICKED_UP,2026-07-30T13:53:00+01:00,2,PRD-91286,378.0,7184,unknown_product,items[1].product_id PRD-91286 does not exist in products.csv (inherited from purchase order line)
+EVT-0007187,SHP-001334,PO-2026-01213,DELIVERED,2026-07-29T00:31:30+01:00,1,PRD-00004,7396.0,7228,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0007195,SHP-001353,PO-2026-01229,IN_TRANSIT,2026-08-01T14:55:24+01:00,2,PRD-91286,378.0,7236,unknown_product,items[1].product_id PRD-91286 does not exist in products.csv (inherited from purchase order line)
+EVT-0007197,SHP-001216,PO-2026-01112,IN_TRANSIT,2026-08-01T15:42:48+01:00,2,PRD-95377,2315.0,7238,unknown_product,items[1].product_id PRD-95377 does not exist in products.csv (inherited from purchase order line)
+EVT-0007242,SHP-001247,PO-2026-01135,DELIVERED,2026-07-10T20:10:30+01:00,1,PRD-00071,380.0,7283,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0007252,SHP-001216,PO-2026-01112,CUSTOMS,2026-08-03T23:32:28+01:00,2,PRD-95377,2315.0,7293,unknown_product,items[1].product_id PRD-95377 does not exist in products.csv (inherited from purchase order line)
+EVT-0007254,SHP-001353,PO-2026-01229,OUT_FOR_DELIVERY,2026-08-04T08:29:00+01:00,2,PRD-91286,378.0,7295,unknown_product,items[1].product_id PRD-91286 does not exist in products.csv (inherited from purchase order line)
+EVT-0007260,SHP-001353,PO-2026-01229,DELIVERED,2026-08-04T16:29:00+01:00,2,PRD-91286,378.0,7301,unknown_product,items[1].product_id PRD-91286 does not exist in products.csv (inherited from purchase order line)
+EVT-0007287,SHP-001398,PO-2026-01269,CREATED,2026-08-06T07:01:00+01:00,2,PRD-93418,10797.0,7328,unknown_product,items[1].product_id PRD-93418 does not exist in products.csv (inherited from purchase order line)
+EVT-0007311,SHP-001216,PO-2026-01112,OUT_FOR_DELIVERY,2026-08-07T07:17:00+01:00,2,PRD-95377,2315.0,7352,unknown_product,items[1].product_id PRD-95377 does not exist in products.csv (inherited from purchase order line)
+EVT-0007316,SHP-001216,PO-2026-01112,DELIVERED,2026-08-07T11:17:00+01:00,2,PRD-95377,2315.0,7357,unknown_product,items[1].product_id PRD-95377 does not exist in products.csv (inherited from purchase order line)
+EVT-0007345,SHP-001398,PO-2026-01269,PICKED_UP,2026-08-08T17:13:00+01:00,2,PRD-93418,10797.0,7386,unknown_product,items[1].product_id PRD-93418 does not exist in products.csv (inherited from purchase order line)
+EVT-0007350,SHP-001336,PO-2026-01215,IN_TRANSIT,2026-08-09T01:53:24+02:00,3,PRD-00064,-1100.19,7391,negative_quantity,items[2].quantity is negative (-1100.19)
+EVT-0007315,SHP-001386,PO-2026-01257,CREATED,2026-08-07T10:49:00+01:00,1,PRD-00078,890.0,7407,duplicate_event,Exact duplicate of event_id EVT-0007315
+EVT-0007375,SHP-001398,PO-2026-01269,IN_TRANSIT,2026-08-10T06:29:48+01:00,2,PRD-93418,10797.0,7417,unknown_product,items[1].product_id PRD-93418 does not exist in products.csv (inherited from purchase order line)
+EVT-0007384,SHP-001354,PO-2026-01230,OUT_FOR_DELIVERY,2026-08-10T10:10:00+01:00,1,PRD-00036,-15542.0,7426,negative_quantity,items[0].quantity is negative (-15542.0)
+EVT-0007388,SHP-001254,PO-2026-01141,DELIVERED,2026-06-22T12:17:00+01:00,1,PRD-00238,186.0,7430,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-06-27 (also breaks the status sequence)
+EVT-0007383,SHP-001391,PO-2026-01262,IN_TRANSIT,2026-08-10T01:47:00-06:00,1,PRD-00250,3019.2,7462,duplicate_event,Exact duplicate of event_id EVT-0007383
+EVT-0007427,SHP-001398,PO-2026-01269,OUT_FOR_DELIVERY,2026-08-12T06:25:00+01:00,2,PRD-93418,10797.0,7470,unknown_product,items[1].product_id PRD-93418 does not exist in products.csv (inherited from purchase order line)
+EVT-0007429,SHP-001308,PO-2026-01190,OUT_FOR_DELIVERY,2026-08-12T07:31:00+01:00,1,PRD-96977,6054.71,7472,unknown_product,items[0].product_id PRD-96977 does not exist in products.csv
+EVT-0007439,SHP-001398,PO-2026-01269,DELIVERED,2026-08-12T14:25:00+01:00,2,PRD-93418,10797.0,7482,unknown_product,items[1].product_id PRD-93418 does not exist in products.csv (inherited from purchase order line)
+EVT-0007475,SHP-001384,PO-2026-01256,DELIVERED,2026-07-19T17:09:00+01:00,1,PRD-00117,463.04,7518,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-07-25 (also breaks the status sequence)
+EVT-0007477,SHP-001376,PO-2026-01250,IN_TRANSIT,2026-08-14T03:38:40+09:00,1,PRD-91416,3309.65,7520,unknown_product,items[0].product_id PRD-91416 does not exist in products.csv
+EVT-0009378,SHP-001381,PO-2026-01254,IN_TRANSIT,2026-08-14T22:47:00+01:00,1,PRD-00067,9122.0,7547,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0007500,SHP-001382,PO-2026-01255,PICKED_UP,2026-08-14T13:28:00+01:00,1,PRD-00129,1002.0,7577,duplicate_event,Exact duplicate of event_id EVT-0007500
+EVT-0009383,SHP-001395,PO-2026-01266,IN_TRANSIT,2026-08-18T02:54:00+02:00,1,PRD-00089,5224.0,7619,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0007601,SHP-001400,PO-2026-01271,DELIVERED,2026-07-24T17:26:00+01:00,1,PRD-00150,11412.0,7647,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-07-31 (also breaks the status sequence)
+EVT-0007633,SHP-001357,PO-2026-01233,DELIVERED,2026-07-27T07:15:30+01:00,1,PRD-00231,9225.0,7679,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0007664,SHP-001293,PO-2026-01176,CUSTOMS,2026-08-22T05:22:07+01:00,2,PRD-00118,-2207.64,7710,negative_quantity,items[1].quantity is negative (-2207.64)
+EVT-0007682,SHP-001485,PO-2026-01346,CREATED,2026-08-23T09:30:00+05:30,1,PRD-91986,1461.0,7728,unknown_product,items[0].product_id PRD-91986 does not exist in products.csv
+EVT-0007698,SHP-001404,PO-2026-01275,OUT_FOR_DELIVERY,2026-08-24T01:05:00+02:00,1,PRD-00044,377.0,7762,duplicate_event,Exact duplicate of event_id EVT-0007698
+EVT-0007716,SHP-001391,PO-2026-01262,CUSTOMS,2026-08-25T03:27:00+01:00,1,PRD-00250,3019.2,7796,duplicate_event,Exact duplicate of event_id EVT-0007716
+EVT-0007805,SHP-001210,PO-2026-01106,DELIVERED,2026-08-29T10:02:00+01:00,1,PRD-00038,4127.0,7864,duplicate_event,Exact duplicate of event_id EVT-0007805
+EVT-0007989,SHP-001415,PO-2026-01285,DELIVERED,2026-08-02T16:12:00+01:00,1,PRD-00060,16967.0,8038,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-08-03 (also breaks the status sequence)
+EVT-0009391,SHP-001428,PO-2026-01298,IN_TRANSIT,2026-09-07T04:12:00+02:00,1,PRD-00110,1171.0,8067,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0008081,SHP-001422,PO-2026-01292,CUSTOMS,2026-09-08T09:05:00+01:00,1,PRD-94666,2275.69,8131,unknown_product,items[0].product_id PRD-94666 does not exist in products.csv
+EVT-0009380,SHP-001327,PO-2026-01206,IN_TRANSIT,2026-09-09T04:08:00+01:00,1,PRD-00297,4623.0,8140,invalid_status_sequence,IN_TRANSIT event occurs after DELIVERED for the same shipment
+EVT-0008121,SHP-001509,PO-2026-01368,CREATED,2026-09-09T08:12:00+01:00,2,PRD-98869,224.0,8172,unknown_product,items[1].product_id PRD-98869 does not exist in products.csv (inherited from purchase order line)
+EVT-0008167,SHP-001509,PO-2026-01368,PICKED_UP,2026-09-10T12:56:00+01:00,2,PRD-98869,224.0,8218,unknown_product,items[1].product_id PRD-98869 does not exist in products.csv (inherited from purchase order line)
+EVT-0008196,SHP-001509,PO-2026-01368,IN_TRANSIT,2026-09-11T10:02:48+01:00,2,PRD-98869,224.0,8247,unknown_product,items[1].product_id PRD-98869 does not exist in products.csv (inherited from purchase order line)
+EVT-0008206,SHP-001509,PO-2026-01368,DELAYED,2026-09-11T15:19:30+01:00,2,PRD-98869,224.0,8257,unknown_product,items[1].product_id PRD-98869 does not exist in products.csv (inherited from purchase order line)
+EVT-0008249,SHP-001509,PO-2026-01368,OUT_FOR_DELIVERY,2026-09-12T11:43:00+01:00,2,PRD-98869,224.0,8300,unknown_product,items[1].product_id PRD-98869 does not exist in products.csv (inherited from purchase order line)
+EVT-0008265,SHP-001509,PO-2026-01368,DELIVERED,2026-09-12T17:43:00+01:00,2,PRD-98869,224.0,8316,unknown_product,items[1].product_id PRD-98869 does not exist in products.csv (inherited from purchase order line)
+EVT-0008283,SHP-001542,PO-2026-01396,DELIVERED,2026-08-26T09:25:00+02:00,1,PRD-00252,7869.0,8334,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-09-02 (also breaks the status sequence)
+EVT-0008295,SHP-000781,PO-2026-00721,CREATED,2026-09-13T07:10:00-05:00,2,PRD-95246,1520.0,8346,unknown_product,items[1].product_id PRD-95246 does not exist in products.csv (inherited from purchase order line)
+EVT-0008313,SHP-001470,PO-2026-01333,OUT_FOR_DELIVERY,2026-09-14T05:07:00+02:00,1,PRD-00266,-729.0,8364,negative_quantity,items[0].quantity is negative (-729.0)
+EVT-0008340,SHP-001439,PO-2026-01308,DELIVERED,2026-07-27T16:02:00+01:00,1,PRD-00227,4337.0,8391,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-08-10 (also breaks the status sequence)
+EVT-0008348,SHP-000781,PO-2026-00721,PICKED_UP,2026-09-14T17:15:00-05:00,2,PRD-95246,1520.0,8399,unknown_product,items[1].product_id PRD-95246 does not exist in products.csv (inherited from purchase order line)
+EVT-0008365,SHP-001378,PO-2026-01251,DELIVERED,2026-09-15T08:27:00+01:00,1,PRD-00026,7789.0,8455,duplicate_event,Exact duplicate of event_id EVT-0008365
+EVT-0008412,SHP-001516,PO-2026-01374,CREATED,2026-09-16T07:37:00+02:00,1,PRD-99615,725.0,8464,unknown_product,items[0].product_id PRD-99615 does not exist in products.csv
+EVT-0008414,SHP-000781,PO-2026-00721,IN_TRANSIT,2026-09-16T00:54:12-05:00,2,PRD-95246,1520.0,8466,unknown_product,items[1].product_id PRD-95246 does not exist in products.csv (inherited from purchase order line)
+EVT-0008473,SHP-001572,PO-2026-01430,CREATED,2026-09-17T11:32:00-06:00,2,PRD-96043,2978.24,8525,unknown_product,items[1].product_id PRD-96043 does not exist in products.csv
+EVT-0008458,SHP-000343,PO-2025-00319,IN_TRANSIT,2026-09-17T17:42:57+09:00,1,PRD-00278,6392.0,8533,duplicate_event,Exact duplicate of event_id EVT-0008458
+EVT-0008486,SHP-001485,PO-2026-01346,IN_TRANSIT,2026-09-18T05:10:12+01:00,3,PRD-90844,275.0,8539,unknown_product,items[2].product_id PRD-90844 does not exist in products.csv
+EVT-0008561,SHP-001461,PO-2026-01328,OUT_FOR_DELIVERY,2026-09-20T08:41:00+02:00,1,PRD-00090,-16.0,8614,negative_quantity,items[0].quantity is negative (-16.0)
+EVT-0008607,SHP-001522,PO-2026-01379,DELIVERED,2026-09-14T01:09:30+01:00,2,PRD-00067,4584.0,8660,invalid_status_sequence,DELIVERED event occurs before PICKED_UP for the same shipment
+EVT-0008665,SHP-000781,PO-2026-00721,DELAYED,2026-09-22T23:05:00-05:00,2,PRD-95246,1520.0,8718,unknown_product,items[1].product_id PRD-95246 does not exist in products.csv (inherited from purchase order line)
+EVT-0008832,SHP-000532,PO-2026-00492,CREATED,2026-09-26T09:03:00+01:00,2,PRD-98082,2093.0,8885,unknown_product,items[0].product_id PRD-98082 does not exist in products.csv (inherited from purchase order line)
+EVT-0008846,SHP-000724,PO-2026-00667,CREATED,2026-09-26T10:52:00+01:00,1,PRD-98862,2290.0,8899,unknown_product,items[0].product_id PRD-98862 does not exist in products.csv (inherited from purchase order line)
+EVT-0008855,SHP-001554,PO-2026-01411,PICKED_UP,2026-09-26T12:34:00+01:00,1,PRD-97296,3522.0,8908,unknown_product,items[0].product_id PRD-97296 does not exist in products.csv
+EVT-0008882,SHP-000483,PO-2026-00446,IN_TRANSIT,2026-09-26T22:25:00+02:00,1,PRD-00202,1038.0,8964,duplicate_event,Exact duplicate of event_id EVT-0008882
+EVT-0008930,SHP-001548,PO-2026-01404,DELIVERED,2026-08-28T11:00:00+01:00,1,PRD-00039,323.33,8984,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-09-06 (also breaks the status sequence)
+EVT-0008928,SHP-001481,PO-2026-01343,CREATED,2026-09-27T10:35:00+01:00,1,PRD-00159,7352.0,8994,duplicate_event,Exact duplicate of event_id EVT-0008928
+EVT-0008953,SHP-001534,PO-2026-01389,DELIVERED,2026-08-22T14:34:00+01:00,2,PRD-00074,804.0,9008,delivery_before_order,DELIVERED event_ts is before PO order_date 2026-09-02 (also breaks the status sequence)
+EVT-0008957,SHP-001120,PO-2026-01028,IN_TRANSIT,2026-09-27T15:05:12+01:00,1,PRD-98697,824.7,9012,unknown_product,items[0].product_id PRD-98697 does not exist in products.csv
+EVT-0008976,SHP-000532,PO-2026-00492,PICKED_UP,2026-09-27T17:26:00+01:00,2,PRD-98082,2093.0,9031,unknown_product,items[0].product_id PRD-98082 does not exist in products.csv (inherited from purchase order line)
+EVT-0008986,SHP-001123,PO-2026-01030,PICKED_UP,2026-09-27T13:29:00-05:00,2,PRD-00267,-14732.0,9041,negative_quantity,items[1].quantity is negative (-14732.0)
+EVT-0009003,SHP-000781,PO-2026-00721,IN_TRANSIT,2026-09-28T04:47:00+02:00,2,PRD-95246,1520.0,9058,unknown_product,items[1].product_id PRD-95246 does not exist in products.csv (inherited from purchase order line)
+EVT-0009041,SHP-000724,PO-2026-00667,PICKED_UP,2026-09-28T13:00:00+01:00,1,PRD-98862,2290.0,9096,unknown_product,items[0].product_id PRD-98862 does not exist in products.csv (inherited from purchase order line)
+EVT-0009126,SHP-000781,PO-2026-00721,CUSTOMS,2026-09-29T12:26:12+02:00,2,PRD-95246,1520.0,9181,unknown_product,items[1].product_id PRD-95246 does not exist in products.csv (inherited from purchase order line)
+EVT-0009219,SHP-001598,PO-2026-01460,CREATED,2026-09-30T11:36:00+01:00,1,PRD-00152,3763.59,9291,duplicate_event,Exact duplicate of event_id EVT-0009219
+EVT-0009275,SHP-001321,PO-2026-01200,DELAYED,2026-09-30T10:59:59-05:00,1,PRD-00094,-3475.0,9331,negative_quantity,items[0].quantity is negative (-3475.0)
+EVT-0009310,SHP-000532,PO-2026-00492,DELAYED,2026-09-30T19:59:59+01:00,2,PRD-98082,2093.0,9366,unknown_product,items[0].product_id PRD-98082 does not exist in products.csv (inherited from purchase order line)
+EVT-0009320,SHP-000724,PO-2026-00667,DELAYED,2026-09-30T20:59:59+01:00,1,PRD-98862,2290.0,9376,unknown_product,items[0].product_id PRD-98862 does not exist in products.csv (inherited from purchase order line)
