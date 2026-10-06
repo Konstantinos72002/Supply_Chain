@@ -130,14 +130,16 @@ def has_active_alternate(products: DataFrame, suppliers: DataFrame) -> DataFrame
 # Dimensions
 # =========================================================================== #
 def dim_date(spark: SparkSession, po: DataFrame, events: DataFrame, as_of: date | None) -> DataFrame:
-    b = (po.select(F.col("order_date").alias("d"))
-         .unionByName(po.select(F.col("promised_delivery_date").alias("d")))
-         .unionByName(events.select(F.to_date("event_ts").alias("d")))
-         .unionByName(events.select(F.to_date("eta_ts").alias("d")))
-         .unionByName(spark.range(1).select(snapshot(as_of).alias("d")))
-         .agg(F.min("d").alias("lo"), F.max("d").alias("hi")).first())
-    d = spark.range(1).select(F.explode(F.sequence(F.lit(date(b.lo.year, 1, 1)),
-                                                   F.lit(date(b.hi.year, 12, 31)))).alias("date"))
+    """Calendar covering whole years from the earliest to the latest date used by the facts.
+    Built lazily (no collect): Lakeflow table functions must only return a query plan."""
+    bounds = (po.select(F.col("order_date").alias("d"))
+              .unionByName(po.select(F.col("promised_delivery_date").alias("d")))
+              .unionByName(events.select(F.to_date("event_ts").alias("d")))
+              .unionByName(events.select(F.to_date("eta_ts").alias("d")))
+              .unionByName(spark.range(1).select(snapshot(as_of).alias("d")))
+              .agg(F.min("d").alias("lo"), F.max("d").alias("hi")))
+    d = bounds.select(F.explode(F.sequence(F.make_date(F.year("lo"), F.lit(1), F.lit(1)),
+                                           F.make_date(F.year("hi"), F.lit(12), F.lit(31)))).alias("date"))
     d = d.select(date_key("date").alias("date_key"), "date", F.year("date").alias("year"),
                  F.quarter("date").alias("quarter"), F.month("date").alias("month"),
                  F.date_format("date", "MMMM").alias("month_name"))
