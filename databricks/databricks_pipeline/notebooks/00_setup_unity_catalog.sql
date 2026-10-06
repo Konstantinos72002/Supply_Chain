@@ -9,11 +9,12 @@
 -- MAGIC |---|---|
 -- MAGIC | Volume `data2026acc123456.team4.landing` | Raw CSV/JSON files exactly as delivered (one folder per source) |
 -- MAGIC | `team4.bronze_*` | Raw Delta tables + audit columns |
--- MAGIC | `team4.silver_*` | Validated, conformed tables (next step) |
+-- MAGIC | `team4.silver_*` | Validated, conformed tables + `silver_quarantine` |
 -- MAGIC | `team4.gold_*` | Star schema for Fabric / Power BI |
 -- MAGIC | `team4.ops_*` | Pipeline event log, file summary, DQ results |
 -- MAGIC
--- MAGIC Tables are created by the **ETL pipeline** (`pipelines/bronze_pipeline.py`), not here.
+-- MAGIC Tables are created by the single **ETL pipeline** `team4-supply-chain-medallion`
+-- MAGIC (source files `pipelines/medallion/01_bronze.py`, `02_silver.py`, `03_gold.py`), not here.
 -- MAGIC
 -- MAGIC Required privileges on `team4`: `USE SCHEMA`, `CREATE TABLE`, `CREATE MATERIALIZED VIEW`, `CREATE VOLUME`
 -- MAGIC (plus `USE CATALOG` on `data2026acc123456`).
@@ -44,18 +45,11 @@ CREATE VOLUME IF NOT EXISTS landing
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### Clean-up from the notebook-based version (run once)
--- MAGIC The ETL pipeline must **own** its tables. Tables with the same names created earlier by the
--- MAGIC notebook would make the pipeline fail with "table already exists". Drop them once.
--- MAGIC Your raw files in the Volume are NOT touched.
-
--- COMMAND ----------
-
-DROP TABLE IF EXISTS bronze_suppliers_raw;
-DROP TABLE IF EXISTS bronze_products_raw;
-DROP TABLE IF EXISTS bronze_purchase_orders_raw;
-DROP TABLE IF EXISTS bronze_shipment_events_raw;
-DROP TABLE IF EXISTS ops_ingestion_log;   -- replaced by the pipeline event log
+-- MAGIC ### Migration note
+-- MAGIC Tables are owned by the ETL pipeline `team4-supply-chain-medallion`. If tables from earlier versions
+-- MAGIC exist (e.g. `bronze_*_raw`, `silver_purchase_order_lines`, `gold_fact_inventory_risk`), delete the
+-- MAGIC pipeline(s) that created them before creating/updating the new one: deleting a pipeline drops its tables.
+-- MAGIC Files in the landing Volume are never affected; the pipeline rebuilds everything from them.
 
 -- COMMAND ----------
 
@@ -67,4 +61,4 @@ SHOW TABLES;
 -- Optional, if your schema-level permissions allow it (ask the workspace admin otherwise).
 -- Least-privilege examples at object level inside team4:
 -- GRANT READ VOLUME, WRITE VOLUME ON VOLUME data2026acc123456.team4.landing TO `team4-data-engineers`;
--- GRANT SELECT ON TABLE data2026acc123456.team4.ops_bronze_file_summary TO `team4-analysts`;
+-- GRANT SELECT ON TABLE data2026acc123456.team4.ops_bronze_ingestion_log TO `team4-analysts`;

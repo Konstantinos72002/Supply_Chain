@@ -46,9 +46,8 @@ SOURCES = {
     "suppliers": {
         "format": "csv",
         "folder": "suppliers",
-        "target_table": "bronze_suppliers_raw",
+        "target_table": "bronze_suppliers",
         "source_system": "ERP_MASTER_DATA",
-        "load_type": "full_snapshot",       # each delivery = full extract, appended as a batch
         "key_columns": ["supplier_id"],
         "expected_columns": [
             "supplier_id", "supplier_name", "country_code", "region",
@@ -60,9 +59,8 @@ SOURCES = {
     "products": {
         "format": "csv",
         "folder": "products",
-        "target_table": "bronze_products_raw",
+        "target_table": "bronze_products",
         "source_system": "ERP_MASTER_DATA",
-        "load_type": "full_snapshot",
         "key_columns": ["product_id"],
         "expected_columns": [
             "product_id", "product_name", "category", "unit_of_measure",
@@ -75,9 +73,8 @@ SOURCES = {
     "purchase_orders": {
         "format": "csv",
         "folder": "purchase_orders",
-        "target_table": "bronze_purchase_orders_raw",
+        "target_table": "bronze_purchase_orders",
         "source_system": "ERP_PROCUREMENT",
-        "load_type": "incremental",         # latest last_modified_ts wins (resolved in Silver)
         "key_columns": ["po_id", "po_line_number"],
         "expected_columns": [
             "po_id", "po_line_number", "supplier_id", "product_id", "order_date",
@@ -89,9 +86,8 @@ SOURCES = {
     "shipment_events": {
         "format": "jsonl",                  # newline-delimited JSON, read line by line
         "folder": "shipment_events",
-        "target_table": "bronze_shipment_events_raw",
+        "target_table": "bronze_shipment_events",
         "source_system": "CARRIER_TMS",
-        "load_type": "incremental",
         "key_columns": ["event_id"],
         "expected_columns": [f.name for f in SHIPMENT_EVENT_SCHEMA.fields],
         "json_schema": SHIPMENT_EVENT_SCHEMA,
@@ -105,16 +101,8 @@ EXCLUDED_FILE_SUFFIXES = ["_errors.csv", "_errors.json"]
 
 # Per-record load_status values written to Bronze
 LOAD_STATUS_LOADED = "LOADED"              # parsed and matches the contract
-LOAD_STATUS_SCHEMA_DRIFT = "SCHEMA_DRIFT"  # parsed, but carries unexpected / mismatched data
+LOAD_STATUS_SCHEMA_DRIFT = "SCHEMA_DRIFT"  # parsed, but carries unexpected / missing columns (_rescued_data)
 LOAD_STATUS_MALFORMED = "MALFORMED"        # could not be parsed (raw text kept)
 
-# Delta / pipeline properties applied to every Bronze table
-BRONZE_TABLE_PROPERTIES = {
-    "quality": "bronze",
-    "delta.enableChangeDataFeed": "true",   # lets Silver read changes incrementally
-}
+BRONZE_TABLE_PROPERTIES = {"quality": "bronze"}
 
-
-def csv_schema(source_name: str) -> StructType:
-    """All-string schema for a CSV source, in contract order."""
-    return StructType([StructField(c, S) for c in SOURCES[source_name]["expected_columns"]])
