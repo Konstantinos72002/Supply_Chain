@@ -1,9 +1,0 @@
-product_id,product_name,category,unit_of_measure,unit_cost,cost_currency,criticality,primary_supplier_id,alternate_supplier_id,stocking_location_id,on_hand_qty,safety_stock_qty,avg_daily_demand,source_line_number,dq_rule,dq_description
-PRD-00009,Gearbox S70,Mechanical Parts,EA,111.1997,EUR,MEDIUM,SUP-0048,SUP-0043,WH-THE-01,349.00,-278.00,29.01,10,negative_quantity,safety_stock_qty is negative (-278.00)
-PRD-00052,Rivet C87,Fasteners,EA,0.2210,EUR,LOW,SUP-0021,SUP-9555,WH-RTM-01,7585.00,2220.00,298.99,53,unknown_supplier,alternate_supplier_id SUP-9555 does not exist in suppliers.csv
-PRD-00098,Epoxy Resin C65,Chemicals,L,24.2431,usd,MEDIUM,SUP-0007,,WH-MIL-01,2105.65,197.10,48.30,99,currency_inconsistency,cost_currency 'usd' is not a valid ISO 4217 code (expected EUR)
-PRD-00092,Foam Insert B43,Packaging,EA,1.9767,EUR,LOW,SUP-0039,,WH-MIL-01,7289.00,2421.00,287.78,168,duplicate_product,Duplicate product_id PRD-00092 with conflicting unit_cost
-PRD-00203,Lock Nut X10,Fasteners,EA,1.7986,EUR,LOW,SUP-0007,SUP-9151,WH-MIL-01,11911.00,1110.00,287.25,205,unknown_supplier,alternate_supplier_id SUP-9151 does not exist in suppliers.csv
-PRD-00222,Coolant A84,Chemicals,L,16.8659,EUR,LOW,SUP-0041,SUP-0017,WH-RTM-01,5737.27,-1034.89,136.47,224,negative_quantity,safety_stock_qty is negative (-1034.89)
-PRD-00231,Corrugated Box S86,Packaging,EA,0.8985,usd,MEDIUM,SUP-0038,,WH-RTM-01,8653.00,1644.00,333.50,233,currency_inconsistency,cost_currency 'usd' is not a valid ISO 4217 code (expected USD)
-PRD-00208,Shipping Crate S96,Packaging,EA,0.5457,EUR,LOW,SUP-0042,SUP-0029,WH-MIL-01,15436.00,965.00,303.90,252,duplicate_product,Duplicate product_id PRD-00208 with conflicting unit_cost
