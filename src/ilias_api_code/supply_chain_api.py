@@ -9,10 +9,14 @@ Callers sign in with Microsoft Entra ID and send the access token as 'Authorizat
 User interface: http://127.0.0.1:8000/   Interactive docs: http://127.0.0.1:8000/docs
 """
 import asyncio
+import json
+import logging
 import os
 import re
 import time
+import uuid
 from contextlib import asynccontextmanager
+from contextvars import ContextVar
 from datetime import date
 from pathlib import Path
 from typing import Any, Literal
@@ -60,8 +64,56 @@ DIM_PRODUCT = table('gold_dim_product')
 DIM_LOCATION = table('gold_dim_location')
 DIM_DATE = table('gold_dim_date')
 
+# =============================================================================
+# Structured logs with a correlation id (assignment 6.7)
+# =============================================================================
+CORRELATION_HEADER = 'X-Correlation-ID'
+VALID_CORRELATION_ID = re.compile(r'[A-Za-z0-9._-]{1,64}')
+correlation_id: ContextVar[str] = ContextVar('correlation_id', default='-')
+
+
+class CorrelationIdFilter(logging.Filter):
+    """Stamps every log record with the correlation id of the request being served."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.correlation_id = correlation_id.get()
+        return True
+
+
+class JsonLogFormatter(logging.Formatter):
+    """One JSON object per line. Only metadata is logged: never headers, request bodies or secrets."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        entry = {
+            'ts': time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime(record.created)) + f'.{int(record.msecs):03d}Z',
+            'level': record.levelname,
+            'logger': record.name,
+            'message': record.getMessage(),
+            'correlation_id': getattr(record, 'correlation_id', '-'),
+            **getattr(record, 'fields', {}),
+        }
+        if record.exc_info:
+            entry['exception'] = self.formatException(record.exc_info)
+        return json.dumps(entry, default=str)
+
+
+logger = logging.getLogger('supply_chain_api')
+logger.setLevel(logging.INFO)
+logger.addFilter(CorrelationIdFilter())
+if not logger.handlers:
+    _log_handler = logging.StreamHandler()
+    _log_handler.setFormatter(JsonLogFormatter())
+    logger.addHandler(_log_handler)
+
 STATEMENTS_PATH = '/api/2.0/sql/statements'
 POLL_DEADLINE_SECONDS = 120
+
+# Bounded retries for transient Databricks errors (assignment 6.7): rate limit (429) and temporary unavailability.
+RETRY_STATUSES = {429, 502, 503, 504}
+MAX_ATTEMPTS = 3                     # 1 call + at most 2 retries
+RETRY_BASE_DELAY_SECONDS = 1.0       # waits 1s, then 2s
+MAX_RETRY_AFTER_SECONDS = 10.0       # upper bound for a Retry-After header sent by Databricks
+retry_sleep = asyncio.sleep          # kept as a module attribute so tests can record the waits
 
 # The Statement Execution API returns every value as a string (or null); convert by column type.
 INT_TYPES = {'BYTE', 'SHORT', 'INT', 'LONG'}
@@ -83,11 +135,39 @@ async def lifespan(app: FastAPI):
         app.state.client = client
         yield
 
+def retry_delay(response: httpx.Response | None, attempt: int) -> float:
+    """Seconds to wait before the next attempt: Retry-After when Databricks sends it, otherwise 1s, 2s, ..."""
+    if response is not None:
+        retry_after = response.headers.get('Retry-After', '')
+        if retry_after.isdigit():
+            return min(float(retry_after), MAX_RETRY_AFTER_SECONDS)
+    return RETRY_BASE_DELAY_SECONDS * 2 ** (attempt - 1)
+
+
+async def send_with_retry(client: httpx.AsyncClient, method: str, url: str, **kwargs: Any) -> httpx.Response:
+    """Sends one request to Databricks; retries 429/502/503/504 and network errors at most MAX_ATTEMPTS times."""
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            response = await client.request(method, url, **kwargs)
+        except httpx.TransportError as exc:          # connection refused, timeout, connection reset ...
+            if attempt == MAX_ATTEMPTS:
+                raise
+            response, reason = None, type(exc).__name__
+        else:
+            if response.status_code not in RETRY_STATUSES or attempt == MAX_ATTEMPTS:
+                return response
+            reason = f'HTTP {response.status_code}'
+        delay = retry_delay(response, attempt)
+        logger.warning('Databricks %s; retry %s/%s in %.1fs', reason, attempt, MAX_ATTEMPTS - 1, delay)
+        await retry_sleep(delay)
+    raise AssertionError('unreachable')
+
 
 def check_response(response: httpx.Response) -> dict[str, Any]:
     if response.is_error:
-        raise HTTPException(status_code=502, detail={
-            'databricks_status': response.status_code, 'databricks_response': response.text})
+        # The full Databricks reply can contain SQL and table names: server log only, never to the client.
+        logger.error('Databricks HTTP %s: %s', response.status_code, response.text[:2000])
+        raise HTTPException(status_code=502, detail='The data source returned an error. Please try again later.')
     return response.json()
 
 
@@ -112,7 +192,7 @@ async def run_statement(client: httpx.AsyncClient, statement: str,
     }
     if parameters:
         payload['parameters'] = parameters
-    result = check_response(await client.post(STATEMENTS_PATH, json=payload))
+    result = check_response(await send_with_retry(client, 'POST', STATEMENTS_PATH, json=payload))
     statement_id = result['statement_id']
 
     deadline = time.monotonic() + POLL_DEADLINE_SECONDS
@@ -124,16 +204,18 @@ async def run_statement(client: httpx.AsyncClient, statement: str,
                 pass
             raise HTTPException(status_code=504, detail=f'Statement {statement_id} timed out and was cancelled.')
         await asyncio.sleep(1)
-        result = check_response(await client.get(f'{STATEMENTS_PATH}/{statement_id}'))
+        result = check_response(await send_with_retry(client, 'GET', f'{STATEMENTS_PATH}/{statement_id}'))
 
     if result['status']['state'] != 'SUCCEEDED':
-        raise HTTPException(status_code=502, detail=result['status'])
+        logger.error('Statement %s ended in state %s: %s', statement_id, result['status']['state'],
+                     result['status'].get('error'))
+        raise HTTPException(status_code=502, detail='The query on the data source failed. Please try again later.')
 
     schema = result['manifest']['schema']['columns']
     chunk = result.get('result', {})
     rows = list(chunk.get('data_array', []))
     while link := chunk.get('next_chunk_internal_link'):
-        chunk = check_response(await client.get(link))
+        chunk = check_response(await send_with_retry(client, 'GET', link))
         rows.extend(chunk.get('data_array', []))
     return [{col['name']: convert(v, col['type_name']) for col, v in zip(schema, row)} for row in rows]
 
@@ -175,6 +257,28 @@ app = FastAPI(
     lifespan=lifespan,
     swagger_ui_init_oauth={'clientId': UI_CLIENT_ID, 'usePkceWithAuthorizationCodeGrant': True, 'scopes': SCOPE},
 )
+
+
+@app.middleware('http')
+async def correlation_id_and_access_log(request: Request, call_next):
+    """Gives every request a correlation id (taken from the X-Correlation-ID header when valid, otherwise new),
+    returns it in the response header and writes one structured log line per request."""
+    incoming = request.headers.get(CORRELATION_HEADER, '')
+    request_id = incoming if VALID_CORRELATION_ID.fullmatch(incoming) else uuid.uuid4().hex
+    token = correlation_id.set(request_id)
+    start = time.perf_counter()
+    status = 500
+    try:
+        response = await call_next(request)
+        status = response.status_code
+        response.headers[CORRELATION_HEADER] = request_id
+        return response
+    finally:
+        logger.info('request', extra={'fields': {
+            'method': request.method, 'path': request.url.path, 'status': status,
+            'duration_ms': round((time.perf_counter() - start) * 1000, 1)}})
+        correlation_id.reset(token)
+
 
 # Signing keys of the tenant, fetched once and cached (refetched when Entra rotates them).
 jwks_client = jwt.PyJWKClient(f'{AUTHORITY}/discovery/v2.0/keys', cache_keys=True, lifespan=3600)
@@ -587,7 +691,8 @@ async def ask_assistant(request: Request, body: AssistantQuery) -> AssistantAnsw
         request.app.state.assistant_llm = default_llm()
     # In-process calls to this same app with the caller's own token: same validation and security, no network hop.
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=request.app), base_url='http://supply-chain-api',
-                                 headers={'Authorization': request.headers['Authorization']},
+                                 headers={'Authorization': request.headers['Authorization'],
+                                          CORRELATION_HEADER: correlation_id.get()},
                                  timeout=POLL_DEADLINE_SECONDS + 30) as tools_client:
         return await run_assistant(body.question, tools_client, request.app.state.assistant_llm)
 
@@ -610,12 +715,24 @@ async def auth_config() -> dict[str, str]:
 
 
 # =============================================================================
-# Health
+# Health & Readiness
 # =============================================================================
-@app.get('/health', operation_id='get_health', summary='Service and Databricks SQL warehouse health')
-async def health(request: Request) -> dict[str, str]:
-    await run_statement(request.app.state.client, 'SELECT 1')
+@app.get('/health', operation_id='get_health', summary='Liveness: the API process is running')
+async def health() -> dict[str, str]:
+    """Liveness probe. Does not call Databricks, so a stopped SQL warehouse does not make the API look dead."""
     return {'status': 'ok'}
+
+
+@app.get('/ready', operation_id='get_readiness', summary='Readiness: the Databricks SQL warehouse answers',
+         responses={503: {'description': 'Databricks is not reachable; the API cannot serve data yet.'}})
+async def ready(request: Request) -> JSONResponse:
+    """Readiness probe: runs SELECT 1 on the SQL warehouse. 200 = ready to serve data, 503 = not ready."""
+    try:
+        await run_statement(request.app.state.client, 'SELECT 1')
+    except (HTTPException, httpx.HTTPError) as exc:
+        logger.warning('Readiness check failed: %s', type(exc).__name__)
+        return JSONResponse(status_code=503, content={'status': 'not_ready', 'databricks': 'unavailable'})
+    return JSONResponse(status_code=200, content={'status': 'ready', 'databricks': 'ok'})
 
 
 if __name__ == '__main__':

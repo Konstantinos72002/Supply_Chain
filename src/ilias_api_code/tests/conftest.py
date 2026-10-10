@@ -1,14 +1,14 @@
-"""Test setup: real Gold tables (built locally by the pipeline), the API's SQL executed by local Spark,
-Entra ID access tokens signed with a local test key, and a scripted fake LLM in place of Azure OpenAI."""
+"""Test setup: real Gold tables (tests/data/gold, exported from the pipeline), the API's SQL executed by local
+Spark, Entra ID access tokens signed with a local test key, and a scripted fake LLM in place of Azure OpenAI."""
 import json
 import os
 import sys
-import tempfile
 import time
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
+import dotenv
 import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -16,11 +16,10 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 TENANT, CLIENT = '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222'
 os.environ.update(DATABRICKS_HOST='https://example', DATABRICKS_TOKEN='x', DATABRICKS_WAREHOUSE_ID='w',
                   ENTRA_TENANT_ID=TENANT, ENTRA_API_CLIENT_ID=CLIENT, ENTRA_REQUIRED_APP_ROLE='SupplyChain.Read')
+dotenv.load_dotenv = lambda *args, **kwargs: False   # a developer's local .env must not override the values above
 HERE = Path(__file__).resolve().parent
-# The Gold tables are built with the pipeline repository (team4_supply_chain) from the generated data files.
-PIPELINE_REPO = Path(os.environ.get('PIPELINE_REPO', HERE.parent.parent / 'team4_supply_chain'))
-DATA_DIR = os.environ.get('BRONZE_TEST_DATA', str(PIPELINE_REPO / 'data'))
-sys.path[:0] = [str(HERE.parent), str(PIPELINE_REPO / 'src'), str(PIPELINE_REPO / 'tests')]
+GOLD_DIR = HERE / 'data' / 'gold'          # one CSV per Gold table used by the API
+sys.path.insert(0, str(HERE.parent))
 
 from langchain_core.messages import AIMessage, ToolMessage
 
@@ -53,6 +52,11 @@ class _LocalKeys:
         return jwt.PyJWK.from_dict(json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(SIGNING_KEY.public_key())))
 
 
+import supply_chain_api  # noqa: E402
+
+supply_chain_api.jwks_client = _LocalKeys()   # tokens are checked against the local test key, also without Spark
+
+
 @pytest.fixture(scope='session')
 def spark():
     from pyspark.sql import SparkSession
@@ -60,11 +64,8 @@ def spark():
          .config('spark.ui.showConsoleProgress', 'false').config('spark.sql.ansi.enabled', 'true')
          .config('spark.sql.session.timeZone', 'UTC').config('spark.driver.memory', '3g').getOrCreate())
     s.sparkContext.setLogLevel('ERROR')
-    from silver_harness import make_landing, run_on_landing
-    tables = run_on_landing(s, make_landing(DATA_DIR, Path(tempfile.mkdtemp())))['tables']
-    for name, df in tables.items():
-        if name.startswith('gold_'):
-            df.createOrReplaceTempView(name)
+    for csv in GOLD_DIR.glob('gold_*.csv'):
+        s.read.csv(str(csv), header=True, inferSchema=True).createOrReplaceTempView(csv.stem)
     return s
 
 
