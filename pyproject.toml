@@ -13,6 +13,7 @@ dependencies = [
     "gh>=0.0.4",
     "httpx>=0.28.1",
     "langchain-core>=1.6.9",
+    "langchain-openai>=1.7.0",
     "langgraph>=1.2.14",
     "pydantic>=2.14.0",
     "uvicorn>=0.54.0",
