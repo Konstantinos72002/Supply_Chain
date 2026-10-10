@@ -16,6 +16,7 @@ dependencies = [
     "langchain-openai>=1.7.0",
     "langgraph>=1.2.14",
     "pydantic>=2.14.0",
+    "python-dotenv>=1.2.4",
     "uvicorn>=0.54.0",
 ]
 
@@ -29,4 +30,5 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "pyspark>=4.2.0",
+    "pytest>=9.1.1",
 ]
