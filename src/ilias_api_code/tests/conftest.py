@@ -1,17 +1,21 @@
 """Test setup: real Gold tables (built locally by the pipeline), the API's SQL executed by local Spark,
-and a scripted fake LLM in place of Azure OpenAI."""
+Entra ID access tokens signed with a local test key, and a scripted fake LLM in place of Azure OpenAI."""
 import json
 import os
 import sys
 import tempfile
+import time
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
+import jwt
 import pytest
+from cryptography.hazmat.primitives.asymmetric import rsa
 
+TENANT, CLIENT = '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222'
 os.environ.update(DATABRICKS_HOST='https://example', DATABRICKS_TOKEN='x', DATABRICKS_WAREHOUSE_ID='w',
-                  API_KEY='secret')
+                  ENTRA_TENANT_ID=TENANT, ENTRA_API_CLIENT_ID=CLIENT, ENTRA_REQUIRED_APP_ROLE='SupplyChain.Read')
 HERE = Path(__file__).resolve().parent
 # The Gold tables are built with the pipeline repository (team4_supply_chain) from the generated data files.
 PIPELINE_REPO = Path(os.environ.get('PIPELINE_REPO', HERE.parent.parent / 'team4_supply_chain'))
@@ -21,6 +25,32 @@ sys.path[:0] = [str(HERE.parent), str(PIPELINE_REPO / 'src'), str(PIPELINE_REPO 
 from langchain_core.messages import AIMessage, ToolMessage
 
 from assistant.schemas import Draft, Judgment, RouteDecision, SupervisorDecision
+
+# --------------------------------------------------------------------------- Entra ID test tokens
+SIGNING_KEY = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+
+
+def token(**overrides):
+    """A v2.0 delegated access token for the API, as Entra ID would issue it; overrides change or drop (None) claims."""
+    now = int(time.time())
+    claims = {'aud': CLIENT, 'iss': f'https://login.microsoftonline.com/{TENANT}/v2.0', 'tid': TENANT,
+              'iat': now, 'nbf': now, 'exp': now + 3600, 'scp': 'access_as_user', 'name': 'Test User'} | overrides
+    return jwt.encode({k: v for k, v in claims.items() if v is not None}, SIGNING_KEY, algorithm='RS256',
+                      headers={'kid': 'test'})
+
+
+def bearer(**overrides):
+    return {'Authorization': f'Bearer {token(**overrides)}'}
+
+
+H = bearer()
+
+
+class _LocalKeys:
+    """Stands in for the tenant's JWKS endpoint."""
+
+    def get_signing_key_from_jwt(self, _):
+        return jwt.PyJWK.from_dict(json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(SIGNING_KEY.public_key())))
 
 
 @pytest.fixture(scope='session')
@@ -50,6 +80,7 @@ def api(spark):
         return [{k: conv(v) for k, v in r.asDict().items()} for r in spark.sql(sql, args=args).collect()]
 
     module.run_statement = local_run_statement
+    module.jwks_client = _LocalKeys()
     return module
 
 

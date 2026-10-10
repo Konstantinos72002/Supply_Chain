@@ -1,7 +1,8 @@
 """Business endpoints: exact brief KPI values on the generated data, filters, safety and contract."""
-import pytest
+import time
 
-H = {'X-API-Key': 'secret'}
+import pytest
+from conftest import CLIENT, TENANT, H, bearer, token
 EXPECTED = {'order_value': 190388429.60, 'on_time_delivery_rate': 0.6446, 'average_delay_days': 6.74,
             'supplier_fill_rate': 0.8426, 'exposed_value': 2574955.37, 'delayed_quantity': 6929712.71,
             'critical_item_count': 22, 'alternate_supplier_coverage': 0.5862}
@@ -60,4 +61,30 @@ def test_operation_ids_for_agents(client):
 def test_user_interface_is_served_without_data(client):
     page = client.get('/')
     assert page.status_code == 200 and page.headers['content-type'].startswith('text/html')
-    assert 'Supply disruption desk' in page.text and 'X-API-Key' in page.text   # data still needs the key
+    assert 'Supply disruption desk' in page.text and 'Sign in with Microsoft' in page.text   # data needs sign-in
+    assert client.get('/auth/config').json() == {
+        'client_id': CLIENT, 'authority': f'https://login.microsoftonline.com/{TENANT}',
+        'scope': f'api://{CLIENT}/access_as_user'}
+
+
+@pytest.mark.parametrize('headers', [
+    {},
+    {'Authorization': 'Bearer not-a-jwt'},
+    bearer(aud='api://some-other-api'),
+    bearer(iss='https://login.microsoftonline.com/other-tenant/v2.0'),
+    bearer(tid='33333333-3333-3333-3333-333333333333'),
+    bearer(exp=int(time.time()) - 60),
+    bearer(tid=None),
+])
+def test_rejected_tokens(client, headers):
+    r = client.post('/analytics/query', json={'kpi': 'order_value'}, headers=headers)
+    assert r.status_code == 401 and r.headers['www-authenticate'] == 'Bearer'
+
+
+def test_token_permissions(client):
+    ok = lambda headers: client.get('/suppliers/scorecard', params={'limit': 1}, headers=headers).status_code
+    v1_token = {'Authorization': f'Bearer {token(aud=f"api://{CLIENT}", iss=f"https://sts.windows.net/{TENANT}/")}'}
+    assert ok(v1_token) == 200
+    assert ok(bearer(scp='User.Read')) == 403
+    assert ok(bearer(scp=None, roles=['SupplyChain.Read'])) == 200        # app-only caller with the app role
+    assert ok(bearer(scp=None, roles=['Something.Else'])) == 403

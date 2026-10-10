@@ -35,8 +35,8 @@
   .brand h1 { font-size: 20px; letter-spacing: .01em; }
   .brand span { color: #AFC0D3; font-size: 14px; }
   .key { display: flex; gap: 8px; align-items: center; }
-  .key label { font-size: 14px; color: #AFC0D3; }
-  .key input { width: 220px; padding: 7px 10px; border: 1px solid #3B5878; border-radius: 4px; background: var(--hull); color: #fff; }
+  .key span { font-size: 14px; color: #AFC0D3; }
+  .key .btn-quiet { color: #fff; border-color: #3B5878; }
   .btn { padding: 8px 16px; border: 0; border-radius: 4px; background: var(--marking); color: var(--ink); font-weight: 600; cursor: pointer; }
   .btn:disabled { opacity: .6; cursor: progress; }
   .btn-quiet { background: transparent; color: var(--hull); border: 1px solid var(--rule); font-weight: 500; }
@@ -112,7 +112,7 @@
     .kpi:nth-child(2n) { border-left: 0; padding-left: 0; }
     .kpi .num { font-size: 32px; }
     .kpi { padding-right: 8px; }
-    .key input { width: 160px; }
+    .key span { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
@@ -121,11 +121,11 @@
 <header class="mast">
   <div class="wrap">
     <div class="brand"><h1>Supply disruption desk</h1><span>Team 4 supply chain</span></div>
-    <form class="key" id="key-form">
-      <label for="api-key">API key</label>
-      <input id="api-key" type="password" autocomplete="off" placeholder="X-API-Key from the server's .env">
-      <button class="btn" type="submit" id="connect">Connect</button>
-    </form>
+    <div class="key" id="auth">
+      <span id="who" aria-live="polite">Not signed in</span>
+      <button class="btn" type="button" id="sign-in">Sign in with Microsoft</button>
+      <button class="btn btn-quiet" type="button" id="sign-out" hidden>Sign out</button>
+    </div>
   </div>
 </header>
 
@@ -133,7 +133,7 @@
   <div class="wrap">
     <div class="board-head">
       <h2 id="board-title">Business brief KPIs, cancelled lines excluded</h2>
-      <p class="asof" id="asof" aria-live="polite">Connect with your API key to load the data.</p>
+      <p class="asof" id="asof" aria-live="polite">Sign in with your Microsoft account to load the data.</p>
     </div>
     <div class="rows">
       <div class="row">
@@ -196,13 +196,13 @@
       </div>
       <div class="filters" id="filters"></div>
       <div class="error" id="list-error" role="alert" hidden></div>
-      <div class="table-wrap" id="list" role="tabpanel" aria-live="polite"><p class="empty">Connect with your API key to load the lists.</p></div>
+      <div class="table-wrap" id="list" role="tabpanel" aria-live="polite"><p class="empty">Sign in with your Microsoft account to load the lists.</p></div>
     </div>
   </section>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.27.0/lib/msal-browser.min.js"></script>
 <script>
-const KEY_STORE = 'supply-desk-api-key';
 const nf = (d) => new Intl.NumberFormat('en-GB', { maximumFractionDigits: d, minimumFractionDigits: d });
 const fmt = {
   eur: (v) => v == null ? '–' : Math.abs(v) >= 1e6 ? `€${nf(2).format(v / 1e6)}M` : `€${nf(0).format(v)}`,
@@ -218,26 +218,36 @@ const KPI_FORMAT = { order_value: fmt.eur, on_time_delivery_rate: fmt.pct, avera
 const $ = (id) => document.getElementById(id);
 const el = (tag, text, cls) => { const e = document.createElement(tag); if (text != null) e.textContent = text; if (cls) e.className = cls; return e; };
 
-let apiKey = sessionStorage.getItem(KEY_STORE) || '';
-
 class ApiError extends Error {}
 
+/* ---------------- Microsoft Entra ID sign-in (MSAL.js, redirect flow) ---------------- */
+let msalApp = null, authConfig = null, account = null;
+
+async function getToken() {
+  if (!account) throw new ApiError('Sign in with your Microsoft account first.');
+  const request = { scopes: [authConfig.scope], account };
+  try {
+    return (await msalApp.acquireTokenSilent(request)).accessToken;
+  } catch (error) {
+    if (error instanceof msal.InteractionRequiredAuthError) await msalApp.acquireTokenRedirect(request);
+    throw new ApiError('Your sign-in has expired. Sign in again.');
+  }
+}
+
 async function api(path, { method = 'GET', body, params } = {}) {
-  if (!apiKey) throw new ApiError('Enter the API key first.');
+  const token = await getToken();
   const url = params ? `${path}?${new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null))}` : path;
   let response;
   try {
-    response = await fetch(url, { method, headers: { 'X-API-Key': apiKey, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    response = await fetch(url, { method, headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
       body: body ? JSON.stringify(body) : undefined });
   } catch {
     throw new ApiError('The API server cannot be reached. Check that it is running.');
   }
   if (response.ok) return response.json();
   const detail = await response.json().then((j) => j.detail).catch(() => null);
-  if (response.status === 401) {
-    apiKey = ''; sessionStorage.removeItem(KEY_STORE);
-    throw new ApiError('The API key was rejected. Use the API_KEY value from the server\'s .env.');
-  }
+  if (response.status === 401) throw new ApiError('Your Microsoft sign-in was rejected by the API. Sign out and sign in again.');
+  if (response.status === 403) throw new ApiError('Your account is signed in but has no access to this API. Ask the app owner for access.');
   if (response.status === 504) throw new ApiError('Databricks did not answer in time. The SQL warehouse may be starting; try again in a minute.');
   if (response.status === 502) throw new ApiError(`Databricks could not be reached${typeof detail === 'string' ? `: ${detail}` : '.'} Check the Databricks settings in .env.`);
   if (response.status === 422) throw new ApiError(`The request was not valid: ${typeof detail === 'string' ? detail : 'check the inputs.'}`);
@@ -396,7 +406,7 @@ document.querySelectorAll('[role="tab"]').forEach((tab) => tab.addEventListener(
   document.querySelectorAll('[role="tab"]').forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
   currentView = tab.dataset.view;
   renderFilters();
-  if (apiKey) loadList();
+  if (account) loadList();
 }));
 
 /* ---------------- assistant ---------------- */
@@ -459,18 +469,36 @@ async function connect() {
   showError('list-error', null);
   await Promise.all([loadKpis(), loadList()]);
 }
-$('key-form').addEventListener('submit', (event) => {
-  event.preventDefault();
-  apiKey = $('api-key').value.trim();
-  if (!apiKey) { $('asof').textContent = 'Enter the API key to load the data.'; return; }
-  sessionStorage.setItem(KEY_STORE, apiKey);
-  $('api-key').value = '';
-  $('api-key').placeholder = 'Connected for this tab';
-  connect();
-});
+function showAccount() {
+  $('who').textContent = account ? (account.name || account.username) : 'Not signed in';
+  $('who').title = account ? account.username : '';
+  $('sign-in').hidden = !!account;
+  $('sign-out').hidden = !account;
+}
+
+async function initAuth() {
+  try {
+    authConfig = await fetch('/auth/config').then((r) => r.json());
+    msalApp = new msal.PublicClientApplication({
+      auth: { clientId: authConfig.client_id, authority: authConfig.authority, redirectUri: `${location.origin}/` },
+      cache: { cacheLocation: 'sessionStorage' },
+    });
+    await msalApp.initialize();
+    const result = await msalApp.handleRedirectPromise();
+    account = result?.account ?? msalApp.getAllAccounts()[0] ?? null;
+  } catch (error) {
+    $('asof').textContent = `Microsoft sign-in is not available: ${error.message}`;
+    return;
+  }
+  showAccount();
+  if (account) connect();
+}
+
+$('sign-in').addEventListener('click', () => msalApp?.loginRedirect({ scopes: [authConfig.scope] }));
+$('sign-out').addEventListener('click', () => msalApp?.logoutRedirect({ account, postLogoutRedirectUri: `${location.origin}/` }));
 
 renderFilters();
-if (apiKey) { $('api-key').placeholder = 'Connected for this tab'; connect(); }
+initAuth();
 </script>
 </body>
 </html>

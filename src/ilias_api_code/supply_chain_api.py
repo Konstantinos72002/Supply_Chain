@@ -1,16 +1,16 @@
 """Team 4 Supply Chain Disruption API: business questions answered from the Databricks Gold layer.
 
 Run:
-    pip install fastapi uvicorn httpx python-dotenv langgraph langchain-openai
+    pip install fastapi uvicorn httpx python-dotenv langgraph langchain-openai "pyjwt[crypto]"
     python supply_chain_api.py
 
 Credentials are read from a .env file next to this file (see .env.example).
+Callers sign in with Microsoft Entra ID and send the access token as 'Authorization: Bearer <token>'.
 User interface: http://127.0.0.1:8000/   Interactive docs: http://127.0.0.1:8000/docs
 """
 import asyncio
 import os
 import re
-import secrets
 import time
 from contextlib import asynccontextmanager
 from datetime import date
@@ -18,10 +18,11 @@ from pathlib import Path
 from typing import Any, Literal
 
 import httpx
+import jwt
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Security
 from fastapi.responses import FileResponse, JSONResponse
-from fastapi.security import APIKeyHeader
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, OAuth2AuthorizationCodeBearer
 from pydantic import BaseModel, ConfigDict, Field
 
 from assistant.graph import default_llm, run_assistant
@@ -32,7 +33,13 @@ load_dotenv(override=True)
 HOST = os.environ['DATABRICKS_HOST'].strip().rstrip('/')
 TOKEN = os.environ['DATABRICKS_TOKEN'].strip()
 WAREHOUSE_ID = os.environ['DATABRICKS_WAREHOUSE_ID'].strip()
-API_KEY = os.environ['API_KEY'].strip()
+# Microsoft Entra ID: the app registration that exposes this API (see .env.example for the setup).
+TENANT_ID = os.environ['ENTRA_TENANT_ID'].strip()
+API_CLIENT_ID = os.environ['ENTRA_API_CLIENT_ID'].strip()
+API_AUDIENCE = os.environ.get('ENTRA_API_AUDIENCE', f'api://{API_CLIENT_ID}').strip()
+REQUIRED_SCOPE = os.environ.get('ENTRA_REQUIRED_SCOPE', 'access_as_user').strip()
+REQUIRED_APP_ROLE = os.environ.get('ENTRA_REQUIRED_APP_ROLE', '').strip()   # optional: app-only (daemon) callers
+UI_CLIENT_ID = os.environ.get('ENTRA_UI_CLIENT_ID', API_CLIENT_ID).strip()
 CATALOG = os.environ.get('DATABRICKS_CATALOG', 'data2026acc123456').strip()
 SCHEMA = os.environ.get('DATABRICKS_SCHEMA', 'team4').strip()
 
@@ -153,20 +160,54 @@ class Filters:
 # =============================================================================
 # App, security, errors
 # =============================================================================
+AUTHORITY = f'https://login.microsoftonline.com/{TENANT_ID}'
+SCOPE = f'{API_AUDIENCE}/{REQUIRED_SCOPE}'
+# v2.0 tokens carry the client id as audience and the v2.0 issuer; v1.0 tokens the App ID URI and sts.windows.net.
+AUDIENCES = [API_AUDIENCE, API_CLIENT_ID]
+ISSUERS = [f'{AUTHORITY}/v2.0', f'https://sts.windows.net/{TENANT_ID}/']
+
 app = FastAPI(
     title='Team 4 Supply Chain Disruption API',
     version='1.0.0',
     description='Answers the business questions of the Team 4 business brief from the Gold layer in Databricks. '
-                'Monetary values are in EUR. Every response carries as_of_date, the snapshot date of the data.',
+                'Monetary values are in EUR. Every response carries as_of_date, the snapshot date of the data. '
+                'Sign in with Microsoft Entra ID (Authorize button) to call the endpoints.',
     lifespan=lifespan,
+    swagger_ui_init_oauth={'clientId': UI_CLIENT_ID, 'usePkceWithAuthorizationCodeGrant': True, 'scopes': SCOPE},
 )
 
-api_key_header = APIKeyHeader(name='X-API-Key', auto_error=False)
+# Signing keys of the tenant, fetched once and cached (refetched when Entra rotates them).
+jwks_client = jwt.PyJWKClient(f'{AUTHORITY}/discovery/v2.0/keys', cache_keys=True, lifespan=3600)
+
+# Documents the sign-in flow in OpenAPI (Swagger "Authorize"); HTTPBearer reads the token itself.
+entra_scheme = OAuth2AuthorizationCodeBearer(
+    authorizationUrl=f'{AUTHORITY}/oauth2/v2.0/authorize', tokenUrl=f'{AUTHORITY}/oauth2/v2.0/token',
+    scopes={SCOPE: 'Read supply chain data'}, auto_error=False)
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
-def require_api_key(key: str | None = Security(api_key_header)) -> None:
-    if not key or not secrets.compare_digest(key, API_KEY):
-        raise HTTPException(status_code=401, detail='Missing or invalid X-API-Key header.')
+def require_user(credentials: HTTPAuthorizationCredentials | None = Security(bearer_scheme),
+                 _: str | None = Security(entra_scheme)) -> dict[str, Any]:
+    """Validates an Entra ID access token for this API: signature, audience, issuer, expiry and permission.
+    A plain def, so FastAPI runs it in a worker thread and a key download never blocks the event loop."""
+    unauthorized = HTTPException(status_code=401, detail='Missing or invalid Microsoft Entra ID access token.',
+                                 headers={'WWW-Authenticate': 'Bearer'})
+    if credentials is None:
+        raise unauthorized
+    try:
+        key = jwks_client.get_signing_key_from_jwt(credentials.credentials).key
+        claims = jwt.decode(credentials.credentials, key, algorithms=['RS256'], audience=AUDIENCES, issuer=ISSUERS,
+                            options={'require': ['exp', 'iat', 'aud', 'iss', 'tid']})
+    except (jwt.PyJWTError, jwt.PyJWKClientError):
+        raise unauthorized
+    if claims['tid'] != TENANT_ID:
+        raise unauthorized
+    delegated = REQUIRED_SCOPE in claims.get('scp', '').split()
+    app_only = bool(REQUIRED_APP_ROLE) and REQUIRED_APP_ROLE in claims.get('roles', [])
+    if not (delegated or app_only):
+        needed = f"the '{REQUIRED_SCOPE}' scope" + (f" or the '{REQUIRED_APP_ROLE}' app role" if REQUIRED_APP_ROLE else '')
+        raise HTTPException(status_code=403, detail=f'The token lacks {needed}.')
+    return claims
 
 
 @app.exception_handler(httpx.HTTPError)
@@ -265,7 +306,7 @@ class KpiResponse(BaseModel):
 
 @app.post('/analytics/query', response_model=KpiResponse, operation_id='query_kpi',
           summary='Compute one business KPI, optionally filtered and grouped',
-          dependencies=[Depends(require_api_key)])
+          dependencies=[Depends(require_user)])
 async def query_kpi(request: Request, body: KpiQuery) -> KpiResponse:
     """Computes one of the 8 business brief KPIs (Order Value, On-Time Delivery Rate, Average Delay,
     Supplier Fill Rate, Exposed Value, Delayed Quantity, Critical-Item Count, Alternate-Supplier Coverage).
@@ -335,7 +376,7 @@ class ScorecardResponse(BaseModel):
 
 
 @app.get('/suppliers/scorecard', response_model=ScorecardResponse, operation_id='get_supplier_scorecard',
-         summary='Rank suppliers by delivery performance', dependencies=[Depends(require_api_key)])
+         summary='Rank suppliers by delivery performance', dependencies=[Depends(require_user)])
 async def get_supplier_scorecard(
     request: Request,
     sort_by: Literal['on_time_delivery_rate', 'supplier_fill_rate', 'average_delay_days', 'delayed_quantity',
@@ -411,7 +452,7 @@ class ExposureResponse(BaseModel):
 
 @app.get('/products/exposure', response_model=ExposureResponse, operation_id='get_product_exposure',
          summary='Products at risk of running out before delayed goods arrive',
-         dependencies=[Depends(require_api_key)])
+         dependencies=[Depends(require_user)])
 async def get_product_exposure(
     request: Request,
     only_exposed: bool = Query(True, description='Only products whose stock runs out before arrival.'),
@@ -484,7 +525,7 @@ class DelayedLinesResponse(BaseModel):
 
 @app.get('/orders/delayed', response_model=DelayedLinesResponse, operation_id='get_delayed_order_lines',
          summary='Open delayed purchase-order lines, in expedite priority order',
-         dependencies=[Depends(require_api_key)])
+         dependencies=[Depends(require_user)])
 async def get_delayed_order_lines(
     request: Request,
     only_exposed_products: bool = Query(False, description='Only lines of products that run out before arrival.'),
@@ -537,16 +578,17 @@ async def get_delayed_order_lines(
 # Assistant (LangGraph multi-agent system over the endpoints above)
 # =============================================================================
 @app.post('/assistant/query', response_model=AssistantAnswer, operation_id='ask_assistant',
-          summary='Answer a business question in natural language', dependencies=[Depends(require_api_key)])
+          summary='Answer a business question in natural language', dependencies=[Depends(require_user)])
 async def ask_assistant(request: Request, body: AssistantQuery) -> AssistantAnswer:
     """Multi-agent assistant: routes the question, lets specialist agents call the business endpoints of this
     API (the only data access it has), composes an answer from the results and evaluates it (deterministic
     checks + LLM judge) before returning it with evidence, filters, measures, limitations and its execution trace."""
     if getattr(request.app.state, 'assistant_llm', None) is None:
         request.app.state.assistant_llm = default_llm()
-    # In-process calls to this same app: same validation and security, no network hop.
+    # In-process calls to this same app with the caller's own token: same validation and security, no network hop.
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=request.app), base_url='http://supply-chain-api',
-                                 headers={'X-API-Key': API_KEY}, timeout=POLL_DEADLINE_SECONDS + 30) as tools_client:
+                                 headers={'Authorization': request.headers['Authorization']},
+                                 timeout=POLL_DEADLINE_SECONDS + 30) as tools_client:
         return await run_assistant(body.question, tools_client, request.app.state.assistant_llm)
 
 
@@ -559,6 +601,12 @@ UI_PAGE = Path(__file__).with_name('ui') / 'index.html'
 @app.get('/', include_in_schema=False)
 async def user_interface() -> FileResponse:
     return FileResponse(UI_PAGE)
+
+
+@app.get('/auth/config', include_in_schema=False)
+async def auth_config() -> dict[str, str]:
+    """Public sign-in settings for the page (MSAL.js); none of them is a secret."""
+    return {'client_id': UI_CLIENT_ID, 'authority': AUTHORITY, 'scope': SCOPE}
 
 
 # =============================================================================
