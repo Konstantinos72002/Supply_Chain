@@ -1,10 +1,9 @@
 """POST /assistant/query end to end: real API + real Gold data + scripted LLM."""
 import pytest
-from conftest import FakeLLM
+from conftest import H, FakeLLM
 
 from assistant.evaluation import ungrounded_numbers
 
-H = {'X-API-Key': 'secret'}
 OTD = [('query_kpi', {'kpi': 'on_time_delivery_rate'})]
 
 
@@ -141,7 +140,7 @@ def test_tool_call_limits(client, api):
     assert 'supervisor:finish(limit)' in r['trace'] and r['status'] == 'answered'
 
 
-def test_assistant_requires_api_key_and_valid_body(client, api):
+def test_assistant_requires_sign_in_and_valid_body(client, api):
     assert client.post('/assistant/query', json={'question': 'What is our order value?'}).status_code == 401
     assert client.post('/assistant/query', json={'question': 'x'}, headers=H).status_code == 422
     assert client.post('/assistant/query', json={'question': 'ok?', 'x': 1}, headers=H).status_code == 422
