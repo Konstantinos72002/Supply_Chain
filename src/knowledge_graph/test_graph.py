@@ -40,8 +40,9 @@ def test_demo_question(g):
     r = supplier_alternatives(g, "SUP-017")
     ids = [p["product_id"] for p in r["affected_products"]]
     assert "PRD-0203" not in ids                    # not critical
+    assert r["supplier_name"] == "Acme" and r["supplier_is_active"] is True
     assert r["affected_product_count"] == 3
-    assert r["uncovered_product_count"] == 2        # PRD-0117 none, PRD-0150 inactive alt
+    assert r["uncovered_product_count"] == 2       # PRD-0117 none, PRD-0150 inactive alt
     first = r["affected_products"][0]
     assert first["has_usable_alternate"] is False   # uncovered sorted first
 

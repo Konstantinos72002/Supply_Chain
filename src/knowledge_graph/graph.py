@@ -152,6 +152,8 @@ def supplier_alternatives(g: nx.MultiDiGraph, supplier_id: str,
     affected.sort(key=lambda r: (r["has_usable_alternate"], r["product_id"] or ""))
     return {
         "supplier_id": supplier_id,
+        "supplier_name": g.nodes[node].get("supplier_name"),
+        "supplier_is_active": bool(g.nodes[node].get("is_active", False)),
         "critical_only": critical_only,
         "affected_product_count": len(affected),
         "uncovered_product_count": sum(not r["has_usable_alternate"] for r in affected),

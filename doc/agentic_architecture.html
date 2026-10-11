@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assistant Agent Architecture</title>
+<style>
+  :root {
+    --bg: #fafaf9; --fg: #1c1917; --muted: #57534e; --surface: #ffffff; --line: #d6d3d1;
+    --accent: #0f766e; --accent-soft: #ccfbf1; --warn: #b45309;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1917; --fg: #e7e5e4; --muted: #a8a29e; --surface: #292524; --line: #44403c;
+      --accent: #2dd4bf; --accent-soft: #134e4a; --warn: #fbbf24;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1917; --fg: #e7e5e4; --muted: #a8a29e; --surface: #292524; --line: #44403c;
+    --accent: #2dd4bf; --accent-soft: #134e4a; --warn: #fbbf24;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.7rem; margin: 0 0 6px; }
+  h2 { font-size: 1.2rem; margin: 44px 0 10px; }
+  p.lede { color: var(--muted); margin: 0 0 8px; max-width: 70ch; }
+  code { font: 0.88em ui-monospace, SFMono-Regular, Consolas, monospace; }
+  figure { margin: 16px 0 0; }
+  figcaption { color: var(--muted); font-size: 0.92rem; margin-top: 10px; max-width: 80ch; }
+  svg { display: block; width: 100%; height: auto; color: var(--fg); }
+  svg text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fill: currentColor; }
+  svg .t { font-size: 14px; font-weight: 600; }
+  svg .s { font-size: 11px; fill: var(--muted); }
+  svg .l { font-size: 11px; fill: var(--muted); }
+  svg .box { fill: var(--surface); stroke: currentColor; stroke-width: 1.2; }
+  svg .ghost { fill: none; stroke: currentColor; stroke-width: 1.2; stroke-dasharray: 5 4; }
+  svg .kg { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.8; }
+  svg .end { fill: var(--surface); stroke: var(--warn); stroke-width: 1.2; }
+  svg .w { fill: none; stroke: currentColor; stroke-width: 1.3; }
+  svg .wk { fill: none; stroke: var(--accent); stroke-width: 1.8; }
+  svg .wd { fill: none; stroke: currentColor; stroke-width: 1.2; stroke-dasharray: 5 4; }
+  svg .ah { fill: currentColor; }
+  svg .ahk { fill: var(--accent); }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 0.9rem; color: var(--muted); margin-top: 8px; }
+  .sw { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.93rem; margin-top: 8px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 600; }
+  tr.kg td:first-child { color: var(--accent); font-weight: 600; }
+  ul { padding-left: 20px; }
+  li { margin: 4px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Assistant agent architecture</h1>
+  <p class="lede">How <code>POST /assistant/query</code> answers a question: a LangGraph supervisor delegates to
+    four specialist agents. They can only reach data through the API's own business endpoints, and every answer
+    passes an evaluation gate before it is returned. The knowledge-graph path is shown in teal.</p>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--accent-soft);border:2px solid var(--accent)"></span>knowledge-graph path</span>
+    <span><span class="sw" style="border:1.5px solid var(--warn)"></span>ends the run early</span>
+  </div>
+
+  <h2>1 · Routing, delegation and data access</h2>
+  <figure>
+    <svg viewBox="0 0 1000 712" role="img" aria-label="The guard routes a question to the supervisor or to a fixed answer. The supervisor delegates tasks to four specialists. Their tool calls go through one tools node to the FastAPI business endpoints. Four endpoints query the Databricks Gold tables; the disruption-impact endpoint reads the knowledge graph.">
+      <defs>
+        <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path class="ah" d="M0 0 L10 5 L0 10 z"/>
+        </marker>
+        <marker id="ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path class="ahk" d="M0 0 L10 5 L0 10 z"/>
+        </marker>
+      </defs>
+
+      <!-- question -> guard -->
+      <rect class="box" x="400" y="12" width="200" height="48" rx="8"/>
+      <text class="t" x="500" y="32" text-anchor="middle">User question</text>
+      <text class="s" x="500" y="50" text-anchor="middle">POST /assistant/query</text>
+      <line class="w" x1="500" y1="60" x2="500" y2="98" marker-end="url(#a)"/>
+
+      <rect class="box" x="400" y="100" width="200" height="48" rx="8"/>
+      <text class="t" x="500" y="120" text-anchor="middle">guard</text>
+      <text class="s" x="500" y="138" text-anchor="middle">router LLM · RouteDecision</text>
+
+      <!-- guard -> fixed_answer -->
+      <line class="w" x1="600" y1="124" x2="738" y2="124" marker-end="url(#a)"/>
+      <text class="l" x="669" y="116" text-anchor="middle">out_of_scope | clarify</text>
+      <rect class="end" x="740" y="100" width="200" height="48" rx="8"/>
+      <text class="t" x="840" y="120" text-anchor="middle">fixed_answer → END</text>
+      <text class="s" x="840" y="138" text-anchor="middle">fixed text, no tools called</text>
+
+      <!-- guard -> supervisor -->
+      <line class="w" x1="500" y1="148" x2="500" y2="188" marker-end="url(#a)"/>
+      <text class="l" x="510" y="173">answer</text>
+      <rect class="box" x="400" y="190" width="200" height="48" rx="8"/>
+      <text class="t" x="500" y="210" text-anchor="middle">supervisor</text>
+      <text class="s" x="500" y="228" text-anchor="middle">LLM · SupervisorDecision</text>
+      <text class="l" x="612" y="210">≤ 3 delegations</text>
+      <text class="l" x="612" y="226">≤ 8 tool calls in total</text>
+
+      <!-- supervisor -> evaluation gate -->
+      <line class="w" x1="400" y1="214" x2="262" y2="214" marker-end="url(#a)"/>
+      <text class="l" x="331" y="206" text-anchor="middle">finish</text>
+      <rect class="ghost" x="60" y="190" width="200" height="48" rx="8"/>
+      <text class="t" x="160" y="210" text-anchor="middle">evaluation gate</text>
+      <text class="s" x="160" y="228" text-anchor="middle">see figure 2</text>
+
+      <!-- supervisor -> specialists bus -->
+      <polyline class="w" points="500,238 500,268"/>
+      <line class="w" x1="125" y1="268" x2="875" y2="268"/>
+      <line class="w" x1="125" y1="268" x2="125" y2="298" marker-end="url(#a)"/>
+      <line class="w" x1="375" y1="268" x2="375" y2="298" marker-end="url(#a)"/>
+      <line class="w" x1="625" y1="268" x2="625" y2="298" marker-end="url(#a)"/>
+      <line class="wk" x1="875" y1="268" x2="875" y2="298" marker-end="url(#ak)"/>
+      <text class="l" x="510" y="260">one task at a time · findings return to supervisor</text>
+
+      <!-- specialists -->
+      <rect class="box" x="25" y="300" width="200" height="56" rx="8"/>
+      <text class="t" x="125" y="322" text-anchor="middle">kpi_analyst</text>
+      <text class="s" x="125" y="342" text-anchor="middle">query_kpi</text>
+
+      <rect class="box" x="275" y="300" width="200" height="56" rx="8"/>
+      <text class="t" x="375" y="322" text-anchor="middle">supplier_analyst</text>
+      <text class="s" x="375" y="342" text-anchor="middle">scorecard · query_kpi</text>
+
+      <rect class="box" x="525" y="300" width="200" height="56" rx="8"/>
+      <text class="t" x="625" y="322" text-anchor="middle">inventory_analyst</text>
+      <text class="s" x="625" y="342" text-anchor="middle">exposure · delayed lines</text>
+
+      <rect class="kg" x="775" y="300" width="200" height="56" rx="8"/>
+      <text class="t" x="875" y="322" text-anchor="middle">network_analyst</text>
+      <text class="s" x="875" y="342" text-anchor="middle">disruption_impact · scorecard</text>
+
+      <!-- specialists -> tools bus -->
+      <line class="w" x1="125" y1="356" x2="125" y2="390"/>
+      <line class="w" x1="375" y1="356" x2="375" y2="390"/>
+      <line class="w" x1="625" y1="356" x2="625" y2="390"/>
+      <line class="wk" x1="875" y1="356" x2="875" y2="390"/>
+      <line class="w" x1="125" y1="390" x2="875" y2="390"/>
+      <line class="w" x1="500" y1="390" x2="500" y2="418" marker-end="url(#a)"/>
+      <text class="l" x="490" y="410" text-anchor="end">tool_calls ↓ · ToolMessage ↑</text>
+
+      <!-- tools node -->
+      <rect class="box" x="350" y="420" width="300" height="52" rx="8"/>
+      <text class="t" x="500" y="441" text-anchor="middle">tools node</text>
+      <text class="s" x="500" y="460" text-anchor="middle">validates args · per-agent allow-list · ≤ 4 calls per agent</text>
+
+      <line class="w" x1="650" y1="446" x2="738" y2="446" marker-end="url(#a)"/>
+      <text class="l" x="694" y="438" text-anchor="middle">service error</text>
+      <rect class="end" x="740" y="420" width="200" height="52" rx="8"/>
+      <text class="t" x="840" y="441" text-anchor="middle">unavailable → END</text>
+      <text class="s" x="840" y="460" text-anchor="middle">no answer is guessed</text>
+
+      <!-- tools -> API -->
+      <line class="w" x1="500" y1="472" x2="500" y2="498" marker-end="url(#a)"/>
+      <rect class="box" x="25" y="500" width="950" height="40" rx="8"/>
+      <text class="t" x="500" y="525" text-anchor="middle">FastAPI business endpoints — in-process ASGI call with the caller's Entra ID token</text>
+
+      <!-- endpoint chips -->
+      <line class="w" x1="115" y1="540" x2="115" y2="560"/>
+      <line class="w" x1="307.5" y1="540" x2="307.5" y2="560"/>
+      <line class="w" x1="500" y1="540" x2="500" y2="560"/>
+      <line class="w" x1="692.5" y1="540" x2="692.5" y2="560"/>
+      <line class="wk" x1="885" y1="540" x2="885" y2="560"/>
+
+      <rect class="box" x="25" y="560" width="180" height="40" rx="6"/>
+      <text class="s" x="115" y="576" text-anchor="middle">POST</text>
+      <text class="l" x="115" y="592" text-anchor="middle">/analytics/query</text>
+      <rect class="box" x="217.5" y="560" width="180" height="40" rx="6"/>
+      <text class="s" x="307.5" y="576" text-anchor="middle">GET</text>
+      <text class="l" x="307.5" y="592" text-anchor="middle">/suppliers/scorecard</text>
+      <rect class="box" x="410" y="560" width="180" height="40" rx="6"/>
+      <text class="s" x="500" y="576" text-anchor="middle">GET</text>
+      <text class="l" x="500" y="592" text-anchor="middle">/products/exposure</text>
+      <rect class="box" x="602.5" y="560" width="180" height="40" rx="6"/>
+      <text class="s" x="692.5" y="576" text-anchor="middle">GET</text>
+      <text class="l" x="692.5" y="592" text-anchor="middle">/orders/delayed</text>
+      <rect class="kg" x="795" y="560" width="180" height="40" rx="6"/>
+      <text class="s" x="885" y="576" text-anchor="middle">GET</text>
+      <text class="l" x="885" y="592" text-anchor="middle">/suppliers/disruption-impact</text>
+
+      <!-- data sources -->
+      <line class="w" x1="115" y1="600" x2="115" y2="638" marker-end="url(#a)"/>
+      <line class="w" x1="307.5" y1="600" x2="307.5" y2="638" marker-end="url(#a)"/>
+      <line class="w" x1="500" y1="600" x2="500" y2="638" marker-end="url(#a)"/>
+      <line class="w" x1="692.5" y1="600" x2="692.5" y2="638" marker-end="url(#a)"/>
+      <line class="wk" x1="885" y1="600" x2="885" y2="638" marker-end="url(#ak)"/>
+      <text class="l" x="125" y="624">SQL</text>
+      <text class="l" x="895" y="624">traverse</text>
+
+      <rect class="box" x="25" y="640" width="757.5" height="48" rx="8"/>
+      <text class="t" x="403.75" y="660" text-anchor="middle">Databricks SQL warehouse — Gold star schema</text>
+      <text class="s" x="403.75" y="678" text-anchor="middle">Statement Execution API · bounded retries on 429 / 5xx</text>
+
+      <rect class="kg" x="795" y="640" width="180" height="48" rx="8"/>
+      <text class="t" x="885" y="660" text-anchor="middle">Knowledge graph</text>
+      <text class="s" x="885" y="678" text-anchor="middle">networkx JSON (KG_PATH)</text>
+      <text class="l" x="885" y="706" text-anchor="middle">built offline from Gold</text>
+    </svg>
+    <figcaption>Specialists never call each other or the data sources directly. Each tool call goes through the
+      tools node, which rejects tools outside the caller's allow-list. It then calls this same API in-process, so
+      the agent gets the same validation and authorization as a human caller. A 400/404/422 response goes back to
+      the agent so it can fix its arguments. Any other error ends the run as <code>data_unavailable</code>.</figcaption>
+  </figure>
+
+  <h2>2 · Evaluation gate</h2>
+  <figure>
+    <svg viewBox="0 0 1000 300" role="img" aria-label="The composer writes a draft from the evidence. Deterministic checks and an LLM judge must both pass before finalize. A failure sends the draft back to the composer once. A second failure, or a judge error, goes to a fallback built from the raw tool results.">
+      <defs>
+        <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path class="ah" d="M0 0 L10 5 L0 10 z"/>
+        </marker>
+      </defs>
+      <rect class="ghost" x="15" y="120" width="120" height="48" rx="8"/>
+      <text class="t" x="75" y="140" text-anchor="middle">supervisor</text>
+      <text class="s" x="75" y="158" text-anchor="middle">finish</text>
+      <line class="w" x1="135" y1="144" x2="173" y2="144" marker-end="url(#b)"/>
+
+      <rect class="box" x="175" y="120" width="140" height="48" rx="8"/>
+      <text class="t" x="245" y="140" text-anchor="middle">composer</text>
+      <text class="s" x="245" y="158" text-anchor="middle">LLM · Draft</text>
+      <line class="w" x1="315" y1="144" x2="353" y2="144" marker-end="url(#b)"/>
+      <text class="l" x="334" y="136" text-anchor="middle">draft</text>
+
+      <rect class="box" x="355" y="120" width="140" height="48" rx="8"/>
+      <text class="t" x="425" y="140" text-anchor="middle">checks</text>
+      <text class="s" x="425" y="158" text-anchor="middle">numbers ∈ evidence</text>
+      <line class="w" x1="495" y1="144" x2="533" y2="144" marker-end="url(#b)"/>
+      <text class="l" x="514" y="136" text-anchor="middle">pass</text>
+
+      <rect class="box" x="535" y="120" width="140" height="48" rx="8"/>
+      <text class="t" x="605" y="140" text-anchor="middle">judge</text>
+      <text class="s" x="605" y="158" text-anchor="middle">LLM · 6 rubric scores</text>
+      <line class="w" x1="675" y1="144" x2="713" y2="144" marker-end="url(#b)"/>
+      <text class="l" x="694" y="136" text-anchor="middle">pass</text>
+
+      <rect class="box" x="715" y="120" width="140" height="48" rx="8"/>
+      <text class="t" x="785" y="140" text-anchor="middle">finalize</text>
+      <text class="s" x="785" y="158" text-anchor="middle">quality · limitations</text>
+      <line class="w" x1="855" y1="144" x2="893" y2="144" marker-end="url(#b)"/>
+
+      <rect class="box" x="895" y="120" width="95" height="48" rx="8"/>
+      <text class="t" x="942.5" y="140" text-anchor="middle">answer</text>
+      <text class="s" x="942.5" y="158" text-anchor="middle">+ evidence</text>
+
+      <!-- revise loops -->
+      <polyline class="w" points="425,120 425,76 262,76 262,118" marker-end="url(#b)"/>
+      <text class="l" x="343" y="68" text-anchor="middle">fail → revise once</text>
+      <polyline class="w" points="605,120 605,40 228,40 228,118" marker-end="url(#b)"/>
+      <text class="l" x="416" y="32" text-anchor="middle">fail → revise once</text>
+
+      <!-- fallback -->
+      <polyline class="w" points="425,168 425,254 468,254" marker-end="url(#b)"/>
+      <text class="l" x="433" y="214">2nd fail</text>
+      <line class="w" x1="605" y1="168" x2="605" y2="230" marker-end="url(#b)"/>
+      <text class="l" x="613" y="202">2nd fail / judge error</text>
+      <rect class="end" x="470" y="232" width="150" height="44" rx="8"/>
+      <text class="t" x="545" y="251" text-anchor="middle">fallback</text>
+      <text class="s" x="545" y="267" text-anchor="middle">built from tool results</text>
+      <polyline class="w" points="620,254 785,254 785,170" marker-end="url(#b)"/>
+      <text class="l" x="702" y="246" text-anchor="middle">passed = false</text>
+    </svg>
+    <figcaption>The <code>checks</code> step needs no model: every number in the draft must trace to a tool result,
+      shown as is, as a percentage, or in thousands or millions. The judge's scores are compared with
+      <code>THRESHOLDS</code> in code; the judge never decides pass or fail itself. A <code>no_data</code> draft
+      that passes the checks skips the judge. Finalize adds the FX note when EUR values were used and the
+      snapshot note when the knowledge graph was used.</figcaption>
+  </figure>
+
+  <h2>3 · What network_analyst traverses</h2>
+  <figure>
+    <svg viewBox="0 0 1000 230" role="img" aria-label="Knowledge graph schema: Supplier SUPPLIES Product; Product ALTERNATE_SUPPLIER Supplier; Shipment FOR_PRODUCT Product; Shipment DELIVERS_TO Location.">
+      <defs>
+        <marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path class="ahk" d="M0 0 L10 5 L0 10 z"/>
+        </marker>
+      </defs>
+      <rect class="kg" x="30" y="40" width="180" height="48" rx="24"/>
+      <text class="t" x="120" y="60" text-anchor="middle">Supplier</text>
+      <text class="s" x="120" y="77" text-anchor="middle">the one that fails</text>
+
+      <rect class="box" x="410" y="40" width="180" height="48" rx="24"/>
+      <text class="t" x="500" y="60" text-anchor="middle">Product</text>
+      <text class="s" x="500" y="77" text-anchor="middle">is_critical</text>
+
+      <rect class="box" x="790" y="40" width="180" height="48" rx="24"/>
+      <text class="t" x="880" y="60" text-anchor="middle">Supplier</text>
+      <text class="s" x="880" y="77" text-anchor="middle">alternate · is_active</text>
+
+      <rect class="box" x="410" y="160" width="180" height="48" rx="24"/>
+      <text class="t" x="500" y="180" text-anchor="middle">Shipment</text>
+      <text class="s" x="500" y="197" text-anchor="middle">open · status_code</text>
+
+      <rect class="box" x="790" y="160" width="180" height="48" rx="24"/>
+      <text class="t" x="880" y="180" text-anchor="middle">Location</text>
+      <text class="s" x="880" y="197" text-anchor="middle">destination warehouse</text>
+
+      <line class="wk" x1="210" y1="64" x2="408" y2="64" marker-end="url(#c)"/>
+      <text class="l" x="309" y="56" text-anchor="middle">① SUPPLIES</text>
+      <line class="wk" x1="590" y1="64" x2="788" y2="64" marker-end="url(#c)"/>
+      <text class="l" x="689" y="56" text-anchor="middle">② ALTERNATE_SUPPLIER</text>
+      <line class="wk" x1="500" y1="160" x2="500" y2="90" marker-end="url(#c)"/>
+      <text class="l" x="510" y="130">③ FOR_PRODUCT (followed backwards)</text>
+      <line class="wk" x1="590" y1="184" x2="788" y2="184" marker-end="url(#c)"/>
+      <text class="l" x="689" y="176" text-anchor="middle">④ DELIVERS_TO</text>
+    </svg>
+    <figcaption><code>supplier_alternatives</code> starts at the failing supplier and follows ① to its products
+      (critical only by default) and ② to their alternates. A product without an active alternate counts as
+      uncovered and is listed first. It then follows ③ backwards to the open shipments of each product, and ④ to
+      where they are headed. Supplier risk ratings are stored on the nodes but never returned.</figcaption>
+  </figure>
+
+  <h2>Specialists and their tools</h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Specialist</th><th>Tools (allow-list)</th><th>Gets questions like</th></tr></thead>
+    <tbody>
+      <tr><td>kpi_analyst</td><td><code>query_kpi</code></td><td>Any business-brief KPI, filtered, by month (trend) or by region</td></tr>
+      <tr><td>supplier_analyst</td><td><code>get_supplier_scorecard</code>, <code>query_kpi</code></td><td>Rank or compare suppliers; look up a supplier's ID from its name</td></tr>
+      <tr><td>inventory_analyst</td><td><code>get_product_exposure</code>, <code>get_delayed_order_lines</code></td><td>Portfolio-wide stock-out exposure, critical items with no backup supplier, which delayed lines to expedite first</td></tr>
+      <tr class="kg"><td>network_analyst</td><td><code>get_supplier_disruption_impact</code>, <code>get_supplier_scorecard</code></td><td>What if one supplier fails: which products depend on it, who can replace it, which shipments and warehouses are hit</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="lede" style="margin-top:12px">Source: <code>src/ilias_api_code/assistant/graph.py</code>,
+    <code>tools.py</code>, <code>prompts.py</code>, <code>evaluation.py</code> and
+    <code>src/knowledge_graph/graph.py</code>.</p>
+</main>
+</body>
+</html>

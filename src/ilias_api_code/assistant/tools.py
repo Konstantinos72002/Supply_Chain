@@ -1,4 +1,4 @@
-"""The four approved tools. Each mirrors one business endpoint of the API; the assistant has no other data access.
+"""The five approved tools. Each mirrors one business endpoint of the API; the assistant has no other data access.
 
 Arguments are validated with these Pydantic models before any call; the API validates them again.
 """
@@ -63,6 +63,12 @@ class DelayedOrderLinesArgs(BaseModel):
     limit: int = Field(20, ge=1, le=500)
 
 
+class SupplierDisruptionImpactArgs(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    supplier_id: str = Field(pattern=ID, description='Supplier that may stop delivering, e.g. SUP-0009.')
+    critical_only: bool = Field(True, description='Only CRITICAL products; false to include all products.')
+
+
 @dataclass(frozen=True)
 class ToolSpec:
     args_model: type[BaseModel]
@@ -89,12 +95,18 @@ TOOLS: dict[str, ToolSpec] = {
         DelayedOrderLinesArgs, 'GET', '/orders/delayed',
         'Open delayed purchase-order lines in expedite priority order (product Exposed Value, CRITICAL products, '
         'Delayed Quantity), with promised date, latest ETA and delayed quantity.'),
+    'get_supplier_disruption_impact': ToolSpec(
+        SupplierDisruptionImpactArgs, 'GET', '/suppliers/disruption-impact',
+        'Knowledge-graph what-if for one supplier that stops delivering: the products that depend on it (CRITICAL '
+        'only by default), their alternate suppliers and whether one is active, and the open shipments of those '
+        'products with their status and destination warehouse. Uncovered products come first.'),
 }
 
 SPECIALIST_TOOLS = {
     'kpi_analyst': ['query_kpi'],
     'supplier_analyst': ['get_supplier_scorecard', 'query_kpi'],
     'inventory_analyst': ['get_product_exposure', 'get_delayed_order_lines'],
+    'network_analyst': ['get_supplier_disruption_impact', 'get_supplier_scorecard'],
 }
 
 
@@ -131,7 +143,7 @@ async def call_tool(client: httpx.AsyncClient, name: str, raw_args: dict[str, An
             response = await client.get(spec.path, params=arguments)
     except httpx.HTTPError as exc:
         return ToolOutcome('unavailable', arguments, message=f'Data service unreachable ({type(exc).__name__}).')
-    if response.status_code in (400, 422):
+    if response.status_code in (400, 404, 422):
         return ToolOutcome('invalid_arguments', arguments,
                            message=f'The API rejected the arguments: {response.json().get("detail")}. Fix and retry.')
     if response.is_error:

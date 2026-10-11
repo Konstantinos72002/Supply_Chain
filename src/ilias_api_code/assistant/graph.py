@@ -1,10 +1,11 @@
 """LangGraph multi-agent assistant.
 
-guard -> supervisor <-> {kpi_analyst, supplier_analyst, inventory_analyst} <-> tools
+guard -> supervisor <-> {kpi_analyst, supplier_analyst, inventory_analyst, network_analyst} <-> tools
       -> composer -> checks -> judge -> finalize          (revise once, then safe fallback)
 guard -> fixed answer (out of scope / clarification);  tools -> unavailable (data service down)
 
-The LLM reaches data only through the four API tools (assistant/tools.py).
+The LLM reaches data only through the five API tools (assistant/tools.py); network_analyst's
+get_supplier_disruption_impact is the API's view of the supply-chain knowledge graph.
 """
 import json
 import operator
@@ -34,6 +35,9 @@ MAX_TOOL_CALLS = 8
 RECURSION_LIMIT = 40
 EUR_TOOLS = {'get_supplier_scorecard', 'get_product_exposure', 'get_delayed_order_lines'}
 FX_LIMITATION = 'EUR values use placeholder FX rates until the business brief fx_rates values are provided.'
+KG_TOOLS = {'get_supplier_disruption_impact'}
+KG_LIMITATION = ('Supplier dependencies and open shipments come from the knowledge-graph snapshot of the Gold tables '
+                 '(as of its last build), not from a live query.')
 
 
 def default_llm():
@@ -81,6 +85,9 @@ def _ok_evidence(state: State) -> list[dict[str, Any]]:
 def _result_summary(tool: str, data: dict[str, Any]) -> dict[str, Any]:
     if tool == 'query_kpi':
         return {'kpi': data['kpi'], 'unit': data['unit'], 'results': data['results']}
+    if tool in KG_TOOLS:
+        return {k: data[k] for k in ('supplier_id', 'supplier_name', 'affected_product_count',
+                                     'uncovered_product_count')} | {'affected_products': data['affected_products'][:5]}
     rows_key = next(k for k in ('suppliers', 'products', 'order_lines') if k in data)
     return {'count': data['count'], rows_key: data[rows_key][:5]}
 
@@ -103,8 +110,9 @@ def build_graph(llm: Any, client: httpx.AsyncClient):
             text = state.get('clarifying_question') or 'Could you say which measure, supplier, product or period?'
         else:
             status = 'out_of_scope'
-            text = ('I can only answer read-only questions about delivery performance, suppliers, delayed orders '
-                    'and stock-out exposure. I cannot perform actions or share confidential raw values.')
+            text = ('I can only answer read-only questions about delivery performance, suppliers, delayed orders, '
+                    'stock-out exposure and the impact of a supplier that stops delivering. I cannot perform actions '
+                    'or share confidential raw values.')
         return {'final': _final(state, status, text, measures=[], limitations=[], quality=None),
                 'trace': ['fixed_answer']}
 
@@ -227,6 +235,8 @@ def build_graph(llm: Any, client: httpx.AsyncClient):
         limitations = list(draft.get('limitations', []))
         if any(e['tool'] in EUR_TOOLS or (e['data'] or {}).get('unit') == 'EUR' for e in evidence):
             limitations.append(FX_LIMITATION)
+        if any(e['tool'] in KG_TOOLS for e in evidence):
+            limitations.append(KG_LIMITATION)
         fallback_used = state.get('fallback_used', False)
         if fallback_used:
             passed = False
