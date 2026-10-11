@@ -19,6 +19,13 @@ dependencies = [
     "pyjwt[crypto]>=2.10",
     "python-dotenv>=1.2.4",
     "uvicorn>=0.54.0",
+    "databricks-sql-connector>=4.6.0",
+    "gh>=0.0.4",
+    "langchain-core>=1.6.9",
+    "networkx>=3.7",
+    "pydantic>=2.14.0",
+    "pytest>=9.1.1",
+    "python-dotenv>=1.2.4",
 ]
 
 [project.scripts]
