@@ -46,7 +46,7 @@ def default_llm():
     from langchain_openai import AzureChatOpenAI
 
     load_dotenv()
-    return AzureChatOpenAI(model=os.getenv('AZURE_OPENAI_DEPLOYMENT_NAME'))
+    return AzureChatOpenAI(model=os.getenv('AZURE_OPENAI_DEPLOYMENT_NAME'), temperature=0)
 
 
 class State(TypedDict, total=False):
