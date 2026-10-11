@@ -57,7 +57,11 @@
   .kpi .lbl { display: block; margin-top: 6px; font-size: 14px; color: #DCE5EE; }
 
   /* work area */
-  main.wrap { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 32px; padding-top: 28px; padding-bottom: 48px; }
+  main.wrap { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 0 32px; padding-top: 28px; padding-bottom: 48px; }
+  /* Each section spans the same three rows (title, subtitle, panel) through subgrid,
+     so both panels start at the same height even when one subtitle wraps. */
+  main.wrap > section { display: grid; grid-row: span 3; grid-template-rows: subgrid; }
+  main.wrap > section > .panel { align-self: start; }
   section h2 { font-size: 22px; margin-bottom: 4px; }
   .sub { margin: 0 0 16px; color: var(--steel); font-size: 15px; }
   .panel { background: var(--paper); border-top: 3px solid var(--hull); padding: 20px; }
@@ -86,6 +90,8 @@
   .error { margin-top: 14px; padding: 10px 12px; border-left: 4px solid var(--alert); background: #FBEDEB; color: #6E1E18; font-size: 15px; }
   .error[hidden] { display: none; }
 
+  #ask { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
   /* lists */
   .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--rule); margin-bottom: 14px; }
   .tabs button { padding: 8px 14px; border: 0; background: none; font-weight: 500; color: var(--steel); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
@@ -106,7 +112,8 @@
   .empty { padding: 18px 0; color: var(--steel); }
 
   @media (max-width: 960px) {
-    main.wrap { grid-template-columns: minmax(0, 1fr); }
+    main.wrap { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+    main.wrap > section { display: block; }
     .row { grid-template-columns: repeat(2, 1fr); row-gap: 14px; }
     .row-name { grid-column: 1 / -1; padding-bottom: 0; }
     .kpi:nth-child(2n) { border-left: 0; padding-left: 0; }
@@ -174,6 +181,7 @@
         <li><button type="button">Which critical products have no active backup supplier?</button></li>
       </ul>
       <div class="error" id="ask-error" role="alert" hidden></div>
+
       <div class="answer" id="answer" aria-live="polite" hidden>
         <span class="verdict" id="verdict"></span>
         <p class="answer-text" id="answer-text"></p>
@@ -409,6 +417,26 @@ document.querySelectorAll('[role="tab"]').forEach((tab) => tab.addEventListener(
   if (account) loadList();
 }));
 
+/* ---------------- thinking indicator (shown on the Ask button) ---------------- */
+let thinkingTimer = null, thinkingStart = 0;
+
+function showThinking() {
+  const seconds = Math.floor((Date.now() - thinkingStart) / 1000);
+  $('ask').textContent = `Thinking... (${seconds} sec)`;
+}
+
+function startThinking() {
+  thinkingStart = Date.now();
+  $('answer').hidden = true;
+  showThinking();
+  thinkingTimer = setInterval(showThinking, 250);
+}
+
+function stopThinking() {
+  clearInterval(thinkingTimer);
+  thinkingTimer = null;
+}
+
 /* ---------------- assistant ---------------- */
 const STATUS = {
   answered: ['Answered', 'ok'], no_data: ['No matching data', 'warn'], clarification_needed: ['Needs more detail', 'warn'],
@@ -449,13 +477,15 @@ $('ask-form').addEventListener('submit', async (event) => {
   const question = $('question').value.trim();
   if (question.length < 3) { showError('ask-error', new ApiError('Type a question of at least 3 characters.')); return; }
   const button = $('ask');
-  button.disabled = true; button.textContent = 'Asking…';
+  button.disabled = true;
   showError('ask-error', null);
+  startThinking();
   try {
     renderAnswer(await api('/assistant/query', { method: 'POST', body: { question } }));
   } catch (error) {
     showError('ask-error', error);
   } finally {
+    stopThinking();
     button.disabled = false; button.textContent = 'Ask';
   }
 });
