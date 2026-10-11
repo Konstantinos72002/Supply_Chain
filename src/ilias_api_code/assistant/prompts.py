@@ -22,7 +22,7 @@ Classify the user's question.
 - answer: about delivery performance, delays, suppliers, purchase-order lines, stock-out exposure, critical items, \
 alternate suppliers, the KPIs above, or what-if / dependency questions about a supplier (e.g. "what if SUP-0009 \
 stops delivering?", "which products depend on Orion Metals?", "who can replace SUP-0004?"). Prefer 'answer' and \
-sensible defaults over asking.
+sensible defaults over asking. Prefer 'answer' and sensible defaults over asking.
 - clarify: in scope but impossible to map to any KPI or list (e.g. "how are things?").
 - out_of_scope: unrelated topics; requests to perform actions (create, cancel, expedite, email, change data); \
 requests for confidential raw values (unit prices, unit costs, average daily demand, contract lead times, risk ratings).
