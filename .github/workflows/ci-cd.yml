@@ -1,0 +1,55 @@
+# CI for the Team 4 Supply Chain API (assignment 6.8): lint -> test -> build, each job only if the previous passed.
+name: CI/CD
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.32"
+      - name: Ruff
+        run: uv run --frozen ruff check src/ilias_api_code src/knowledge_graph
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4          # PySpark runs the Gold-table tests and needs Java
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.32"
+      - name: Pytest
+        working-directory: src/ilias_api_code
+        run: uv run --frozen pytest
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the Docker image
+        run: docker build -t team4-api:${{ github.sha }} .
+      - name: Smoke test the image (the API starts and /health answers)
+        run: |
+          docker run -d --name api -p 8000:8000 \
+            -e DATABRICKS_HOST=https://example.invalid -e DATABRICKS_TOKEN=dummy -e DATABRICKS_WAREHOUSE_ID=dummy \
+            -e ENTRA_TENANT_ID=00000000-0000-0000-0000-000000000000 \
+            -e ENTRA_API_CLIENT_ID=00000000-0000-0000-0000-000000000000 \
+            team4-api:${{ github.sha }}
+          for i in $(seq 30); do curl -fs http://localhost:8000/health && exit 0; sleep 2; done
+          docker logs api
+          exit 1

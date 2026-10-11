@@ -111,4 +111,3 @@ def test_endpoint_recovers_from_a_rate_limit(waits, monkeypatch):
         client.app.state.client, calls = scripted(httpx.Response(429), httpx.Response(200, json=SUCCEEDED))
         r = client.get('/ready')
     assert r.status_code == 200 and r.json()['status'] == 'ready' and len(calls) == 2
-    
