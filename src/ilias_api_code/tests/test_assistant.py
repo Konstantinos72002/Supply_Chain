@@ -23,7 +23,7 @@ def test_kpi_question(client, api):
     r = ask(client, api, FakeLLM(tool_script={'query_kpi': OTD}, composer=otd_answer))
     assert r['status'] == 'answered' and '64.46%' in r['answer']
     assert r['evidence'][0]['result_summary']['results'][0]['value'] == 0.6446
-    assert r['as_of_date'] == '2026-10-05'
+    assert r['as_of_date'] == '2026-10-07'
     assert r['quality'] == {'scores': {k: 90 for k in r['quality']['scores']}, 'passed': True, 'revised': False,
                             'fallback_used': False}
     assert r['trace'] == ['guard:answer', 'supervisor->kpi_analyst', 'kpi_analyst:call query_kpi', 'tool:query_kpi:ok',
@@ -147,7 +147,7 @@ def test_assistant_requires_sign_in_and_valid_body(client, api):
 
 
 @pytest.mark.parametrize('answer, bad', [
-    ('Rate 64.46% (0.6446) as of 2026-10-05 for SUP-0007, PO-2025-00208.', []),
+    ('Rate 64.46% (0.6446) as of 2026-10-07 for SUP-0007, PO-2025-00208.', []),
     ('Order value EUR 190.39 million, EUR 190,388,429.60 in total, top 5 lines.', []),
     ('Exposure is EUR 2.57 million across 36 products.', []),
     ('The rate improved by 3.2 points to 71.3%.', ['3.2', '71.3']),
