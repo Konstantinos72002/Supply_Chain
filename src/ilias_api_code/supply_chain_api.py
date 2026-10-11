@@ -1,8 +1,11 @@
 """Team 4 Supply Chain Disruption API: business questions answered from the Databricks Gold layer.
 
 Run:
-    pip install fastapi uvicorn httpx python-dotenv langgraph langchain-openai "pyjwt[crypto]"
-    python supply_chain_api.py
+    uv sync                      # also makes the knowledge_graph package (src/knowledge_graph) importable
+    uv run python supply_chain_api.py
+
+The knowledge graph is read from KG_PATH (default: <repo>/data/graph/supply_graph.json); rebuild it with
+`uv run python -m knowledge_graph.build_knowledge_graph` and the API picks up the new file without a restart.
 
 Credentials are read from a .env file next to this file (see .env.example).
 Callers sign in with Microsoft Entra ID and send the access token as 'Authorization: Bearer <token>'.
@@ -31,6 +34,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from assistant.graph import default_llm, run_assistant
 from assistant.schemas import AssistantAnswer, AssistantQuery
+from knowledge_graph.graph import load_graph, supplier_alternatives
 
 load_dotenv(override=True)
 
@@ -45,6 +49,9 @@ REQUIRED_SCOPE = os.environ.get('ENTRA_REQUIRED_SCOPE', 'access_as_user').strip(
 REQUIRED_APP_ROLE = os.environ.get('ENTRA_REQUIRED_APP_ROLE', '').strip()   # optional: app-only (daemon) callers
 UI_CLIENT_ID = os.environ.get('ENTRA_UI_CLIENT_ID', API_CLIENT_ID).strip()
 CATALOG = os.environ.get('DATABRICKS_CATALOG', 'data2026acc123456').strip()
+# Knowledge graph built from Gold by `python -m knowledge_graph.build_knowledge_graph` (repo data/graph by default).
+KG_PATH = Path(os.environ.get('KG_PATH', '').strip()
+               or Path(__file__).resolve().parents[2] / 'data' / 'graph' / 'supply_graph.json')
 SCHEMA = os.environ.get('DATABRICKS_SCHEMA', 'team4').strip()
 
 # Catalog and schema are inlined into SQL, so they must be plain identifiers.
@@ -676,6 +683,75 @@ async def get_delayed_order_lines(
         as_of_date=rows[0]['as_of_date'] if rows else None, filters=where.applied, count=len(rows),
         order_lines=[DelayedLine(**{k: v for k, v in r.items() if k != 'as_of_date'}) for r in rows],
     )
+
+
+# =============================================================================
+# Supplier disruption impact (knowledge graph)
+# =============================================================================
+_graph_cache: dict[str, Any] = {}
+
+
+def knowledge_graph():
+    """The graph file, loaded once and reloaded when it is rebuilt (new modification time)."""
+    try:
+        mtime = KG_PATH.stat().st_mtime
+    except FileNotFoundError:
+        raise HTTPException(status_code=503, detail='The knowledge graph has not been built yet.') from None
+    if _graph_cache.get('key') != (str(KG_PATH), mtime):
+        _graph_cache.update(key=(str(KG_PATH), mtime), graph=load_graph(KG_PATH))
+    return _graph_cache['graph']
+
+
+class AlternateSupplier(BaseModel):
+    supplier_id: str
+    supplier_name: str | None
+    is_active: bool
+
+
+class InFlightShipment(BaseModel):
+    shipment_id: str | None
+    status_code: str | None
+    delivers_to: str | None = Field(description='Destination warehouse (location_id).')
+
+
+class AffectedProduct(BaseModel):
+    product_id: str | None
+    product_name: str | None
+    is_critical: bool
+    alternate_suppliers: list[AlternateSupplier]
+    has_usable_alternate: bool = Field(description='True when at least one alternate supplier is active.')
+    shipments: list[InFlightShipment] = Field(description='Open (not delivered or cancelled) shipments.')
+
+
+class DisruptionImpactResponse(BaseModel):
+    filters: dict[str, Any]
+    supplier_id: str
+    supplier_name: str | None
+    supplier_is_active: bool
+    critical_only: bool
+    affected_product_count: int
+    uncovered_product_count: int = Field(description='Affected products without an active alternate supplier.')
+    affected_products: list[AffectedProduct] = Field(description='Uncovered products first.')
+    source: str
+
+
+@app.get('/suppliers/disruption-impact', response_model=DisruptionImpactResponse,
+         operation_id='get_supplier_disruption_impact',
+         summary='What-if: impact of a supplier that stops delivering (knowledge graph)',
+         responses={404: {'description': 'The supplier is not in the knowledge graph.'},
+                    503: {'description': 'The knowledge graph has not been built.'}},
+         dependencies=[Depends(require_user)])
+async def get_supplier_disruption_impact(
+    supplier_id: str = Query(..., pattern=ID_PATTERN, description='Supplier that may stop delivering, e.g. SUP-0009.'),
+    critical_only: bool = Query(True, description='Only CRITICAL products.'),
+) -> DisruptionImpactResponse:
+    """Traverses the supply-chain knowledge graph (Supplier -SUPPLIES-> Product -ALTERNATE_SUPPLIER-> Supplier,
+    Shipment -FOR_PRODUCT-> Product, Shipment -DELIVERS_TO-> Location): the products that depend on the supplier,
+    who can replace it, and which open shipments of those products are in flight to which warehouse."""
+    result = supplier_alternatives(knowledge_graph(), supplier_id, critical_only)
+    if result.get('error') == 'NOT_FOUND':
+        raise HTTPException(status_code=404, detail=f'Supplier {supplier_id} is not in the knowledge graph.')
+    return DisruptionImpactResponse(filters={'supplier_id': supplier_id, 'critical_only': critical_only}, **result)
 
 
 # =============================================================================

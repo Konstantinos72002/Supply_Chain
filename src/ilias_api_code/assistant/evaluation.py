@@ -82,6 +82,7 @@ KEY_FIELDS = {
     'products': ['product_id', 'product_name', 'criticality', 'days_of_cover', 'days_until_arrival',
                  'exposed_value_eur'],
     'order_lines': ['po_id', 'po_line_number', 'product_id', 'latest_eta_date', 'delayed_qty'],
+    'affected_products': ['product_id', 'product_name', 'has_usable_alternate'],
 }
 
 
@@ -96,6 +97,14 @@ def fallback_answer(evidence: list[dict[str, Any]]) -> str:
             continue
         key = next(k for k in KEY_FIELDS if k in data)
         rows = data[key][:5]
+        if key == 'affected_products':
+            lines.append(f"{e['tool']} for {data['supplier_id']}: {data['affected_product_count']} affected products, "
+                         f"{data['uncovered_product_count']} without an active alternate; first {len(rows)}:")
+            lines += ['  - ' + ', '.join(f'{f}={r.get(f)}' for f in KEY_FIELDS[key])
+                      + '; alternates=' + (', '.join(a['supplier_id'] for a in r['alternate_suppliers']) or 'none')
+                      + '; open shipments=' + (', '.join(s['shipment_id'] for s in r['shipments']) or 'none')
+                      for r in rows]
+            continue
         lines.append(f"{e['tool']}: {data['count']} rows returned; first {len(rows)}:")
         lines += ['  - ' + ', '.join(f'{f}={r.get(f)}' for f in KEY_FIELDS[key]) for r in rows]
     return 'Results retrieved for your question:\n' + '\n'.join(lines)
