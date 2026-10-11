@@ -1,0 +1,15 @@
+# Allowlist: only what the API image needs is sent to the Docker build.
+*
+!pyproject.toml
+!uv.lock
+!.python-version
+!src/ilias_api_code/
+!src/knowledge_graph/
+!data/graph/supply_graph.json
+
+# Never in the image, even inside those folders: secrets, tests, caches and duplicate data.
+**/.env
+**/__pycache__
+src/ilias_api_code/tests
+src/knowledge_graph/test_graph.py
+src/knowledge_graph/data
