@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supply disruption desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap">
+<style>
+  :root {
+    --hull: #1F3A5F;
+    --hull-deep: #172C48;
+    --harbour: #E8ECEF;
+    --paper: #F7F9FA;
+    --ink: #16202A;
+    --steel: #5B6B7A;
+    --rule: #C9D1D8;
+    --marking: #F2C230;
+    --alert: #B8322A;
+    --clear: #2F7A57;
+    --font: "Barlow", "Segoe UI", system-ui, sans-serif;
+    --font-numerals: "Barlow Condensed", "Arial Narrow", "Barlow", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--harbour); color: var(--ink); font: 400 16px/1.5 var(--font); }
+  :focus-visible { outline: 3px solid var(--marking); outline-offset: 2px; }
+  h1, h2, h3 { margin: 0; font-weight: 600; line-height: 1.2; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+  /* masthead */
+  .mast { background: var(--hull-deep); color: #fff; }
+  .mast .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; padding-top: 14px; padding-bottom: 14px; }
+  .brand { display: flex; align-items: baseline; gap: 12px; }
+  .brand h1 { font-size: 20px; letter-spacing: .01em; }
+  .brand span { color: #AFC0D3; font-size: 14px; }
+  .key { display: flex; gap: 8px; align-items: center; }
+  .key span { font-size: 14px; color: #AFC0D3; }
+  .key .btn-quiet { color: #fff; border-color: #3B5878; }
+  .btn { padding: 8px 16px; border: 0; border-radius: 4px; background: var(--marking); color: var(--ink); font-weight: 600; cursor: pointer; }
+  .btn:disabled { opacity: .6; cursor: progress; }
+  .btn-quiet { background: transparent; color: var(--hull); border: 1px solid var(--rule); font-weight: 500; }
+
+  /* KPI status board: the one bold element */
+  .board { background: var(--hull); color: #fff; border-bottom: 6px solid var(--marking); }
+  .board .wrap { padding-top: 22px; padding-bottom: 26px; }
+  .board-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 14px; }
+  .board-head h2 { font-size: 15px; font-weight: 500; color: #CBD7E4; }
+  .asof { font-size: 14px; color: #CBD7E4; }
+  .asof strong { color: var(--marking); font-weight: 600; }
+  .rows { display: grid; gap: 18px; }
+  .row { display: grid; grid-template-columns: 150px repeat(4, 1fr); align-items: start; gap: 0; }
+  .row-name { font-size: 14px; color: #CBD7E4; padding-top: 10px; }
+  .kpi { padding: 2px 18px 6px; border-left: 1px solid #3B5878; }
+  .kpi .num { display: block; font: 600 46px/1 var(--font-numerals); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+  .kpi .num.warn { color: var(--marking); }
+  .kpi .lbl { display: block; margin-top: 6px; font-size: 14px; color: #DCE5EE; }
+
+  /* work area */
+  main.wrap { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 0 32px; padding-top: 28px; padding-bottom: 48px; }
+  /* Each section spans the same three rows (title, subtitle, panel) through subgrid,
+     so both panels start at the same height even when one subtitle wraps. */
+  main.wrap > section { display: grid; grid-row: span 3; grid-template-rows: subgrid; }
+  main.wrap > section > .panel { align-self: start; }
+  section h2 { font-size: 22px; margin-bottom: 4px; }
+  .sub { margin: 0 0 16px; color: var(--steel); font-size: 15px; }
+  .panel { background: var(--paper); border-top: 3px solid var(--hull); padding: 20px; }
+
+  /* assistant */
+  textarea { width: 100%; min-height: 84px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 4px; background: #fff; resize: vertical; }
+  .ask-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 10px; }
+  .hint { font-size: 13px; color: var(--steel); }
+  .examples { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
+  .examples button { padding: 5px 10px; border: 1px solid var(--rule); border-radius: 4px; background: #fff; font-size: 14px; color: var(--hull); cursor: pointer; text-align: left; }
+  .examples button:hover { border-color: var(--hull); }
+  .answer { margin-top: 20px; border-top: 1px solid var(--rule); padding-top: 16px; }
+  .answer[hidden] { display: none; }
+  .verdict { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 13px; font-weight: 600; }
+  .verdict.ok { background: #DDEEE5; color: #1F5A3F; }
+  .verdict.warn { background: #FBEFC4; color: #6B5208; }
+  .verdict.bad { background: #F6DCD9; color: #7E211B; }
+  .answer-text { margin: 12px 0; white-space: pre-wrap; font-size: 17px; line-height: 1.55; max-width: 70ch; }
+  .facts { margin: 0; font-size: 14px; color: var(--steel); }
+  .facts li { margin: 2px 0; }
+  details { margin-top: 12px; border-top: 1px solid var(--rule); padding-top: 8px; }
+  summary { cursor: pointer; font-weight: 500; color: var(--hull); }
+  .scores { display: grid; grid-template-columns: repeat(3, auto); gap: 4px 18px; justify-content: start; margin: 8px 0 0; font-size: 14px; }
+  .evidence { margin: 8px 0 0; padding-left: 18px; font-size: 14px; }
+  .trace { margin: 8px 0 0; padding-left: 22px; font-size: 13px; color: var(--steel); }
+  .error { margin-top: 14px; padding: 10px 12px; border-left: 4px solid var(--alert); background: #FBEDEB; color: #6E1E18; font-size: 15px; }
+  .error[hidden] { display: none; }
+
+  #ask { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* lists */
+  .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--rule); margin-bottom: 14px; }
+  .tabs button { padding: 8px 14px; border: 0; background: none; font-weight: 500; color: var(--steel); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+  .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--hull); }
+  .filters { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 12px; font-size: 14px; }
+  .filters select { padding: 5px 8px; border: 1px solid var(--rule); border-radius: 4px; background: #fff; }
+  .filters label { display: inline-flex; align-items: center; gap: 6px; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th { text-align: left; font-weight: 600; color: var(--steel); padding: 6px 8px 6px 0; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+  td { padding: 7px 8px 7px 0; border-bottom: 1px solid #DDE3E8; vertical-align: top; }
+  td.n, th.n { text-align: right; }
+  td small { display: block; color: var(--steel); }
+  td.nw, td small.nw { white-space: nowrap; }
+  .list-note { margin: 10px 0 0; font-size: 13px; color: var(--steel); }
+  .flag { color: var(--alert); font-weight: 600; }
+  .muted { color: var(--steel); }
+  .empty { padding: 18px 0; color: var(--steel); }
+
+  @media (max-width: 960px) {
+    main.wrap { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+    main.wrap > section { display: block; }
+    .row { grid-template-columns: repeat(2, 1fr); row-gap: 14px; }
+    .row-name { grid-column: 1 / -1; padding-bottom: 0; }
+    .kpi:nth-child(2n) { border-left: 0; padding-left: 0; }
+    .kpi .num { font-size: 32px; }
+    .kpi { padding-right: 8px; }
+    .key span { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<header class="mast">
+  <div class="wrap">
+    <div class="brand"><h1>Supply disruption desk</h1><span>Team 4 supply chain</span></div>
+    <div class="key" id="auth">
+      <span id="who" aria-live="polite">Not signed in</span>
+      <button class="btn" type="button" id="sign-in">Sign in with Microsoft</button>
+      <button class="btn btn-quiet" type="button" id="sign-out" hidden>Sign out</button>
+    </div>
+  </div>
+</header>
+
+<section class="board" aria-labelledby="board-title">
+  <div class="wrap">
+    <div class="board-head">
+      <h2 id="board-title">Business brief KPIs, cancelled lines excluded</h2>
+      <p class="asof" id="asof" aria-live="polite">Sign in with your Microsoft account to load the data.</p>
+    </div>
+    <div class="rows">
+      <div class="row">
+        <div class="row-name">Delivery performance</div>
+        <div class="kpi" data-kpi="order_value"><span class="num">–</span><span class="lbl">Order value</span></div>
+        <div class="kpi" data-kpi="on_time_delivery_rate"><span class="num">–</span><span class="lbl">On-time delivery rate</span></div>
+        <div class="kpi" data-kpi="average_delay_days"><span class="num">–</span><span class="lbl">Average delay of late lines</span></div>
+        <div class="kpi" data-kpi="supplier_fill_rate"><span class="num">–</span><span class="lbl">Supplier fill rate</span></div>
+      </div>
+      <div class="row">
+        <div class="row-name">Exposure</div>
+        <div class="kpi" data-kpi="exposed_value"><span class="num">–</span><span class="lbl">Exposed value</span></div>
+        <div class="kpi" data-kpi="delayed_quantity"><span class="num">–</span><span class="lbl">Delayed quantity</span></div>
+        <div class="kpi" data-kpi="critical_item_count"><span class="num">–</span><span class="lbl">Critical items delayed</span></div>
+        <div class="kpi" data-kpi="alternate_supplier_coverage"><span class="num">–</span><span class="lbl">Critical items with a backup supplier</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<main class="wrap">
+  <section aria-labelledby="ask-title">
+    <h2 id="ask-title">Ask about delays, suppliers and stock</h2>
+    <p class="sub">Answers come only from the Gold tables and are checked before you see them.</p>
+    <div class="panel">
+      <form id="ask-form">
+        <label for="question" class="hint">Your question</label>
+        <textarea id="question" maxlength="1000" required placeholder="Which delayed orders should we expedite first?"></textarea>
+        <div class="ask-bar">
+          <span class="hint">Read-only: the assistant cannot change orders or contact suppliers.</span>
+          <button class="btn" type="submit" id="ask">Ask</button>
+        </div>
+      </form>
+      <ul class="examples" aria-label="Example questions">
+        <li><button type="button">Which delayed orders should we expedite first?</button></li>
+        <li><button type="button">Is our on-time delivery rate improving month by month?</button></li>
+        <li><button type="button">Which suppliers have the lowest fill rate?</button></li>
+        <li><button type="button">Which critical products have no active backup supplier?</button></li>
+      </ul>
+      <div class="error" id="ask-error" role="alert" hidden></div>
+
+      <div class="answer" id="answer" aria-live="polite" hidden>
+        <span class="verdict" id="verdict"></span>
+        <p class="answer-text" id="answer-text"></p>
+        <ul class="facts" id="facts"></ul>
+        <details id="checks"><summary>How this answer was checked</summary><div id="quality"></div></details>
+        <details><summary>Evidence: data the answer is based on</summary><ul class="evidence" id="evidence"></ul></details>
+        <details><summary>Steps taken</summary><ol class="trace" id="trace"></ol></details>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="lists-title">
+    <h2 id="lists-title">Where to act</h2>
+    <p class="sub">Open delayed lines, products at risk of running out, and supplier performance.</p>
+    <div class="panel">
+      <div class="tabs" role="tablist" aria-label="Lists">
+        <button role="tab" aria-selected="true" data-view="queue">Expedite queue</button>
+        <button role="tab" aria-selected="false" data-view="exposure">Stock-out risk</button>
+        <button role="tab" aria-selected="false" data-view="scorecard">Supplier scorecard</button>
+      </div>
+      <div class="filters" id="filters"></div>
+      <div class="error" id="list-error" role="alert" hidden></div>
+      <div class="table-wrap" id="list" role="tabpanel" aria-live="polite"><p class="empty">Sign in with your Microsoft account to load the lists.</p></div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.27.0/lib/msal-browser.min.js"></script>
+<script>
+const nf = (d) => new Intl.NumberFormat('en-GB', { maximumFractionDigits: d, minimumFractionDigits: d });
+const fmt = {
+  eur: (v) => v == null ? '–' : Math.abs(v) >= 1e6 ? `€${nf(2).format(v / 1e6)}M` : `€${nf(0).format(v)}`,
+  pct: (v) => v == null ? '–' : `${nf(1).format(v * 100)}%`,
+  qty: (v) => v == null ? '–' : Math.abs(v) >= 1e6 ? `${nf(2).format(v / 1e6)}M` : nf(0).format(v),
+  days: (v) => v == null ? '–' : `${nf(1).format(v)} d`,
+  wholeDays: (v) => v == null ? '–' : `${nf(0).format(v)} d`,
+  int: (v) => v == null ? '–' : nf(0).format(v),
+};
+const KPI_FORMAT = { order_value: fmt.eur, on_time_delivery_rate: fmt.pct, average_delay_days: fmt.days,
+  supplier_fill_rate: fmt.pct, exposed_value: fmt.eur, delayed_quantity: fmt.qty, critical_item_count: fmt.int,
+  alternate_supplier_coverage: fmt.pct };
+const $ = (id) => document.getElementById(id);
+const el = (tag, text, cls) => { const e = document.createElement(tag); if (text != null) e.textContent = text; if (cls) e.className = cls; return e; };
+
+class ApiError extends Error {}
+
+/* ---------------- Microsoft Entra ID sign-in (MSAL.js, redirect flow) ---------------- */
+let msalApp = null, authConfig = null, account = null;
+
+async function getToken() {
+  if (!account) throw new ApiError('Sign in with your Microsoft account first.');
+  const request = { scopes: [authConfig.scope], account };
+  try {
+    return (await msalApp.acquireTokenSilent(request)).accessToken;
+  } catch (error) {
+    if (error instanceof msal.InteractionRequiredAuthError) await msalApp.acquireTokenRedirect(request);
+    throw new ApiError('Your sign-in has expired. Sign in again.');
+  }
+}
+
+async function api(path, { method = 'GET', body, params } = {}) {
+  const token = await getToken();
+  const url = params ? `${path}?${new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null))}` : path;
+  let response;
+  try {
+    response = await fetch(url, { method, headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+      body: body ? JSON.stringify(body) : undefined });
+  } catch {
+    throw new ApiError('The API server cannot be reached. Check that it is running.');
+  }
+  if (response.ok) return response.json();
+  const detail = await response.json().then((j) => j.detail).catch(() => null);
+  if (response.status === 401) throw new ApiError('Your Microsoft sign-in was rejected by the API. Sign out and sign in again.');
+  if (response.status === 403) throw new ApiError('Your account is signed in but has no access to this API. Ask the app owner for access.');
+  if (response.status === 504) throw new ApiError('Databricks did not answer in time. The SQL warehouse may be starting; try again in a minute.');
+  if (response.status === 502) throw new ApiError(`Databricks could not be reached${typeof detail === 'string' ? `: ${detail}` : '.'} Check the Databricks settings in .env.`);
+  if (response.status === 422) throw new ApiError(`The request was not valid: ${typeof detail === 'string' ? detail : 'check the inputs.'}`);
+  throw new ApiError(`The API returned an error (HTTP ${response.status}).`);
+}
+
+function showError(id, error) {
+  const box = $(id);
+  box.textContent = error ? error.message : '';
+  box.hidden = !error;
+}
+
+/* ---------------- KPI board ---------------- */
+async function loadKpis() {
+  const tiles = document.querySelectorAll('.kpi');
+  const results = await Promise.allSettled([...tiles].map((tile) =>
+    api('/analytics/query', { method: 'POST', body: { kpi: tile.dataset.kpi } })));
+  let asOf = null;
+  results.forEach((result, i) => {
+    const num = tiles[i].querySelector('.num');
+    if (result.status !== 'fulfilled') { num.textContent = '–'; return; }
+    const value = result.value.results[0]?.value;
+    num.textContent = KPI_FORMAT[tiles[i].dataset.kpi](value);
+    num.title = result.value.definition;
+    num.classList.toggle('warn', ['exposed_value', 'critical_item_count'].includes(tiles[i].dataset.kpi) && value > 0);
+    asOf = asOf || result.value.as_of_date;
+  });
+  const failed = results.find((r) => r.status === 'rejected');
+  if (failed) { $('asof').textContent = failed.reason.message; return; }
+  $('asof').replaceChildren('Data as of ', el('strong', asOf ?? 'unknown'));
+}
+
+/* ---------------- lists ---------------- */
+const CRITICALITY = ['', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
+const VIEWS = {
+  queue: {
+    filters: [
+      { name: 'only_exposed_products', type: 'check', label: 'Only products that run out before arrival', value: true },
+      { name: 'criticality', type: 'select', label: 'Criticality', options: CRITICALITY },
+    ],
+    load: (f) => api('/orders/delayed', { params: { ...f, limit: 20 } }),
+    rows: (d) => d.order_lines,
+    columns: [
+      ['Order line', (r) => [`${r.po_id} / ${r.po_line_number}`, r.delivery_location_id], 'nw'],
+      ['Product', (r) => [r.product_name, `${r.product_id}, ${r.criticality}`]],
+      ['Supplier', (r) => [r.supplier_name, r.supplier_id]],
+      ['Latest ETA', (r) => [r.latest_eta_date ?? 'no ETA', `promised ${r.promised_delivery_date}`], 'nw'],
+      ['Delayed qty', (r) => [fmt.qty(r.delayed_qty), `${fmt.wholeDays(r.delay_days)} late`], 'n nw'],
+      ['Exposure', (r) => r.product_is_exposed ? fmt.eur(r.product_exposed_value_eur) : 'covered', 'n nw',
+        (r) => r.product_is_exposed ? 'flag' : 'muted'],
+    ],
+    note: 'First 20 lines in expedite priority: product exposed value, then critical products, then delayed quantity.',
+    empty: 'No open delayed lines match these filters.',
+  },
+  exposure: {
+    filters: [
+      { name: 'only_exposed', type: 'check', label: 'Only products that run out before arrival', value: true },
+      { name: 'without_active_alternate', type: 'check', label: 'Only without an active backup supplier', value: false },
+      { name: 'criticality', type: 'select', label: 'Criticality', options: CRITICALITY },
+    ],
+    load: (f) => api('/products/exposure', { params: { ...f, limit: 20 } }),
+    rows: (d) => d.products,
+    columns: [
+      ['Product', (r) => [r.product_name, `${r.product_id}, ${r.criticality}`]],
+      ['Warehouse', (r) => r.stocking_location_id, 'nw'],
+      ['Cover', (r) => fmt.days(r.days_of_cover), 'n'],
+      ['Arrival in', (r) => fmt.days(r.days_until_arrival), 'n'],
+      ['Delayed inbound', (r) => fmt.qty(r.delayed_inbound_qty), 'n'],
+      ['Exposed value', (r) => fmt.eur(r.exposed_value_eur), 'n nw', (r) => r.is_exposed ? 'flag' : 'muted'],
+      ['Backup', (r) => r.has_active_alternate ? r.alternate_supplier_id : 'none active',
+        null, (r) => r.has_active_alternate ? '' : 'flag'],
+    ],
+    note: 'First 20 products by exposed value. Cover and arrival are in days from the data date.',
+    empty: 'No products match these filters.',
+  },
+  scorecard: {
+    filters: [
+      { name: 'sort_by', type: 'select', label: 'Rank by', options: [
+        ['on_time_delivery_rate', 'On-time delivery rate'], ['supplier_fill_rate', 'Fill rate'],
+        ['average_delay_days', 'Average delay'], ['delayed_quantity', 'Delayed quantity'], ['order_value', 'Order value']] },
+      { name: 'region', type: 'select', label: 'Region', options: ['', 'EMEA', 'APAC', 'AMER'] },
+    ],
+    load: (f) => api('/suppliers/scorecard', { params: { ...f, limit: 50 } }),
+    rows: (d) => d.suppliers,
+    columns: [
+      ['Supplier', (r) => [r.supplier_name, `${r.supplier_id}, ${r.country_code}${r.is_active ? '' : ', inactive'}`]],
+      ['Region', (r) => r.region],
+      ['On-time', (r) => fmt.pct(r.on_time_delivery_rate), 'n'],
+      ['Fill rate', (r) => fmt.pct(r.supplier_fill_rate), 'n'],
+      ['Avg delay', (r) => fmt.days(r.average_delay_days), 'n'],
+      ['Delayed qty', (r) => fmt.qty(r.delayed_quantity), 'n'],
+      ['Order value', (r) => fmt.eur(r.order_value_eur), 'n'],
+    ],
+    note: 'Weakest suppliers first for the chosen measure (largest first for order value).',
+    empty: 'No suppliers match these filters.',
+  },
+};
+let currentView = 'queue';
+const filterState = {};
+
+function renderFilters() {
+  const view = VIEWS[currentView];
+  filterState[currentView] ??= Object.fromEntries(view.filters.map((f) => [f.name, f.value ?? (f.type === 'select' ? (Array.isArray(f.options[0]) ? f.options[0][0] : '') : false)]));
+  const state = filterState[currentView];
+  $('filters').replaceChildren(...view.filters.map((f) => {
+    const label = el('label');
+    if (f.type === 'check') {
+      const input = el('input'); input.type = 'checkbox'; input.checked = state[f.name];
+      input.addEventListener('change', () => { state[f.name] = input.checked; loadList(); });
+      label.append(input, f.label);
+    } else {
+      const select = el('select');
+      f.options.forEach((o) => { const [value, text] = Array.isArray(o) ? o : [o, o || 'All']; const opt = el('option', text); opt.value = value; select.append(opt); });
+      select.value = state[f.name];
+      select.addEventListener('change', () => { state[f.name] = select.value; loadList(); });
+      label.append(f.label, select);
+    }
+    return label;
+  }));
+}
+
+async function loadList() {
+  const view = VIEWS[currentView];
+  showError('list-error', null);
+  $('list').setAttribute('aria-busy', 'true');
+  try {
+    const data = await view.load(filterState[currentView]);
+    const rows = view.rows(data);
+    if (!rows.length) { $('list').replaceChildren(el('p', view.empty, 'empty')); return; }
+    const table = el('table');
+    const head = el('tr');
+    view.columns.forEach(([title, , cls]) => head.append(el('th', title, cls || '')));
+    table.append(el('thead')); table.tHead.append(head);
+    const body = el('tbody');
+    rows.forEach((row) => {
+      const tr = el('tr');
+      view.columns.forEach(([, value, cls, tone]) => {
+        const td = el('td', null, [cls, tone?.(row)].filter(Boolean).join(' '));
+        const v = value(row);
+        if (Array.isArray(v)) { td.append(v[0] ?? '–'); if (v[1]) td.append(el('small', v[1], 'nw')); } else td.textContent = v ?? '–';
+        tr.append(td);
+      });
+      body.append(tr);
+    });
+    table.append(body);
+    $('list').replaceChildren(table, el('p', view.note, 'list-note'));
+  } catch (error) {
+    showError('list-error', error);
+    $('list').replaceChildren();
+  } finally {
+    $('list').removeAttribute('aria-busy');
+  }
+}
+
+document.querySelectorAll('[role="tab"]').forEach((tab) => tab.addEventListener('click', () => {
+  document.querySelectorAll('[role="tab"]').forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
+  currentView = tab.dataset.view;
+  renderFilters();
+  if (account) loadList();
+}));
+
+/* ---------------- thinking indicator (shown on the Ask button) ---------------- */
+let thinkingTimer = null, thinkingStart = 0;
+
+function showThinking() {
+  const seconds = Math.floor((Date.now() - thinkingStart) / 1000);
+  $('ask').textContent = `Thinking... (${seconds} sec)`;
+}
+
+function startThinking() {
+  thinkingStart = Date.now();
+  $('answer').hidden = true;
+  showThinking();
+  thinkingTimer = setInterval(showThinking, 250);
+}
+
+function stopThinking() {
+  clearInterval(thinkingTimer);
+  thinkingTimer = null;
+}
+
+/* ---------------- assistant ---------------- */
+const STATUS = {
+  answered: ['Answered', 'ok'], no_data: ['No matching data', 'warn'], clarification_needed: ['Needs more detail', 'warn'],
+  out_of_scope: ['Outside what I can answer', 'warn'], data_unavailable: ['Data unavailable', 'bad'],
+};
+
+function renderAnswer(r) {
+  const [label, tone] = STATUS[r.status] ?? [r.status, 'warn'];
+  const verdict = $('verdict'); verdict.textContent = label; verdict.className = `verdict ${tone}`;
+  $('answer-text').textContent = r.answer;
+  const facts = [];
+  if (r.as_of_date) facts.push(`Data as of ${r.as_of_date}`);
+  r.limitations.forEach((l) => facts.push(l));
+  $('facts').replaceChildren(...facts.map((f) => el('li', f)));
+
+  const q = r.quality;
+  $('checks').hidden = !q;
+  if (q) {
+    const summary = q.fallback_used ? 'The generated answer failed the quality check, so this answer lists the raw results.'
+      : q.passed ? (q.revised ? 'Passed the quality check after one revision.' : 'Passed the number check and the quality review.')
+      : 'Did not pass the quality check.';
+    const parts = [el('p', summary)];
+    if (q.scores) {
+      const grid = el('div', null, 'scores');
+      Object.entries(q.scores).forEach(([k, v]) => grid.append(el('span', `${k}: ${v}`)));
+      parts.push(grid);
+    }
+    $('quality').replaceChildren(...parts);
+  }
+  $('evidence').replaceChildren(...(r.evidence.length ? r.evidence.map((e) =>
+    el('li', `${e.tool} ${e.status === 'ok' ? '' : '(rejected, retried) '}${JSON.stringify(e.arguments)}`)) : [el('li', 'No data was needed.')]));
+  $('trace').replaceChildren(...r.trace.map((t) => el('li', t)));
+  $('answer').hidden = false;
+}
+
+$('ask-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const question = $('question').value.trim();
+  if (question.length < 3) { showError('ask-error', new ApiError('Type a question of at least 3 characters.')); return; }
+  const button = $('ask');
+  button.disabled = true;
+  showError('ask-error', null);
+  startThinking();
+  try {
+    renderAnswer(await api('/assistant/query', { method: 'POST', body: { question } }));
+  } catch (error) {
+    showError('ask-error', error);
+  } finally {
+    stopThinking();
+    button.disabled = false; button.textContent = 'Ask';
+  }
+});
+$('question').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) $('ask-form').requestSubmit(); });
+document.querySelectorAll('.examples button').forEach((b) => b.addEventListener('click', () => {
+  $('question').value = b.textContent; $('question').focus();
+}));
+
+/* ---------------- connect ---------------- */
+async function connect() {
+  showError('list-error', null);
+  await Promise.all([loadKpis(), loadList()]);
+}
+function showAccount() {
+  $('who').textContent = account ? (account.name || account.username) : 'Not signed in';
+  $('who').title = account ? account.username : '';
+  $('sign-in').hidden = !!account;
+  $('sign-out').hidden = !account;
+}
+
+async function initAuth() {
+  try {
+    authConfig = await fetch('/auth/config').then((r) => r.json());
+    msalApp = new msal.PublicClientApplication({
+      auth: { clientId: authConfig.client_id, authority: authConfig.authority, redirectUri: `${location.origin}/` },
+      cache: { cacheLocation: 'sessionStorage' },
+    });
+    await msalApp.initialize();
+    const result = await msalApp.handleRedirectPromise();
+    account = result?.account ?? msalApp.getAllAccounts()[0] ?? null;
+  } catch (error) {
+    $('asof').textContent = `Microsoft sign-in is not available: ${error.message}`;
+    return;
+  }
+  showAccount();
+  if (account) connect();
+}
+
+$('sign-in').addEventListener('click', () => msalApp?.loginRedirect({ scopes: [authConfig.scope] }));
+$('sign-out').addEventListener('click', () => msalApp?.logoutRedirect({ account, postLogoutRedirectUri: `${location.origin}/` }));
+
+renderFilters();
+initAuth();
+</script>
+</body>
+</html>
