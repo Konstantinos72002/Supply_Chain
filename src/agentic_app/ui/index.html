@@ -29,20 +29,20 @@
   .wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
 
   /* masthead */
-  .mast { background: var(--hull-deep); color: #fff; }
+  .mast { background: #000; color: #fff; }
   .mast .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; padding-top: 14px; padding-bottom: 14px; }
   .brand { display: flex; align-items: baseline; gap: 12px; }
   .brand h1 { font-size: 20px; letter-spacing: .01em; }
   .brand span { color: #AFC0D3; font-size: 14px; }
   .key { display: flex; gap: 8px; align-items: center; }
   .key span { font-size: 14px; color: #AFC0D3; }
-  .key .btn-quiet { color: #fff; border-color: #3B5878; }
+  .key .btn-quiet { color: #fff; border-color: #444; }
   .btn { padding: 8px 16px; border: 0; border-radius: 4px; background: var(--marking); color: var(--ink); font-weight: 600; cursor: pointer; }
   .btn:disabled { opacity: .6; cursor: progress; }
   .btn-quiet { background: transparent; color: var(--hull); border: 1px solid var(--rule); font-weight: 500; }
 
   /* KPI status board: the one bold element */
-  .board { background: var(--hull); color: #fff; border-bottom: 6px solid var(--marking); }
+  .board { background: #000; color: #fff; border-bottom: 6px solid var(--marking); }
   .board .wrap { padding-top: 22px; padding-bottom: 26px; }
   .board-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 14px; }
   .board-head h2 { font-size: 15px; font-weight: 500; color: #CBD7E4; }
@@ -51,7 +51,7 @@
   .rows { display: grid; gap: 18px; }
   .row { display: grid; grid-template-columns: 150px repeat(4, 1fr); align-items: start; gap: 0; }
   .row-name { font-size: 14px; color: #CBD7E4; padding-top: 10px; }
-  .kpi { padding: 2px 18px 6px; border-left: 1px solid #3B5878; }
+  .kpi { padding: 2px 18px 6px; border-left: 1px solid #333; }
   .kpi .num { display: block; font: 600 46px/1 var(--font-numerals); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
   .kpi .num.warn { color: var(--marking); }
   .kpi .lbl { display: block; margin-top: 6px; font-size: 14px; color: #DCE5EE; }
