@@ -1,7 +1,7 @@
 """Executable API examples (assignment 6.7): one call per endpoint, each with the result it must return.
 
 Start the API first, then in a second terminal:
-    cd src/ilias_api_code
+    cd src/agentic_app
     uv run python api_examples.py
 The API needs a Microsoft Entra ID access token for it: put the token in API_TOKEN (environment or .env),
 for example with the Azure CLI: az account get-access-token --scope api://<client-id>/access_as_user

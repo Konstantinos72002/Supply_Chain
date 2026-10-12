@@ -7,7 +7,7 @@ import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
-import supply_chain_api as module
+import app as module
 
 ORIGINAL_RUN_STATEMENT = module.run_statement      # captured before the test fixtures replace it
 

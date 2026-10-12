@@ -7,7 +7,7 @@ import pytest
 from conftest import H, FakeLLM
 from fastapi.testclient import TestClient
 
-import supply_chain_api
+import app as module
 from knowledge_graph.graph import build_graph, save_graph
 
 SUPPLIERS = [
@@ -31,15 +31,15 @@ IMPACT = [('get_supplier_disruption_impact', {'supplier_id': 'SUP-0017'})]
 @pytest.fixture
 def kg_client(tmp_path, monkeypatch):
     path = save_graph(build_graph(SUPPLIERS, PRODUCTS, SHIPMENTS), tmp_path / 'kg.json')
-    monkeypatch.setattr(supply_chain_api, 'KG_PATH', path)
-    supply_chain_api._graph_cache.clear()
-    with TestClient(supply_chain_api.app) as c:
+    monkeypatch.setattr(module, 'KG_PATH', path)
+    module._graph_cache.clear()
+    with TestClient(module.app) as c:
         yield c
-    supply_chain_api.app.state.assistant_llm = None
+    module.app.state.assistant_llm = None
 
 
 def ask(client, llm, question):
-    supply_chain_api.app.state.assistant_llm = llm
+    module.app.state.assistant_llm = llm
     response = client.post('/assistant/query', json={'question': question}, headers=H)
     assert response.status_code == 200, response.text
     return response.json()
@@ -69,16 +69,16 @@ def test_disruption_impact_errors(kg_client, tmp_path, monkeypatch):
     assert kg_client.get(url, params={'supplier_id': 'SUP-0017'}).status_code == 401
     assert kg_client.get(url, params={'supplier_id': 'bad id!'}, headers=H).status_code == 422
     assert kg_client.get(url, params={'supplier_id': 'SUP-9999'}, headers=H).status_code == 404
-    monkeypatch.setattr(supply_chain_api, 'KG_PATH', tmp_path / 'missing.json')
+    monkeypatch.setattr(module, 'KG_PATH', tmp_path / 'missing.json')
     assert kg_client.get(url, params={'supplier_id': 'SUP-0017'}, headers=H).status_code == 503
 
 
 def test_rebuilt_graph_is_reloaded(kg_client):
     url, params = '/suppliers/disruption-impact', {'supplier_id': 'SUP-0017'}
     assert kg_client.get(url, params=params, headers=H).json()['affected_product_count'] == 2
-    save_graph(build_graph(SUPPLIERS, PRODUCTS[:1], []), supply_chain_api.KG_PATH)
-    stat = supply_chain_api.KG_PATH.stat()
-    os.utime(supply_chain_api.KG_PATH, (stat.st_atime, stat.st_mtime + 10))
+    save_graph(build_graph(SUPPLIERS, PRODUCTS[:1], []), module.KG_PATH)
+    stat = module.KG_PATH.stat()
+    os.utime(module.KG_PATH, (stat.st_atime, stat.st_mtime + 10))
     assert kg_client.get(url, params=params, headers=H).json()['affected_product_count'] == 1
 
 

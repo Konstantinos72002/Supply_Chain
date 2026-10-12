@@ -2,7 +2,7 @@
 
 Run:
     uv sync                      # also makes the knowledge_graph package (src/knowledge_graph) importable
-    uv run python supply_chain_api.py
+    uv run python app.py
 
 The knowledge graph is read from KG_PATH (default: <repo>/data/graph/supply_graph.json); rebuild it with
 `uv run python -m knowledge_graph.build_knowledge_graph` and the API picks up the new file without a restart.
@@ -814,5 +814,5 @@ async def ready(request: Request) -> JSONResponse:
 if __name__ == '__main__':
     import uvicorn
 
-    uvicorn.run('supply_chain_api:app', host=os.environ.get('API_HOST', '127.0.0.1'),
+    uvicorn.run('app:app', host=os.environ.get('API_HOST', '127.0.0.1'),
                 port=int(os.environ.get('API_PORT', '8000')))

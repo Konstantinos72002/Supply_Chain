@@ -1,7 +1,7 @@
 """Export the Gold Delta tables used by the API to CSV test fixtures.
 
-The API tests (src/ilias_api_code/tests/conftest.py) load one CSV per Gold table from
-src/ilias_api_code/tests/data/gold/ into a local Spark session. This script creates those files
+The API tests (src/agentic_app/tests/conftest.py) load one CSV per Gold table from
+src/agentic_app/tests/data/gold/ into a local Spark session. This script creates those files
 from the real Gold tables in Databricks, using the same .env credentials as the API.
 
 Run from the repository root:
@@ -24,7 +24,7 @@ TABLES = [
     "gold_dim_location",
     "gold_dim_date",
 ]
-OUT_DIR = Path(__file__).resolve().parents[1] / "src" / "ilias_api_code" / "tests" / "data" / "gold"
+OUT_DIR = Path(__file__).resolve().parents[1] / "src" / "agentic_app" / "tests" / "data" / "gold"
 
 
 def to_csv_value(value):
