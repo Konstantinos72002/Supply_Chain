@@ -6,7 +6,7 @@ import httpx
 import pytest
 from fastapi import HTTPException
 
-import supply_chain_api as module
+import app as module
 from conftest import H
 
 ORIGINAL_RUN_STATEMENT = module.run_statement      # captured before the test fixtures replace it

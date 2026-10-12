@@ -18,7 +18,7 @@ jobs:
         with:
           version: "0.11.32"
       - name: Ruff
-        run: uv run --frozen ruff check src/ilias_api_code src/knowledge_graph
+        run: uv run --frozen ruff check src/agentic_app src/knowledge_graph
 
   test:
     needs: lint
@@ -33,7 +33,7 @@ jobs:
         with:
           version: "0.11.32"
       - name: Pytest
-        working-directory: src/ilias_api_code
+        working-directory: src/agentic_app
         run: uv run --frozen pytest
 
   build:

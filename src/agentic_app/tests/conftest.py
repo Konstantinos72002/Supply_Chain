@@ -52,9 +52,9 @@ class _LocalKeys:
         return jwt.PyJWK.from_dict(json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(SIGNING_KEY.public_key())))
 
 
-import supply_chain_api  # noqa: E402
+import app  # noqa: E402
 
-supply_chain_api.jwks_client = _LocalKeys()   # tokens are checked against the local test key, also without Spark
+app.jwks_client = _LocalKeys()   # tokens are checked against the local test key, also without Spark
 
 
 @pytest.fixture(scope='session')
@@ -71,7 +71,7 @@ def spark():
 
 @pytest.fixture(scope='session')
 def api(spark):
-    import supply_chain_api as module
+    import app as module
 
     async def local_run_statement(client, statement, parameters=None):
         sql = statement.replace(f'{module.CATALOG}.{module.SCHEMA}.', '')
