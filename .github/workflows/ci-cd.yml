@@ -1,4 +1,4 @@
-# CI for the Team 4 Supply Chain API (assignment 6.8): lint -> test -> build, each job only if the previous passed.
+   # CI/CD for the Team 4 Supply Chain API (assignment 6.8): lint -> test -> build -> deploy (deploy only on push to main), each job only if the previous passed.
 name: CI/CD
 
 on:
@@ -52,4 +52,38 @@ jobs:
             team4-api:${{ github.sha }}
           for i in $(seq 30); do curl -fs http://localhost:8000/health && exit 0; sleep 2; done
           docker logs api
+          exit 1
+
+  deploy:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RESOURCE_GROUP: rg_gtgh_data_17
+      ACR_NAME: team4scacr
+      CONTAINER_APP: team4-sc-app
+      IMAGE: team4scacr.azurecr.io/supply-chain:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sign in to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Build the image and push it to Azure Container Registry
+        run: |
+          az acr login --name "$ACR_NAME"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+      - name: Deploy the new image to the Container App
+        run: az containerapp update --name "$CONTAINER_APP" --resource-group "$RESOURCE_GROUP" --image "$IMAGE"
+      - name: Check that the new version answers
+        run: |
+          FQDN=$(az containerapp show --name "$CONTAINER_APP" --resource-group "$RESOURCE_GROUP" \
+                 --query properties.configuration.ingress.fqdn --output tsv)
+          for i in $(seq 30); do curl -fs "https://$FQDN/health" && exit 0; sleep 10; done
           exit 1
