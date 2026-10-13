@@ -89,6 +89,39 @@ class Quality(BaseModel):
     fallback_used: bool = Field(description='True when the answer was built directly from tool results.')
 
 
+class SqlStatementMetric(BaseModel):
+    endpoint: str = Field(description='API endpoint whose handler ran the statement.')
+    statement_id: str | None = Field(description='Databricks statement id (look it up in the warehouse query history).')
+    state: str = Field(description='SUCCEEDED, FAILED, CANCELED, TIMEOUT or ERROR.')
+    duration_ms: float = Field(description='Submit to last row received, including polling and retries.')
+    rows: int
+    polls: int = Field(description='Status polls while the warehouse was still running the statement (1s apart).')
+
+
+class LlmCallMetric(BaseModel):
+    node: str = Field(description='Graph node that made the call.')
+    status: Literal['ok', 'error']
+    duration_ms: float
+    input_tokens: int
+    output_tokens: int
+
+
+class QueryMetrics(BaseModel):
+    total_ms: float = Field(description='Wall-clock time to answer the question.')
+    sql_count: int = Field(description='SQL statements sent to the Databricks warehouse.')
+    sql_total_ms: float = Field(description='Sum of statement durations; above the wall time when they overlap.')
+    sql_avg_ms: float | None
+    sql_max_ms: float | None
+    sql_rows: int
+    tool_calls: int = Field(description='Calls of the API tools by the agents.')
+    llm_calls: int
+    llm_total_ms: float = Field(description='Sum of LLM call durations; above the wall time when they overlap.')
+    input_tokens: int
+    output_tokens: int
+    sql_statements: list[SqlStatementMetric]
+    llm: list[LlmCallMetric]
+
+
 class AssistantAnswer(BaseModel):
     status: Literal['answered', 'clarification_needed', 'out_of_scope', 'no_data', 'data_unavailable']
     answer: str
@@ -99,3 +132,4 @@ class AssistantAnswer(BaseModel):
     limitations: list[str]
     quality: Quality | None
     trace: list[str] = Field(description='Execution path: graph nodes and tool calls, in order.')
+    metrics: QueryMetrics | None = Field(None, description='SQL statements, LLM calls and timings of this answer.')

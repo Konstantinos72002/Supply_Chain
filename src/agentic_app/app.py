@@ -33,7 +33,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, OAuth2Aut
 from pydantic import BaseModel, ConfigDict, Field
 
 from assistant.graph import default_llm, run_assistant
-from assistant.schemas import AssistantAnswer, AssistantQuery
+from assistant.metrics import track_llm_calls
+from assistant.schemas import AssistantAnswer, AssistantQuery, QueryMetrics
 from gold_sql import UnsafeSql, prepare
 from knowledge_graph.graph import load_graph, supplier_alternatives
 
@@ -78,6 +79,10 @@ DIM_DATE = table('gold_dim_date')
 CORRELATION_HEADER = 'X-Correlation-ID'
 VALID_CORRELATION_ID = re.compile(r'[A-Za-z0-9._-]{1,64}')
 correlation_id: ContextVar[str] = ContextVar('correlation_id', default='-')
+# Per-question metrics: ask_assistant sets a list and run_statement appends one entry per SQL statement, tagged with
+# the endpoint being served (the assistant's tool calls are in-process requests, so they share the list).
+current_endpoint: ContextVar[str] = ContextVar('current_endpoint', default='-')
+sql_metrics: ContextVar[list[dict[str, Any]] | None] = ContextVar('sql_metrics', default=None)
 
 
 class CorrelationIdFilter(logging.Filter):
@@ -202,6 +207,21 @@ def convert(value: str | None, type_name: str) -> Any:
 async def run_statement(client: httpx.AsyncClient, statement: str,
                         parameters: list[dict[str, str]] | None = None) -> list[dict[str, Any]]:
     """Runs one SQL statement on the SQL warehouse; user values are passed only as named parameters."""
+    metric = {'endpoint': current_endpoint.get(), 'statement_id': None, 'state': 'ERROR', 'rows': 0, 'polls': 0}
+    start = time.perf_counter()
+    try:
+        rows = await _execute_statement(client, statement, parameters, metric)
+        metric['rows'] = len(rows)
+        return rows
+    finally:
+        metric['duration_ms'] = round((time.perf_counter() - start) * 1000, 1)
+        logger.info('sql statement', extra={'fields': metric})
+        if (collected := sql_metrics.get()) is not None:
+            collected.append(metric)
+
+
+async def _execute_statement(client: httpx.AsyncClient, statement: str, parameters: list[dict[str, str]] | None,
+                             metric: dict[str, Any]) -> list[dict[str, Any]]:
     payload: dict[str, Any] = {
         'warehouse_id': WAREHOUSE_ID, 'statement': statement, 'wait_timeout': '10s',
         'disposition': 'INLINE', 'format': 'JSON_ARRAY',
@@ -209,7 +229,7 @@ async def run_statement(client: httpx.AsyncClient, statement: str,
     if parameters:
         payload['parameters'] = parameters
     result = check_response(await send_with_retry(client, 'POST', STATEMENTS_PATH, json=payload))
-    statement_id = result['statement_id']
+    statement_id = metric['statement_id'] = result['statement_id']
 
     deadline = time.monotonic() + POLL_DEADLINE_SECONDS
     while result['status']['state'] in {'PENDING', 'RUNNING'}:
@@ -218,10 +238,13 @@ async def run_statement(client: httpx.AsyncClient, statement: str,
                 await client.post(f'{STATEMENTS_PATH}/{statement_id}/cancel')
             except httpx.HTTPError:
                 pass
+            metric['state'] = 'TIMEOUT'
             raise HTTPException(status_code=504, detail=f'Statement {statement_id} timed out and was cancelled.')
         await asyncio.sleep(1)
+        metric['polls'] += 1
         result = check_response(await send_with_retry(client, 'GET', f'{STATEMENTS_PATH}/{statement_id}'))
 
+    metric['state'] = result['status']['state']
     if result['status']['state'] != 'SUCCEEDED':
         error = result['status'].get('error') or {}
         logger.error('Statement %s ended in state %s: %s', statement_id, result['status']['state'], error)
@@ -282,6 +305,7 @@ async def correlation_id_and_access_log(request: Request, call_next):
     incoming = request.headers.get(CORRELATION_HEADER, '')
     request_id = incoming if VALID_CORRELATION_ID.fullmatch(incoming) else uuid.uuid4().hex
     token = correlation_id.set(request_id)
+    endpoint_token = current_endpoint.set(request.url.path)
     start = time.perf_counter()
     status = 500
     try:
@@ -293,6 +317,7 @@ async def correlation_id_and_access_log(request: Request, call_next):
         logger.info('request', extra={'fields': {
             'method': request.method, 'path': request.url.path, 'status': status,
             'duration_ms': round((time.perf_counter() - start) * 1000, 1)}})
+        current_endpoint.reset(endpoint_token)
         correlation_id.reset(token)
 
 
@@ -822,12 +847,38 @@ async def ask_assistant(request: Request, body: AssistantQuery) -> AssistantAnsw
     checks + LLM judge) before returning it with evidence, filters, measures, limitations and its execution trace."""
     if getattr(request.app.state, 'assistant_llm', None) is None:
         request.app.state.assistant_llm = default_llm()
-    # In-process calls to this same app with the caller's own token: same validation and security, no network hop.
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=request.app), base_url='http://supply-chain-api',
-                                 headers={'Authorization': request.headers['Authorization'],
-                                          CORRELATION_HEADER: correlation_id.get()},
-                                 timeout=POLL_DEADLINE_SECONDS + 30) as tools_client:
-        return await run_assistant(body.question, tools_client, request.app.state.assistant_llm)
+    statements: list[dict[str, Any]] = []
+    metrics_token = sql_metrics.set(statements)
+    start = time.perf_counter()
+    try:
+        with track_llm_calls() as llm_calls:
+            # In-process calls to this same app with the caller's own token: same validation and security,
+            # no network hop.
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=request.app),
+                                         base_url='http://supply-chain-api',
+                                         headers={'Authorization': request.headers['Authorization'],
+                                                  CORRELATION_HEADER: correlation_id.get()},
+                                         timeout=POLL_DEADLINE_SECONDS + 30) as tools_client:
+                answer = await run_assistant(body.question, tools_client, request.app.state.assistant_llm)
+    finally:
+        sql_metrics.reset(metrics_token)
+    answer.metrics = query_metrics(time.perf_counter() - start, statements, llm_calls.calls, len(answer.evidence))
+    logger.info('assistant metrics', extra={'fields': answer.metrics.model_dump(exclude={'sql_statements', 'llm'})})
+    return answer
+
+
+def query_metrics(seconds: float, statements: list[dict[str, Any]], llm_calls: list[dict[str, Any]],
+                  tool_calls: int) -> QueryMetrics:
+    durations = [s['duration_ms'] for s in statements]
+    return QueryMetrics(
+        total_ms=round(seconds * 1000, 1), sql_count=len(statements), sql_total_ms=round(sum(durations), 1),
+        sql_avg_ms=round(sum(durations) / len(durations), 1) if durations else None,
+        sql_max_ms=max(durations, default=None), sql_rows=sum(s['rows'] for s in statements),
+        tool_calls=tool_calls, llm_calls=len(llm_calls),
+        llm_total_ms=round(sum(c['duration_ms'] for c in llm_calls), 1),
+        input_tokens=sum(c['input_tokens'] for c in llm_calls),
+        output_tokens=sum(c['output_tokens'] for c in llm_calls),
+        sql_statements=statements, llm=llm_calls)
 
 
 # =============================================================================

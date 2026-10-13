@@ -88,6 +88,10 @@
   summary { cursor: pointer; font-weight: 500; color: var(--hull); }
   .scores { display: grid; grid-template-columns: repeat(3, auto); gap: 4px 18px; justify-content: start; margin: 8px 0 0; font-size: 14px; }
   .evidence { margin: 8px 0 0; padding-left: 18px; font-size: 14px; }
+  .metrics { margin: 8px 0 0; font-size: 14px; }
+  .metrics table { border-collapse: collapse; margin-top: 8px; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .metrics th, .metrics td { padding: 3px 10px 3px 0; text-align: left; border-bottom: 1px solid var(--rule); }
+  .metrics td.num, .metrics th.num { text-align: right; }
   .trace { margin: 8px 0 0; padding-left: 22px; font-size: 13px; color: var(--steel); }
   .error { margin-top: 14px; padding: 10px 12px; border-left: 4px solid var(--alert); background: #FBEDEB; color: #6E1E18; font-size: 15px; }
   .error[hidden] { display: none; }
@@ -190,6 +194,7 @@
         <ul class="facts" id="facts"></ul>
         <details id="checks"><summary>How this answer was checked</summary><div id="quality"></div></details>
         <details><summary>Evidence: data the answer is based on</summary><ul class="evidence" id="evidence"></ul></details>
+        <details id="metrics-box"><summary>Performance: SQL queries, LLM calls and timings</summary><div class="metrics" id="metrics"></div></details>
         <details><summary>Steps taken</summary><ol class="trace" id="trace"></ol></details>
       </div>
     </div>
@@ -471,7 +476,41 @@ function renderAnswer(r) {
   $('evidence').replaceChildren(...(r.evidence.length ? r.evidence.map((e) =>
     el('li', `${e.tool} ${e.status === 'ok' ? '' : '(rejected, retried) '}${JSON.stringify(e.arguments)}`)) : [el('li', 'No data was needed.')]));
   $('trace').replaceChildren(...r.trace.map((t) => el('li', t)));
+  renderMetrics(r.metrics);
   $('answer').hidden = false;
+}
+
+const ms = (v) => (v == null ? '–' : v >= 1000 ? `${(v / 1000).toFixed(2)} s` : `${Math.round(v)} ms`);
+
+function metricsTable(headers, rows) {
+  const table = el('table');
+  const head = el('tr');
+  headers.forEach(([h, num]) => head.append(el('th', h, num ? 'num' : null)));
+  table.append(head);
+  rows.forEach((cells) => {
+    const tr = el('tr');
+    cells.forEach((c, i) => tr.append(el('td', String(c), headers[i][1] ? 'num' : null)));
+    table.append(tr);
+  });
+  return table;
+}
+
+function renderMetrics(m) {
+  $('metrics-box').hidden = !m;
+  if (!m) return;
+  const parts = [
+    el('p', `Total time ${ms(m.total_ms)}. ${m.sql_count} SQL ${m.sql_count === 1 ? 'query' : 'queries'} to Databricks `
+      + `(${ms(m.sql_total_ms)} in total, average ${ms(m.sql_avg_ms)}, slowest ${ms(m.sql_max_ms)}, ${m.sql_rows} rows). `
+      + `${m.tool_calls} tool calls. ${m.llm_calls} LLM calls (${ms(m.llm_total_ms)}, `
+      + `${m.input_tokens.toLocaleString()} input + ${m.output_tokens.toLocaleString()} output tokens).`),
+  ];
+  if (m.sql_statements.length) parts.push(metricsTable(
+    [['#'], ['Endpoint'], ['State'], ['Time', true], ['Rows', true], ['Polls', true]],
+    m.sql_statements.map((s, i) => [i + 1, s.endpoint, s.state, ms(s.duration_ms), s.rows, s.polls])));
+  if (m.llm.length) parts.push(metricsTable(
+    [['#'], ['Agent step'], ['Time', true], ['Tokens in', true], ['Tokens out', true]],
+    m.llm.map((c, i) => [i + 1, c.node + (c.status === 'ok' ? '' : ' (error)'), ms(c.duration_ms), c.input_tokens, c.output_tokens])));
+  $('metrics').replaceChildren(...parts);
 }
 
 $('ask-form').addEventListener('submit', async (event) => {
