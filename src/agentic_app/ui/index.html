@@ -59,11 +59,7 @@
   .kpi .lbl { display: block; margin-top: 6px; font-size: 14px; color: #E6DCFF; }
 
   /* work area */
-  main.wrap { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 0 32px; padding-top: 28px; padding-bottom: 48px; }
-  /* Each section spans the same three rows (title, subtitle, panel) through subgrid,
-     so both panels start at the same height even when one subtitle wraps. */
-  main.wrap > section { display: grid; grid-row: span 3; grid-template-rows: subgrid; }
-  main.wrap > section > .panel { align-self: start; }
+  main.wrap { padding-top: 28px; padding-bottom: 96px; }
   section h2 { font-size: 22px; margin-bottom: 4px; }
   .sub { margin: 0 0 16px; color: var(--steel); font-size: 15px; }
   .panel { background: var(--paper); border-top: 3px solid var(--hull); padding: 20px; }
@@ -101,9 +97,12 @@
   .filters { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 12px; font-size: 14px; }
   .filters select { padding: 5px 8px; border: 1px solid var(--rule); border-radius: 4px; background: #fff; }
   .filters label { display: inline-flex; align-items: center; gap: 6px; }
-  .table-wrap { overflow-x: auto; }
+  .table-wrap { overflow: auto; max-height: var(--split-h); }
   table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
-  th { text-align: left; font-weight: 600; color: var(--steel); padding: 6px 8px 6px 0; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+  th { text-align: left; font-weight: 600; color: var(--steel); padding: 6px 8px 6px 0; border-bottom: 1px solid var(--rule); white-space: nowrap;
+       position: sticky; top: 0; background: var(--paper); z-index: 1; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover td, tr.linked td { background: #FAF5FF; }
   td { padding: 7px 8px 7px 0; border-bottom: 1px solid #E6E6E6; vertical-align: top; }
   td.n, th.n { text-align: right; }
   td small { display: block; color: var(--steel); }
@@ -113,15 +112,98 @@
   .muted { color: var(--steel); }
   .empty { padding: 18px 0; color: var(--steel); }
 
+  /* chart and list side by side: same rows, same order, same filters */
+  .split { --split-h: 560px; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 0 28px; align-items: start; }
+  .split.no-chart { grid-template-columns: minmax(0, 1fr); }
+  .chart-box { border-right: 1px solid var(--rule); padding-right: 24px; min-width: 0; }
+  .chart-box[hidden] { display: none; }
+  .chart-title { margin: 0; font-size: 15px; font-weight: 600; }
+  .chart-hint { margin: 0 0 8px; font-size: 13px; color: var(--steel); }
+  .chart-canvas { position: relative; height: calc(var(--split-h) - 52px); }
+  tr.selected td, tr.selected:hover td { background: #F3E8FF; }
+  tr.selected td:first-child { box-shadow: inset 3px 0 0 var(--hull); padding-left: 6px; }
+
+  /* supplier map: map and country list side by side */
+  .map-section { margin-top: 36px; }
+  .map-split { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 0 28px; align-items: start; }
+  .map-box { position: relative; border-right: 1px solid var(--rule); padding-right: 24px; min-width: 0; }
+  .map-canvas { position: relative; height: 440px; }
+  .map-canvas svg { display: block; width: 100%; height: 100%; }
+  .map-canvas svg { cursor: grab; touch-action: none; }
+  .map-canvas svg.panning { cursor: grabbing; }
+  .map-canvas .land { fill: #ECECEC; stroke: #FFFFFF; stroke-width: .6; vector-effect: non-scaling-stroke; }
+  .map-canvas .land.has-suppliers { cursor: pointer; }
+  .map-canvas .land.has-suppliers:hover, .map-canvas .land.linked { stroke: var(--ink); stroke-width: 1.5; }
+  .map-canvas .land.selected { stroke: var(--ink); stroke-width: 2.5; }
+  .map-zoom { position: absolute; top: 34px; left: 8px; z-index: 4; display: flex; flex-direction: column; gap: 4px; }
+  .map-zoom[hidden] { display: none; }
+  .map-zoom button { width: 32px; height: 32px; padding: 0; border: 1px solid var(--rule); border-radius: 4px; background: #fff; font-size: 18px; line-height: 1; cursor: pointer; }
+  .map-zoom button:hover { border-color: var(--hull); color: var(--hull); }
+  /* amount KPIs: circles (one colour, area = amount); rate KPIs: country colour, plus a small marker only for
+     countries too small to have a shape on the map */
+  .map-canvas .bubble { fill: var(--hull); fill-opacity: .85; stroke: #FFFFFF; stroke-width: 1.5; cursor: pointer; }
+  .map-canvas .bubble:hover, .map-canvas .bubble.linked, .map-canvas .bubble:focus-visible { fill-opacity: .9; stroke: var(--ink); stroke-width: 2; outline: none; }
+  .map-canvas .bubble.selected { fill-opacity: .9; stroke: var(--ink); stroke-width: 3; }
+  .map-canvas .marker { stroke: var(--ink); stroke-width: 1; cursor: pointer; }
+  .map-canvas .marker:hover, .map-canvas .marker.linked, .map-canvas .marker:focus-visible, .map-canvas .marker.selected { stroke-width: 2.5; outline: none; }
+  .map-canvas .land.has-suppliers.neutral { fill: #D4D4D4; }
+  .map-canvas .land:focus-visible { outline: none; stroke: var(--ink); stroke-width: 2.5; }
+  .map-msg { position: absolute; inset: 0; display: grid; place-items: center; color: var(--steel); font-size: 14px; text-align: center; padding: 20px; }
+  .map-msg[hidden] { display: none; }
+  .map-tip { position: absolute; z-index: 5; pointer-events: none; min-width: 190px; padding: 8px 10px; border-radius: 4px;
+             background: rgba(0, 0, 0, .86); color: #fff; font-size: 13px; line-height: 1.45; }
+  .map-tip[hidden] { display: none; }
+  .map-tip strong { display: block; font-size: 14px; margin-bottom: 2px; }
+  .map-tip span { display: flex; justify-content: space-between; gap: 14px; font-variant-numeric: tabular-nums; }
+  .map-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; margin-top: 8px; font-size: 13px; color: var(--steel); }
+  .map-legend { flex-direction: column; align-items: flex-start; }
+  .map-legend .row-l { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+  .map-legend .sw { display: inline-block; width: 14px; height: 12px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; border: 1px solid rgba(0,0,0,.15); }
+  .map-legend .sw.none { background: repeating-linear-gradient(135deg, #C4C4C4 0 2px, #F2F2F2 2px 5px); }
+  .map-legend .sw.nosup { background: #ECECEC; }
+  .map-legend .bub { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; background: var(--hull); opacity: .8; }
+  .country-panel { min-width: 0; }
+  .country-panel h3 { font-size: 16px; margin-bottom: 2px; }
+  .country-panel .table-wrap { max-height: 400px; }
+  .country-panel table { min-width: 0; }
+  .back { margin: 0 0 8px; padding: 4px 10px; font-size: 13px; }
+
+  /* assistant drawer: opens from the right, the data stays visible */
+  .ask-fab { position: fixed; right: 24px; bottom: 24px; z-index: 60; display: inline-flex; align-items: center; gap: 8px;
+             padding: 12px 20px; border-radius: 999px; box-shadow: 0 6px 18px rgba(70, 0, 115, .35); }
+  .ask-fab[hidden] { display: none; }
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 70; width: min(460px, 100vw);
+            display: none; flex-direction: column; background: var(--paper); border-left: 3px solid var(--hull);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, .18); }
+  .drawer.open { display: flex; animation: drawer-in .2s ease-out; }
+  @keyframes drawer-in { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 18px 20px 12px; border-bottom: 1px solid var(--rule); }
+  .drawer-head h2 { font-size: 20px; margin-bottom: 2px; }
+  .drawer-head .sub { margin: 0; font-size: 14px; }
+  .drawer-close { flex: none; width: 36px; height: 36px; border: 1px solid var(--rule); border-radius: 4px; background: #fff; font-size: 20px; line-height: 1; cursor: pointer; }
+  .drawer-close:hover { border-color: var(--hull); color: var(--hull); }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 16px 20px 24px; }
+  /* wide screens: the page makes room for the drawer instead of being covered by it */
+  @media (min-width: 1500px) { body.drawer-open { padding-right: 460px; } }
+
+  /* side by side down to tablet width; only phones stack */
+  @media (max-width: 720px) {
+    .split, .map-split { grid-template-columns: minmax(0, 1fr); }
+    .chart-box, .map-box { border-right: 0; padding-right: 0; border-bottom: 1px solid var(--rule); padding-bottom: 16px; margin-bottom: 16px; }
+    .chart-canvas { height: 380px; }
+    .map-canvas { height: 260px; }
+    .table-wrap { max-height: none; }
+  }
+
   @media (max-width: 960px) {
-    main.wrap { grid-template-columns: minmax(0, 1fr); gap: 32px; }
-    main.wrap > section { display: block; }
     .row { grid-template-columns: repeat(2, 1fr); row-gap: 14px; }
     .row-name { grid-column: 1 / -1; padding-bottom: 0; }
     .kpi:nth-child(2n) { border-left: 0; padding-left: 0; }
     .kpi .num { font-size: 32px; }
     .kpi { padding-right: 8px; }
     .key span { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chart-canvas { height: 320px; }
+    .ask-fab { right: 16px; bottom: 16px; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
@@ -164,40 +246,9 @@
 </section>
 
 <main class="wrap">
-  <section aria-labelledby="ask-title">
-    <h2 id="ask-title">Ask about delays, suppliers and stock</h2>
-    <p class="sub">Answers come only from the Gold tables and are checked before you see them.</p>
-    <div class="panel">
-      <form id="ask-form">
-        <label for="question" class="hint">Your question</label>
-        <textarea id="question" maxlength="1000" required placeholder="Which delayed orders should we expedite first?"></textarea>
-        <div class="ask-bar">
-          <span class="hint">Read-only: the assistant cannot change orders or contact suppliers.</span>
-          <button class="btn" type="submit" id="ask">Ask</button>
-        </div>
-      </form>
-      <ul class="examples" aria-label="Example questions">
-        <li><button type="button">Which delayed orders should we expedite first?</button></li>
-        <li><button type="button">Is our on-time delivery rate improving month by month?</button></li>
-        <li><button type="button">Which suppliers have the lowest fill rate?</button></li>
-        <li><button type="button">Which critical products have no active backup supplier?</button></li>
-      </ul>
-      <div class="error" id="ask-error" role="alert" hidden></div>
-
-      <div class="answer" id="answer" aria-live="polite" hidden>
-        <span class="verdict" id="verdict"></span>
-        <p class="answer-text" id="answer-text"></p>
-        <ul class="facts" id="facts"></ul>
-        <details id="checks"><summary>How this answer was checked</summary><div id="quality"></div></details>
-        <details><summary>Evidence: data the answer is based on</summary><ul class="evidence" id="evidence"></ul></details>
-        <details><summary>Steps taken</summary><ol class="trace" id="trace"></ol></details>
-      </div>
-    </div>
-  </section>
-
   <section aria-labelledby="lists-title">
     <h2 id="lists-title">Where to act</h2>
-    <p class="sub">Open delayed lines, products at risk of running out, and supplier performance.</p>
+    <p class="sub">Open delayed lines, products at risk of running out, and supplier performance. The chart and the list show the same rows.</p>
     <div class="panel">
       <div class="tabs" role="tablist" aria-label="Lists">
         <button role="tab" aria-selected="true" data-view="queue">Expedite queue</button>
@@ -206,12 +257,104 @@
       </div>
       <div class="filters" id="filters"></div>
       <div class="error" id="list-error" role="alert" hidden></div>
-      <div class="table-wrap" id="list" role="tabpanel" aria-live="polite"><p class="empty">Sign in with your Microsoft account to load the lists.</p></div>
+      <div class="split no-chart" id="split">
+        <div class="chart-box" id="chart-box" hidden>
+          <p class="chart-title" id="chart-title"></p>
+          <p class="chart-hint">Hover a bar or a row to link them; click to select.</p>
+          <div class="chart-canvas"><canvas id="chart" role="img" aria-label="Bar chart of the rows in the list next to it"></canvas></div>
+        </div>
+        <div class="table-wrap" id="list" role="tabpanel" aria-live="polite"><p class="empty">Sign in with your Microsoft account to load the lists.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="map-section" aria-labelledby="map-title">
+    <h2 id="map-title">Where our suppliers are</h2>
+    <p class="sub">Pick a KPI. Amounts (how much) are shown as circles sized by the amount; rates (how well) are shown by colouring the countries.</p>
+    <div class="panel">
+      <div class="filters" id="map-filters">
+        <label>Show on the map
+          <select id="map-kpi">
+            <optgroup label="KPIs">
+              <option value="delayed_quantity">Delayed quantity</option>
+              <option value="order_value_eur">Order value</option>
+              <option value="on_time_delivery_rate">On-time delivery rate</option>
+              <option value="supplier_fill_rate">Supplier fill rate</option>
+              <option value="average_delay_days">Average delay</option>
+            </optgroup>
+            <hr>
+            <option value="suppliers">Number of suppliers</option>
+          </select>
+        </label>
+        <label>Region
+          <select id="map-region">
+            <option value="">All</option><option>EMEA</option><option>APAC</option><option>AMER</option>
+          </select>
+        </label>
+      </div>
+      <div class="error" id="map-error" role="alert" hidden></div>
+      <div class="map-split">
+        <div class="map-box">
+          <p class="chart-hint">Scroll or pinch to zoom, drag to move. Click a country to zoom in and see its suppliers.</p>
+          <div class="map-zoom" id="map-zoom" role="group" aria-label="Map zoom" hidden>
+            <button type="button" id="map-zoom-in" aria-label="Zoom in" title="Zoom in">+</button>
+            <button type="button" id="map-zoom-out" aria-label="Zoom out" title="Zoom out">&minus;</button>
+            <button type="button" id="map-zoom-reset" aria-label="Show all supplier countries" title="Show all supplier countries">&#x2922;</button>
+          </div>
+          <div class="map-canvas" id="map">
+            <p class="map-msg" id="map-msg">Sign in with your Microsoft account to load the map.</p>
+          </div>
+          <div class="map-tip" id="map-tip" hidden></div>
+          <div class="map-legend" id="map-legend"></div>
+        </div>
+        <div class="country-panel" id="country-panel" aria-live="polite"></div>
+      </div>
     </div>
   </section>
 </main>
 
+<button class="btn ask-fab" type="button" id="ask-open" aria-controls="drawer" aria-expanded="false">Ask the assistant</button>
+
+<aside class="drawer" id="drawer" role="dialog" aria-modal="false" aria-labelledby="ask-title">
+  <div class="drawer-head">
+    <div>
+      <h2 id="ask-title">Ask about delays, suppliers and stock</h2>
+      <p class="sub">Answers come only from the Gold tables and are checked before you see them.</p>
+    </div>
+    <button class="drawer-close" type="button" id="ask-close" aria-label="Close the assistant">&times;</button>
+  </div>
+  <div class="drawer-body">
+    <form id="ask-form">
+      <label for="question" class="hint">Your question</label>
+      <textarea id="question" maxlength="1000" required placeholder="Which delayed orders should we expedite first?"></textarea>
+      <div class="ask-bar">
+        <span class="hint">Read-only: the assistant cannot change orders or contact suppliers.</span>
+        <button class="btn" type="submit" id="ask">Ask</button>
+      </div>
+    </form>
+    <ul class="examples" aria-label="Example questions">
+      <li><button type="button">Which delayed orders should we expedite first?</button></li>
+      <li><button type="button">Is our on-time delivery rate improving month by month?</button></li>
+      <li><button type="button">Which suppliers have the lowest fill rate?</button></li>
+      <li><button type="button">Which critical products have no active backup supplier?</button></li>
+    </ul>
+    <div class="error" id="ask-error" role="alert" hidden></div>
+
+    <div class="answer" id="answer" aria-live="polite" hidden>
+      <span class="verdict" id="verdict"></span>
+      <p class="answer-text" id="answer-text"></p>
+      <ul class="facts" id="facts"></ul>
+      <details id="checks"><summary>How this answer was checked</summary><div id="quality"></div></details>
+      <details><summary>Evidence: data the answer is based on</summary><ul class="evidence" id="evidence"></ul></details>
+      <details><summary>Steps taken</summary><ol class="trace" id="trace"></ol></details>
+    </div>
+  </div>
+</aside>
+
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.27.0/lib/msal-browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 <script>
 const nf = (d) => new Intl.NumberFormat('en-GB', { maximumFractionDigits: d, minimumFractionDigits: d });
 const fmt = {
@@ -227,6 +370,27 @@ const KPI_FORMAT = { order_value: fmt.eur, on_time_delivery_rate: fmt.pct, avera
   alternate_supplier_coverage: fmt.pct };
 const $ = (id) => document.getElementById(id);
 const el = (tag, text, cls) => { const e = document.createElement(tag); if (text != null) e.textContent = text; if (cls) e.className = cls; return e; };
+
+/* ---------------- assistant drawer ----------------
+   Set up first, so the buttons work even if a later part of the page fails. */
+function openDrawer() {
+  $('drawer').classList.add('open');
+  document.body.classList.add('drawer-open');
+  $('ask-open').hidden = true;
+  $('ask-open').setAttribute('aria-expanded', 'true');
+  setTimeout(() => $('question').focus(), 50);
+}
+function closeDrawer() {
+  $('drawer').classList.remove('open');
+  document.body.classList.remove('drawer-open');
+  $('ask-open').hidden = false;
+  $('ask-open').setAttribute('aria-expanded', 'false');
+  $('ask-open').focus();
+}
+const drawerIsOpen = () => $('drawer').classList.contains('open');
+$('ask-open').addEventListener('click', openDrawer);
+$('ask-close').addEventListener('click', closeDrawer);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drawerIsOpen()) closeDrawer(); });
 
 class ApiError extends Error {}
 
@@ -292,6 +456,14 @@ async function loadKpis() {
 
 /* ---------------- lists ---------------- */
 const CRITICALITY = ['', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
+// Supplier scorecard: the chart follows the "Rank by" choice -> [chart label, response field, format]
+const SCORE_MEASURE = {
+  on_time_delivery_rate: ['On-time delivery rate', 'on_time_delivery_rate', fmt.pct],
+  supplier_fill_rate: ['Fill rate', 'supplier_fill_rate', fmt.pct],
+  average_delay_days: ['Average delay', 'average_delay_days', fmt.days],
+  delayed_quantity: ['Delayed quantity', 'delayed_quantity', fmt.qty],
+  order_value: ['Order value', 'order_value_eur', fmt.eur],
+};
 const VIEWS = {
   queue: {
     filters: [
@@ -300,6 +472,10 @@ const VIEWS = {
     ],
     load: (f) => api('/orders/delayed', { params: { ...f, limit: 20 } }),
     rows: (d) => d.order_lines,
+    chart: {
+      label: () => 'Delayed quantity per order line', format: () => fmt.qty,
+      name: (r) => `${r.po_id} / ${r.po_line_number}`, value: (r) => r.delayed_qty,
+    },
     columns: [
       ['Order line', (r) => [`${r.po_id} / ${r.po_line_number}`, r.delivery_location_id], 'nw'],
       ['Product', (r) => [r.product_name, `${r.product_id}, ${r.criticality}`]],
@@ -320,6 +496,11 @@ const VIEWS = {
     ],
     load: (f) => api('/products/exposure', { params: { ...f, limit: 20 } }),
     rows: (d) => d.products,
+    chart: {
+      label: () => 'Exposed value per product', format: () => fmt.eur,
+      name: (r) => r.product_name ?? r.product_id, value: (r) => r.exposed_value_eur,
+      title: (r) => `${r.product_name ?? ''} (${r.product_id})`.trim(),
+    },
     columns: [
       ['Product', (r) => [r.product_name, `${r.product_id}, ${r.criticality}`]],
       ['Warehouse', (r) => r.stocking_location_id, 'nw'],
@@ -342,6 +523,13 @@ const VIEWS = {
     ],
     load: (f) => api('/suppliers/scorecard', { params: { ...f, limit: 50 } }),
     rows: (d) => d.suppliers,
+    chart: {
+      label: (s) => `${(SCORE_MEASURE[s.sort_by] ?? SCORE_MEASURE.on_time_delivery_rate)[0]} per supplier`,
+      format: (s) => (SCORE_MEASURE[s.sort_by] ?? SCORE_MEASURE.on_time_delivery_rate)[2],
+      name: (r) => r.supplier_name ?? r.supplier_id,
+      title: (r) => `${r.supplier_name ?? ''} (${r.supplier_id})`.trim(),
+      value: (r, s) => r[(SCORE_MEASURE[s.sort_by] ?? SCORE_MEASURE.on_time_delivery_rate)[1]],
+    },
     columns: [
       ['Supplier', (r) => [r.supplier_name, `${r.supplier_id}, ${r.country_code}${r.is_active ? '' : ', inactive'}`]],
       ['Region', (r) => r.region],
@@ -379,6 +567,123 @@ function renderFilters() {
   }));
 }
 
+/* ---------------- chart next to the list (Chart.js) ----------------
+   One bar per list row, in the list's own order, so the chart changes with the tab and the filters.
+   Bar and row are linked both ways: hovering one highlights the other, a click selects both.
+   If Chart.js could not load, the chart stays hidden and the list takes the full width. */
+const CHART_MAX_BARS = 20;
+const CHART_COLORS = { bar: '#7500C0', barActive: '#A100FF', grid: '#E6E6E6', tick: '#5E5E5E', ink: '#000000' };
+let chart = null;
+let barRows = [];          // bar index -> row index in the list
+let selectedRow = null;    // row index of the selected row/bar, or null
+
+function shortLabel(text, max = 28) {
+  const s = String(text ?? '–');
+  return s.length > max ? `${s.slice(0, max - 1)}…` : s;
+}
+
+const tableRows = () => document.querySelectorAll('#list tbody tr');
+
+function setChartVisible(on) {
+  $('chart-box').hidden = !on;
+  $('split').classList.toggle('no-chart', !on);
+}
+
+/* hover link: row index -> highlight that row and its bar (with tooltip), or clear with null */
+function linkRow(rowIndex) {
+  tableRows().forEach((tr, i) => tr.classList.toggle('linked', i === rowIndex));
+  if (!chart) return;
+  const bar = rowIndex == null ? -1 : barRows.indexOf(rowIndex);
+  if (bar < 0) {
+    chart.setActiveElements([]);
+    chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+  } else {
+    const point = chart.getDatasetMeta(0).data[bar];
+    chart.setActiveElements([{ datasetIndex: 0, index: bar }]);
+    chart.tooltip.setActiveElements([{ datasetIndex: 0, index: bar }], { x: point.x, y: point.y });
+  }
+  chart.update('none');
+}
+
+function scrollRowIntoView(tr) {
+  const wrap = $('list');
+  if (wrap.scrollHeight > wrap.clientHeight + 1) {      // the list scrolls inside its own box
+    const offset = tr.getBoundingClientRect().top - wrap.getBoundingClientRect().top;
+    wrap.scrollTo({ top: wrap.scrollTop + offset - wrap.clientHeight / 2 + tr.offsetHeight / 2, behavior: 'smooth' });
+  } else {
+    tr.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+}
+
+/* click: select a row and its bar; clicking the selected one again clears the selection */
+function selectRow(rowIndex, { scroll = false } = {}) {
+  selectedRow = rowIndex === selectedRow ? null : rowIndex;
+  tableRows().forEach((tr, i) => {
+    tr.classList.toggle('selected', i === selectedRow);
+  });
+  if (scroll && selectedRow != null) scrollRowIntoView(tableRows()[selectedRow]);
+  if (chart) chart.update('none');
+}
+
+function drawChart(view, rows) {
+  if (chart) { chart.destroy(); chart = null; }
+  barRows = []; selectedRow = null;
+  const state = filterState[currentView];
+  const shown = rows.slice(0, CHART_MAX_BARS).map((r, i) => [r, i])
+    .filter(([r]) => typeof view.chart.value(r, state) === 'number');
+  if (typeof Chart === 'undefined' || !shown.length) { setChartVisible(false); return; }
+  barRows = shown.map(([, i]) => i);
+  const top = shown.map(([r]) => r);
+  const label = view.chart.label(state);
+  const format = view.chart.format(state);
+  const names = top.map((r) => String(view.chart.name(r) ?? '–'));
+  $('chart-title').textContent = rows.length > top.length ? `${label}, first ${top.length} rows` : label;
+  setChartVisible(true);
+  chart = new Chart($('chart'), {
+    type: 'bar',
+    data: {
+      labels: names,
+      datasets: [{
+        label, data: top.map((r) => view.chart.value(r, state)),
+        backgroundColor: (ctx) => barRows[ctx.dataIndex] === selectedRow ? CHART_COLORS.barActive : CHART_COLORS.bar,
+        hoverBackgroundColor: CHART_COLORS.barActive,
+        borderRadius: 4, borderSkipped: 'start', maxBarThickness: 18,
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      maintainAspectRatio: false,
+      animation: false,
+      interaction: { mode: 'nearest', axis: 'y', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => view.chart.title?.(top[items[0].dataIndex]) ?? names[items[0].dataIndex],
+            label: (ctx) => `${label}: ${format(ctx.raw)}`,
+          },
+        },
+      },
+      scales: {
+        x: { beginAtZero: true, grid: { color: CHART_COLORS.grid }, border: { display: false },
+             ticks: { color: CHART_COLORS.tick, callback: (value) => format(value), maxTicksLimit: 6 } },
+        y: { grid: { display: false }, border: { color: CHART_COLORS.grid },
+             ticks: { color: CHART_COLORS.ink, autoSkip: false,
+                      // narrower chart -> shorter labels, so they are never clipped on a phone
+                      callback(value, i) { return shortLabel(names[i], Math.max(10, Math.min(28, Math.floor(this.chart.width / 22)))); } } },
+      },
+      onHover: (event, elements) => {
+        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        const rowIndex = elements.length ? barRows[elements[0].index] : null;
+        tableRows().forEach((tr, i) => tr.classList.toggle('linked', i === rowIndex));
+      },
+      onClick: (_event, elements) => { if (elements.length) selectRow(barRows[elements[0].index], { scroll: true }); },
+    },
+  });
+}
+
+$('chart').addEventListener('mouseleave', () => tableRows().forEach((tr) => tr.classList.remove('linked')));
+
 async function loadList() {
   const view = VIEWS[currentView];
   showError('list-error', null);
@@ -386,25 +691,35 @@ async function loadList() {
   try {
     const data = await view.load(filterState[currentView]);
     const rows = view.rows(data);
-    if (!rows.length) { $('list').replaceChildren(el('p', view.empty, 'empty')); return; }
+    if (!rows.length) { drawChart(view, []); $('list').replaceChildren(el('p', view.empty, 'empty')); return; }
     const table = el('table');
     const head = el('tr');
     view.columns.forEach(([title, , cls]) => head.append(el('th', title, cls || '')));
     table.append(el('thead')); table.tHead.append(head);
     const body = el('tbody');
-    rows.forEach((row) => {
+    rows.forEach((row, rowIndex) => {
       const tr = el('tr');
+      tr.tabIndex = 0;
       view.columns.forEach(([, value, cls, tone]) => {
         const td = el('td', null, [cls, tone?.(row)].filter(Boolean).join(' '));
         const v = value(row);
         if (Array.isArray(v)) { td.append(v[0] ?? '–'); if (v[1]) td.append(el('small', v[1], 'nw')); } else td.textContent = v ?? '–';
         tr.append(td);
       });
+      tr.addEventListener('mouseenter', () => linkRow(rowIndex));
+      tr.addEventListener('focus', () => linkRow(rowIndex));
+      tr.addEventListener('click', () => selectRow(rowIndex));
+      tr.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectRow(rowIndex); } });
       body.append(tr);
     });
+    body.addEventListener('mouseleave', () => linkRow(null));
+    body.addEventListener('focusout', (e) => { if (!body.contains(e.relatedTarget)) linkRow(null); });
     table.append(body);
     $('list').replaceChildren(table, el('p', view.note, 'list-note'));
+    $('list').scrollTop = 0;
+    try { drawChart(view, rows); } catch { setChartVisible(false); }
   } catch (error) {
+    drawChart(view, []);
     showError('list-error', error);
     $('list').replaceChildren();
   } finally {
@@ -418,6 +733,418 @@ document.querySelectorAll('[role="tab"]').forEach((tab) => tab.addEventListener(
   renderFilters();
   if (account) loadList();
 }));
+
+/* ---------------- supplier map (d3 + world-atlas) ----------------
+   Data: GET /suppliers/scorecard (country_code, region and the supplier KPIs), grouped by country here.
+   Each bubble sits exactly on its country (the visual centre of its main land area, always inside the border; never moved).
+   One KPI at a time, each in the form that fits it:
+     - amount KPIs (Order Value, Delayed Quantity) add up per country -> circle AREA; countries stay neutral;
+     - rate KPIs (On-Time Rate, Fill Rate, Average Delay) do not add up -> FILL COLOUR of the country, no circles.
+   Colour uses fixed thresholds (not data-driven), darker = worse for every rate; no value = hatched, never 0.
+   "Number of suppliers" is offered after a separator, as it is not a KPI.
+   Zoom: mouse wheel / pinch, drag to move, + / − buttons; selecting a country zooms to it.
+   Rates per country are weighted by order value, so a large supplier counts more than a small one.
+   If the map library or the country shapes cannot load, the country list next to it still works. */
+const WORLD_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json';
+// ISO 3166 alpha-2 -> { num: ISO numeric id used by world-atlas ('' if too small for the map), lonlat }
+const CENTROIDS = Object.fromEntries('AF:004:66.63,34.3;AL:008:20.07,40.66;DZ:012:3.16,27.44;AS::-170.72,-14.3;AD::1.52,42.54;AO:024:17.78,-13.12;AI::-63.07,18.22;AQ:010:-47.46,-79.16;AG::-61.79,17.08;AR:032:-64.13,-31.63;AM:051:44.56,40.59;AW::-69.98,12.52;AU:036:132.37,-23.12;AT:040:15.33,47.74;AZ:031:48.47,40.5;BS:044:-78.04,24.7;BH::50.54,26.04;BD:050:89.73,24.3;BB::-59.56,13.18;BY:112:28.44,53.78;BE:056:4.66,50.78;BZ:084:-88.73,16.97;BJ:204:2.37,10.37;BM::-64.7,32.36;BT:064:89.92,27.48;BO:068:-64.68,-16.7;BA:070:18.09,44.07;BW:072:24.17,-22.06;BR:076:-49.04,-12.66;IO::72.44,-7.42;BN:096:114.5,4.45;BG:100:25.2,42.51;BF:854:-0.95,12.8;BI:108:29.83,-3.42;KH:116:104.43,12.66;CM:120:12.45,4.51;CA:124:-119.04,58.79;CV::-23.64,15.08;KY::-81.26,19.33;CF:140:21.76,7.01;TD:148:19.43,17.29;CL:152:-69.08,-23.34;CN:156:109.47,32.46;CO:170:-73.28,3.41;KM::43.33,-11.69;CG:178:15.99,0.09;CD:180:23.25,-1.83;CK::-159.79,-21.22;CR:188:-84.03,10.09;CI:384:-5.51,7.54;HR:191:16.3,45.78;CU:192:-76.47,20.61;CY:196:32.65,34.91;CZ:203:14.3,49.79;DK:208:9.15,56.01;DJ:262:42.15,11.43;DM::-61.34,15.43;DO:214:-70.88,19.08;EC:218:-78.24,-1.2;EG:818:29.29,26.28;SV:222:-89.28,13.92;GQ:226:10.6,1.59;ER:232:38.05,16.03;EE:233:26.5,58.62;ET:231:38.43,8.53;FK:238:-58.77,-51.63;FO::-6.95,62.18;FJ:242:-179.86,-16.51;FI:246:27.41,63.32;FR:250:2.46,46.68;PF::-149.5,-17.63;TF:260:69.16,-49.31;GA:266:11.43,-0.64;GM:270:-14.98,13.65;GE:268:42.51,42.36;DE:276:9.61,51.03;GH:288:-1.2,7.01;GR:300:21.68,39.82;GL:304:-42.67,73.61;GD::-61.68,12.12;GU::144.74,13.42;GT:320:-90.48,14.99;GN:324:-10,10.69;GW:624:-14.57,12.11;GY:328:-58.67,2.77;HT:332:-72.27,19.25;HM::73.5,-53.1;VA::12.43,41.9;HN:340:-87.13,14.74;HK::114.13,22.46;HU:348:20.34,47.2;IS:352:-18.8,64.65;IN:356:79.22,22.35;ID:360:114.21,-0.93;IR:364:55.63,32.12;IQ:368:43.09,33.25;IE:372:-7.78,53.12;IL:376:34.84,30.91;IT:380:10.88,45.12;JM:388:-77.58,18.17;JP:392:139.5,36.78;JO:400:36.36,30.73;KZ:398:68.86,48.49;KE:404:37.86,0.45;KI::-157.37,1.82;KP:408:126.43,39.88;KR:410:128.11,36.31;KW:414:47.36,29.56;KG:417:74.55,41.7;LA:418:102.56,19.6;LV:428:26.63,56.64;LB:422:36.01,34.16;LS:426:28.4,-29.42;LR:430:-10.19,7.01;LY:434:20.59,26.07;LI::9.55,47.12;LT:440:24.23,55.11;LU:442:6.06,49.74;MO::113.51,22.22;MG:450:46.7,-18.4;MW:454:33.75,-13.38;MY:458:113.71,2.44;MV::73.5,4.18;ML:466:-2.04,18.64;MT::14.43,35.9;MH::171.17,7.09;MR:478:-9.75,19.48;MU::57.57,-20.28;MX:484:-101.74,23.47;FM::158.23,6.89;MD:498:28.49,47.46;MC::7.41,43.75;MN:496:104.86,46.05;MS::-62.19,16.74;MA:504:-6.49,31.88;MZ:508:38.17,-14.02;MM:104:95.93,21.63;NA:516:17.12,-20.59;NR::166.93,-0.52;NP:524:82.03,28.97;NL:528:5.32,52.24;NC:540:165.08,-21.05;NZ:554:169.21,-45.24;NI:558:-85.17,12.57;NE:562:10.44,17.63;NG:566:7.24,9.36;NU::-169.87,-19.05;NF::167.95,-29.05;MP::145.74,15.18;MK:807:21.49,41.51;NO:578:9.94,61.52;OM:512:57.35,22.08;PK:586:67.3,27.77;PW::134.58,7.54;PS:275:35.27,32.18;PA:591:-80.93,8.35;PG:598:143.03,-5.53;PY:600:-60.16,-21.64;PE:604:-73.06,-12.98;PH:608:121.37,16.98;PN::-128.32,-24.36;PL:616:20.42,51.91;PT:620:-7.77,40.71;PR:630:-66.24,18.22;QA:634:51.21,25.12;RO:642:25.16,45.72;RU:643:43.04,57.04;RW:646:29.7,-1.91;SH::-5.72,-15.96;KN::-62.8,17.36;LC::-60.97,13.89;PM::-56.32,46.86;VC::-61.2,13.25;WS::-172.44,-13.63;SM::12.46,43.94;ST::6.61,0.24;SA:682:45.02,23.45;SN:686:-14.92,15.22;SC::55.48,-4.66;SL:694:-11.76,8.67;SG::103.82,1.36;SK:703:18.76,48.74;SI:705:14.9,46.06;SB:090:160.17,-9.62;SO:706:43.02,2.56;ZA:710:23.33,-30.22;GS::-36.28,-54.51;ES:724:-3.46,39.99;LK:144:80.86,7.1;SD:729:29.36,16.62;SR:740:-55.99,4.16;SZ:748:31.47,-26.54;SE:752:19,65.84;CH:756:7.46,46.71;SY:760:38.18,35.04;TW:158:120.8,23.46;TJ:762:72.59,38.25;TZ:834:34.06,-5.56;TH:764:101.41,15.49;TL:626:125.55,-8.88;TG:768:1.05,8.86;TO::-175.29,-21.14;TT:780:-61.25,10.33;TN:788:9.55,35.31;TR:792:33.13,39.07;TM:795:58.65,39.84;TC::-71.7,21.8;UG:800:33.03,2;UA:804:32.39,49.6;AE:784:54.56,23.51;GB:826:-1.3,52.52;US:840:-98.15,39.1;UY:858:-56.04,-32.95;UZ:860:64.06,41.46;VU:548:166.95,-15.38;VE:862:-64.26,7.2;VN:704:105.39,21.68;VG::-64.62,18.42;VI::-64.77,17.74;WF::-178.15,-14.28;EH:732:-13.7,21.96;YE:887:44.95,15.3;ZM:894:26.12,-14.75;ZW:716:29.95,-19;AX::19.97,60.24;CW::-68.93,12.15;GG::-2.57,49.47;IM::-4.46,54.3;JE::-2.19,49.22;ME:499:19.09,42.78;BL::-62.84,17.9;MF::-63.05,18.09;RS:688:20.53,44.3;SX::-63.06,18.05;SS:728:30.49,7.11'.split(';').map((s) => {
+  const [code, num, xy] = s.split(':'); return [code, { num, lonlat: xy.split(',').map(Number) }];
+}));
+// one hue, light to dark: index 0 = best, 3 = worst
+const RATE_RAMP = ['#D9B8FF', '#A963F2', '#7500C0', '#3D0066'];
+// fixed thresholds per rate KPI: [test, label] from best to worst
+const COLOUR_MEASURE = {
+  on_time_delivery_rate: { label: 'On-time delivery rate', fmt: fmt.pct, worse: 'lower rate',
+    bins: [[(v) => v >= 0.9, '90% or more'], [(v) => v >= 0.75, '75 to 90%'], [(v) => v >= 0.6, '60 to 75%'], [() => true, 'below 60%']] },
+  supplier_fill_rate: { label: 'Supplier fill rate', fmt: fmt.pct, worse: 'lower rate',
+    bins: [[(v) => v >= 0.9, '90% or more'], [(v) => v >= 0.75, '75 to 90%'], [(v) => v >= 0.6, '60 to 75%'], [() => true, 'below 60%']] },
+  average_delay_days: { label: 'Average delay', fmt: fmt.days, worse: 'longer delay',
+    bins: [[(v) => v <= 2, '2 days or less'], [(v) => v <= 5, '2 to 5 days'], [(v) => v <= 10, '5 to 10 days'], [() => true, 'over 10 days']] },
+};
+// amounts add up per country -> circles; "Number of suppliers" is a count, not a KPI (listed apart)
+const AMOUNT_MEASURE = { delayed_quantity: ['Delayed quantity', fmt.qty], order_value_eur: ['Order value', fmt.eur], suppliers: ['Number of suppliers', fmt.int] };
+const mapKey = () => $('map-kpi').value;
+/* Circle colour repeats the amount (same as its size). The classes are always worked out from the data on screen,
+   never fixed, so they adapt when new data is loaded:
+   - amounts (money, quantities): up to 4 equal steps from 0 to the largest value;
+   - whole counts (number of suppliers): up to 4 groups of whole numbers between 1 and the largest count,
+     e.g. largest 3 -> 1 | 2 | 3; largest 8 -> 1-2 | 3-4 | 5-6 | 7-8; largest 10 -> 1-3 | 4-5 | 6-8 | 9-10. */
+function amountClasses(key, max) {
+  if (!(max > 0)) return [{ lo: 0, hi: 0 }];
+  if (key === 'suppliers') {
+    const top = Math.max(1, Math.round(max)), n = Math.min(4, top), size = top / n;
+    return Array.from({ length: n }, (_, i) => ({ lo: 1 + Math.round(i * size), hi: Math.round((i + 1) * size) }));
+  }
+  return [0, 1, 2, 3].map((i) => ({ lo: (i * max) / 4, hi: ((i + 1) * max) / 4 }));
+}
+/* class index of a value; for amounts the upper edge belongs to the next class (the largest value to the last) */
+function amountClass(v, classes, key) {
+  if (typeof v !== 'number') return 0;
+  const i = key === 'suppliers' ? classes.findIndex((c) => v <= c.hi) : classes.findIndex((c, j) => v < c.hi || j === classes.length - 1);
+  return i < 0 ? classes.length - 1 : i;
+}
+/* colours spread over the whole light-to-dark ramp, so the largest class is always the darkest */
+const classColour = (i, n) => RATE_RAMP[n <= 1 ? RATE_RAMP.length - 1 : Math.round((i * (RATE_RAMP.length - 1)) / (n - 1))];
+const isRate = (key = mapKey()) => key in COLOUR_MEASURE;
+/* colour for a country's value of a rate KPI, or null when there is no value */
+function rateColour(v, key) {
+  if (typeof v !== 'number') return null;
+  return RATE_RAMP[COLOUR_MEASURE[key].bins.findIndex(([test]) => test(v))];
+}
+const regionNames = (() => { try { return new Intl.DisplayNames(['en'], { type: 'region' }); } catch { return null; } })();
+const countryName = (code) => { try { return regionNames?.of(code) ?? code; } catch { return code; } };
+const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+let mapSuppliers = [], world = null, mapCountries = [], mapSelected = null, mapTruncated = false;
+const MAP_SUPPLIER_LIMIT = 50;   // largest page the scorecard endpoint is asked for
+let mapView = null;   // { svg, zoom, width, height, placed, land, bubbles }
+
+async function loadWorld() {
+  if (world) return world;
+  if (typeof topojson === 'undefined') throw new Error('map library missing');
+  const response = await fetch(WORLD_URL);
+  if (!response.ok) throw new Error('country shapes missing');
+  const topo = await response.json();
+  const land = topojson.feature(topo, topo.objects.countries);
+  land.features = land.features.filter((f) => f.id !== '010');   // no Antarctica
+  world = land;
+  return world;
+}
+
+function weighted(rows, field) {
+  const usable = rows.filter((r) => typeof r[field] === 'number');
+  if (!usable.length) return null;
+  const w = (r) => (r.order_value_eur > 0 ? r.order_value_eur : 0);
+  const weight = usable.reduce((t, r) => t + w(r), 0);
+  if (weight > 0) return usable.reduce((t, r) => t + r[field] * w(r), 0) / weight;
+  return usable.reduce((t, r) => t + r[field], 0) / usable.length;
+}
+
+function aggregateCountries() {
+  const region = $('map-region').value;
+  const groups = new Map();
+  mapSuppliers.filter((s) => !region || s.region === region).forEach((s) => {
+    const code = String(s.country_code ?? '').trim().toUpperCase();
+    if (!code) return;
+    if (!groups.has(code)) groups.set(code, []);
+    groups.get(code).push(s);
+  });
+  const key = mapKey();
+  return [...groups].map(([code, rows]) => ({
+    code, name: countryName(code), rows, suppliers: rows.length,
+    order_value_eur: rows.reduce((t, r) => t + (r.order_value_eur ?? 0), 0),
+    delayed_quantity: rows.reduce((t, r) => t + (r.delayed_quantity ?? 0), 0),
+    on_time_delivery_rate: weighted(rows, 'on_time_delivery_rate'),
+    supplier_fill_rate: weighted(rows, 'supplier_fill_rate'),
+    average_delay_days: weighted(rows, 'average_delay_days'),
+  })).sort((a, b) => {
+    const va = a[key], vb = b[key];
+    if (typeof va !== 'number' || typeof vb !== 'number') return (typeof vb === 'number') - (typeof va === 'number') || a.name.localeCompare(b.name);
+    const worseFirst = key === 'average_delay_days' ? vb - va : isRate(key) ? va - vb : vb - va;
+    return worseFirst || a.name.localeCompare(b.name);
+  });
+}
+
+function mapMessage(text) {
+  $('map').querySelector('svg')?.remove();
+  mapView = null;
+  $('map-zoom').hidden = true;
+  $('map-msg').textContent = text;
+  $('map-msg').hidden = !text;
+}
+
+async function loadMap() {
+  showError('map-error', null);
+  mapMessage('Loading the map…');
+  try {
+    const data = await api('/suppliers/scorecard', { params: { sort_by: 'order_value', limit: MAP_SUPPLIER_LIMIT } });
+    mapSuppliers = data.suppliers ?? [];
+    // if the API returned as many rows as we asked for, there may be more suppliers than the map shows: say so
+    mapTruncated = mapSuppliers.length >= MAP_SUPPLIER_LIMIT;
+  } catch (error) {
+    showError('map-error', error);
+    mapMessage('');
+    return;
+  }
+  try { await loadWorld(); } catch { world = null; }
+  renderMap();
+}
+
+function renderMap() {
+  mapCountries = aggregateCountries();
+  if (mapSelected && !mapCountries.some((c) => c.code === mapSelected)) mapSelected = null;
+  renderCountryPanel();
+  renderLegend();
+  drawMap();
+}
+
+function renderLegend() {
+  if (!mapCountries.length) { $('map-legend').replaceChildren(); return; }
+  const key = mapKey();
+  const row = el('div', null, 'row-l');
+  if (isRate(key)) {
+    const cm = COLOUR_MEASURE[key];
+    row.append(el('span', `Country colour = ${cm.label.toLowerCase()}* (darker = ${cm.worse}):`));
+    cm.bins.forEach(([, label], i) => { const s = el('span'); const sw = el('i', null, 'sw'); sw.style.background = RATE_RAMP[i]; s.append(sw, label); row.append(s); });
+    const none = el('span'); none.append(el('i', null, 'sw none'), 'no value');
+    const empty = el('span'); empty.append(el('i', null, 'sw nosup'), 'no suppliers');
+    row.append(none, empty);
+    const note = el('div', null, 'row-l');
+    note.append(el('span', '* approx., weighted by order value. A small dot = a country too small to colour on the map.'));
+    $('map-legend').replaceChildren(row, note);
+  } else {
+    const [label, f] = AMOUNT_MEASURE[key];
+    const top = mapCountries[0];
+    const max = Math.max(0, ...mapCountries.map((c) => (typeof c[key] === 'number' ? c[key] : 0)));
+    row.append(el('span', `Circle size and colour = ${label.toLowerCase()}${key === 'suppliers' ? ' (not a KPI)' : ''} (darker = larger):`));
+    const classes = amountClasses(key, max);
+    const labels = classes.map((c, i) => {
+      if (key === 'suppliers') return c.lo === c.hi ? f(c.lo) : `${f(c.lo)} to ${f(c.hi)}`;
+      return i === 0 ? `under ${f(c.hi)}` : i < classes.length - 1 ? `${f(c.lo)} to ${f(c.hi)}` : `${f(c.lo)} or more`;
+    });
+    classes.forEach((c, i) => {
+      const s = el('span'); const sw = el('i', null, 'bub'); sw.style.background = classColour(i, classes.length); sw.style.opacity = 1;
+      s.append(sw, labels[i]); row.append(s);
+    });
+    const note = el('div', null, 'row-l');
+    if (top) note.append(el('span', `Largest: ${top.name} ${f(top[key])}. Colour groups are worked out from the data shown (${key === 'suppliers' ? 'whole numbers from 1' : 'equal steps from 0'} to the largest value).`));
+    $('map-legend').replaceChildren(row, note);
+  }
+}
+
+function tipFor(c) {
+  const line = (k, v) => { const s = el('span'); s.append(el('span', k), el('b', v)); return s; };
+  const sep = el('span'); sep.style.cssText = 'display:block;border-top:1px solid rgba(255,255,255,.3);margin:4px 0 3px;';
+  return [el('strong', `${c.name} (${c.code})`),
+    line('Order value', fmt.eur(c.order_value_eur)), line('Delayed quantity', fmt.qty(c.delayed_quantity)),
+    line('On-time delivery*', fmt.pct(c.on_time_delivery_rate)), line('Fill rate*', fmt.pct(c.supplier_fill_rate)),
+    line('Average delay*', fmt.days(c.average_delay_days)), sep, line('Suppliers (not a KPI)', fmt.int(c.suppliers)),
+    el('small', '* approx., weighted by order value')];
+}
+
+/* x, y: position inside the map box (pixels) */
+function showTip(c, x, y) {
+  const tip = $('map-tip'), box = $('map');
+  tip.replaceChildren(...tipFor(c));
+  tip.hidden = false;
+  const left = box.offsetLeft + x, top = box.offsetTop + y;
+  const w = tip.offsetWidth, h = tip.offsetHeight, maxLeft = box.offsetLeft + box.clientWidth - w;
+  tip.style.left = `${Math.max(box.offsetLeft, Math.min(left + 14, maxLeft))}px`;
+  tip.style.top = `${top - h - 12 < box.offsetTop ? top + 16 : top - h - 12}px`;
+}
+const hideTip = () => { $('map-tip').hidden = true; };
+
+/* hover link between a country on the map (bubble and shape) and its row in the list */
+function linkCountry(code) {
+  document.querySelectorAll('#map [data-code]').forEach((n) => n.classList.toggle('linked', n.dataset.code === code));
+  document.querySelectorAll('#country-panel tbody tr[data-code]').forEach((tr) => tr.classList.toggle('linked', tr.dataset.code === code));
+}
+
+const currentTransform = () => (mapView ? d3.zoomTransform(mapView.svg.node()) : null);
+
+function zoomTo(transform) {
+  if (!mapView) return;
+  const target = reduceMotion() ? mapView.svg : mapView.svg.transition().duration(650);
+  target.call(mapView.zoom.transform, transform);
+}
+
+/* zoom so that the given screen box (in un-zoomed map pixels) fills the map */
+function transformFor([[x0, y0], [x1, y1]], maxK = 8) {
+  const { width, height } = mapView;
+  const k = Math.max(1, Math.min(maxK, 0.88 / Math.max((x1 - x0) / width, (y1 - y0) / height, 1e-6)));
+  return d3.zoomIdentity.translate(width / 2 - k * (x0 + x1) / 2, height / 2 - k * (y0 + y1) / 2).scale(k);
+}
+
+function dataTransform() {
+  const pts = mapView.placed;
+  if (!pts.length) return d3.zoomIdentity;
+  const pad = 40;
+  return transformFor([[d3.min(pts, (d) => d.xy[0]) - pad, d3.min(pts, (d) => d.xy[1]) - pad],
+                       [d3.max(pts, (d) => d.xy[0]) + pad, d3.max(pts, (d) => d.xy[1]) + pad]], 5);
+}
+
+function countryTransform(code) {
+  const d = mapView.placed.find((p) => p.c.code === code);
+  if (!d) return null;
+  const k = Math.max(currentTransform().k, 4);
+  return d3.zoomIdentity.translate(mapView.width / 2 - k * d.xy[0], mapView.height / 2 - k * d.xy[1]).scale(k);
+}
+
+function selectCountry(code) {
+  mapSelected = code === mapSelected ? null : code;
+  hideTip();
+  renderCountryPanel();
+  document.querySelectorAll('#map [data-code]').forEach((n) => n.classList.toggle('selected', n.dataset.code === mapSelected));
+  if (mapView) zoomTo(mapSelected ? (countryTransform(mapSelected) ?? currentTransform()) : dataTransform());
+}
+
+function drawMap() {
+  const box = $('map');
+  box.querySelector('svg')?.remove();
+  mapView = null;
+  if (typeof d3 === 'undefined' || !world) { mapMessage('The map could not be loaded (map library or country shapes not reachable). The list next to it has the same data.'); return; }
+  if (!mapCountries.length) { mapMessage('No suppliers match this region.'); return; }
+  $('map-msg').hidden = true;
+  $('map-zoom').hidden = false;
+  const width = box.clientWidth, height = box.clientHeight;
+  if (width < 50 || height < 50) return;
+  const projection = d3.geoEqualEarth().fitExtent([[6, 6], [width - 6, height - 6]], world);
+  const path = d3.geoPath(projection);
+  const key = mapKey(), rate = isRate(key);
+  const max = rate ? 1 : (d3.max(mapCountries, (c) => c[key]) || 1);
+  const classes = rate ? [] : amountClasses(key, d3.max(mapCountries, (c) => c[key]) || 0);
+  const radius = d3.scaleSqrt().domain([0, max]).range([0, Math.max(10, Math.min(24, width / 34))]);
+  const byNum = new Map(mapCountries.filter((c) => CENTROIDS[c.code]?.num).map((c) => [CENTROIDS[c.code].num, c]));
+  const valueText = (c) => (rate ? `${COLOUR_MEASURE[key].label} ${COLOUR_MEASURE[key].fmt(c[key])}` : `${AMOUNT_MEASURE[key][0]} ${AMOUNT_MEASURE[key][1](c[key])}`);
+
+  const svg = d3.select(box).append('svg').attr('viewBox', `0 0 ${width} ${height}`)
+    .attr('role', 'group').attr('aria-label', 'Supplier countries on a world map');
+  // hatch for "supplier country without a value" (not the same as zero)
+  svg.append('defs').append('pattern').attr('id', 'no-value').attr('patternUnits', 'userSpaceOnUse')
+    .attr('width', 5).attr('height', 5).attr('patternTransform', 'rotate(45)')
+    .call((pt) => { pt.append('rect').attr('width', 5).attr('height', 5).attr('fill', '#F2F2F2');
+                    pt.append('line').attr('x1', 0).attr('y1', 0).attr('x2', 0).attr('y2', 5).attr('stroke', '#C4C4C4').attr('stroke-width', 2); });
+  const gLand = svg.append('g');
+
+  // every supplier country's exact position (no displacement); used for circles, small-country markers and zooming
+  const placed = mapCountries.filter((c) => CENTROIDS[c.code])
+    .map((c) => ({ c, xy: projection(CENTROIDS[c.code].lonlat), r: rate ? 5 : Math.max(5, radius(c[key])), hasShape: byNum.has(CENTROIDS[c.code].num) }))
+    .filter((d) => d.xy)
+    .sort((a, b) => b.r - a.r);                       // big first, so small circles stay on top and clickable
+  const bubbleOf = new Map(placed.map((d) => [d.c.code, d]));
+
+  const land = gLand.selectAll('path').data(world.features).join('path')
+    .attr('class', (f) => {
+      const c = byNum.get(f.id);
+      return `land${c ? ' has-suppliers' : ''}${c && !rate ? ' neutral' : ''}${c && c.code === mapSelected ? ' selected' : ''}`;
+    })
+    .attr('data-code', (f) => byNum.get(f.id)?.code ?? null)
+    .style('fill', (f) => { const c = byNum.get(f.id); if (!c || !rate) return null; return rateColour(c[key], key) ?? 'url(#no-value)'; })
+    .attr('d', path)
+    .on('mousemove', (event, f) => {
+      const c = byNum.get(f.id); if (!c) return;
+      const [x, y] = d3.pointer(event, box); showTip(c, x, y); linkCountry(c.code);
+    })
+    .on('mouseleave', () => { hideTip(); linkCountry(null); })
+    .on('click', (event, f) => { const c = byNum.get(f.id); if (c) selectCountry(c.code); });
+  land.filter((f) => !byNum.has(f.id)).attr('aria-hidden', 'true');
+  if (rate) {   // in colour mode the coloured countries themselves are the keyboard targets
+    land.filter((f) => byNum.has(f.id)).attr('tabindex', 0).attr('role', 'button')
+      .attr('aria-label', (f) => `${byNum.get(f.id).name}: ${valueText(byNum.get(f.id))}`)
+      .on('focus', (event, f) => { const d = bubbleOf.get(byNum.get(f.id).code); const t = currentTransform();
+        if (d) showTip(d.c, t.applyX(d.xy[0]), t.applyY(d.xy[1])); linkCountry(byNum.get(f.id).code); })
+      .on('blur', () => { hideTip(); linkCountry(null); })
+      .on('keydown', (event, f) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectCountry(byNum.get(f.id).code); } });
+  }
+
+  // amounts: one circle per country; rates: no circles, only a small coloured dot for countries without a shape
+  const marks = rate ? placed.filter((d) => !d.hasShape) : placed;
+  const bubbles = svg.append('g').selectAll('circle').data(marks).join('circle')
+    .attr('class', (d) => `${rate ? 'marker' : 'bubble'}${d.c.code === mapSelected ? ' selected' : ''}`)
+    .attr('data-code', (d) => d.c.code)
+    .attr('r', (d) => d.r)
+    .style('fill', (d) => (rate ? (rateColour(d.c[key], key) ?? '#C4C4C4') : classColour(amountClass(d.c[key], classes, key), classes.length)))
+    .attr('tabindex', 0).attr('role', 'button')
+    .attr('aria-label', (d) => `${d.c.name}: ${valueText(d.c)}`)
+    .on('mouseenter focus', (event, d) => {
+      const t = currentTransform(); showTip(d.c, t.applyX(d.xy[0]), t.applyY(d.xy[1]) - d.r); linkCountry(d.c.code);
+    })
+    .on('mouseleave blur', () => { hideTip(); linkCountry(null); })
+    .on('click', (event, d) => selectCountry(d.c.code))
+    .on('keydown', (event, d) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectCountry(d.c.code); } });
+
+  // zoom: the land scales, bubbles move with it but keep their size, so close neighbours separate as you zoom in
+  const zoom = d3.zoom().scaleExtent([1, 14]).translateExtent([[0, 0], [width, height]])
+    .on('start', () => { hideTip(); svg.classed('panning', true); })
+    .on('end', () => svg.classed('panning', false))
+    .on('zoom', (event) => {
+      const t = event.transform;
+      gLand.attr('transform', t);
+      bubbles.attr('cx', (d) => t.applyX(d.xy[0])).attr('cy', (d) => t.applyY(d.xy[1]));
+    });
+  svg.call(zoom).on('dblclick.zoom', null);
+  mapView = { svg, zoom, width, height, placed, bubbleOf };
+  svg.call(zoom.transform, mapSelected ? (countryTransform(mapSelected) ?? dataTransform()) : dataTransform());
+}
+
+$('map-zoom-in').addEventListener('click', () => mapView && mapView.svg.transition().duration(reduceMotion() ? 0 : 300).call(mapView.zoom.scaleBy, 1.8));
+$('map-zoom-out').addEventListener('click', () => mapView && mapView.svg.transition().duration(reduceMotion() ? 0 : 300).call(mapView.zoom.scaleBy, 1 / 1.8));
+$('map-zoom-reset').addEventListener('click', () => { if (mapView) zoomTo(dataTransform()); });
+
+function countryTable(headers, rows, rowCells, onRow) {
+  const table = el('table');
+  const head = el('tr');
+  headers.forEach(([t, cls]) => head.append(el('th', t, cls || '')));
+  table.append(el('thead')); table.tHead.append(head);
+  const body = el('tbody');
+  rows.forEach((r) => {
+    const tr = el('tr');
+    rowCells(r).forEach(([v, cls]) => {
+      const td = el('td', null, cls || '');
+      if (Array.isArray(v)) { td.append(v[0] ?? '–'); if (v[1]) td.append(el('small', v[1], 'nw')); } else td.textContent = v ?? '–';
+      tr.append(td);
+    });
+    onRow?.(tr, r);
+    body.append(tr);
+  });
+  table.append(body);
+  return table;
+}
+
+function renderCountryPanel() {
+  const panel = $('country-panel');
+  if (!mapSuppliers.length) { panel.replaceChildren(); return; }
+  const missing = mapCountries.filter((c) => !CENTROIDS[c.code]).map((c) => c.code);
+  const notes = [el('p', '* Rates per country are approximate: the suppliers\' own rates, weighted by order value (not recalculated from order lines). Amounts are exact sums. Click a country (bubble, shape or row) to see its suppliers.', 'list-note')];
+  if (missing.length) notes.push(el('p', `Not placed on the map (unknown country code): ${missing.join(', ')}.`, 'list-note'));
+  if (mapTruncated) notes.push(el('p', `The API returned its maximum of ${MAP_SUPPLIER_LIMIT} suppliers, so there may be more suppliers than the map and this list include.`, 'list-note flag'));
+
+  const country = mapCountries.find((c) => c.code === mapSelected);
+  if (!country) {
+    const wrap = el('div', null, 'table-wrap');
+    wrap.append(countryTable(
+      [['Country'], ['Order value', 'n'], ['Delayed qty', 'n'], ['On-time*', 'n'], ['Fill rate*', 'n'], ['Avg delay*', 'n']],
+      mapCountries,
+      (c) => [[[c.name, `${c.code}, ${c.suppliers} supplier${c.suppliers === 1 ? '' : 's'}`]], [fmt.eur(c.order_value_eur), 'n nw'],
+        [fmt.qty(c.delayed_quantity), 'n'], [fmt.pct(c.on_time_delivery_rate), 'n'], [fmt.pct(c.supplier_fill_rate), 'n'],
+        [fmt.days(c.average_delay_days), 'n nw']],
+      (tr, c) => {
+        tr.dataset.code = c.code; tr.tabIndex = 0;
+        tr.addEventListener('mouseenter', () => linkCountry(c.code));
+        tr.addEventListener('mouseleave', () => linkCountry(null));
+        tr.addEventListener('click', () => selectCountry(c.code));
+        tr.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectCountry(c.code); } });
+      }));
+    panel.replaceChildren(el('h3', `Countries (${mapCountries.length})`), wrap, ...notes);
+    return;
+  }
+  const back = el('button', '← All countries', 'btn btn-quiet back');
+  back.type = 'button';
+  back.addEventListener('click', () => selectCountry(country.code));
+  const summary = el('p', `${country.suppliers} supplier${country.suppliers === 1 ? '' : 's'} · order value ${fmt.eur(country.order_value_eur)} · delayed ${fmt.qty(country.delayed_quantity)} · on-time* ${fmt.pct(country.on_time_delivery_rate)} · fill rate* ${fmt.pct(country.supplier_fill_rate)} · avg delay* ${fmt.days(country.average_delay_days)}`, 'hint');
+  const wrap = el('div', null, 'table-wrap');
+  wrap.append(countryTable(
+    [['Supplier'], ['Order value', 'n'], ['Delayed qty', 'n'], ['On-time', 'n'], ['Fill rate', 'n'], ['Avg delay', 'n']],
+    [...country.rows].sort((a, b) => (b.delayed_quantity ?? 0) - (a.delayed_quantity ?? 0)),
+    (r) => [[[r.supplier_name, `${r.supplier_id}${r.is_active ? '' : ', inactive'}`]], [fmt.eur(r.order_value_eur), 'n nw'],
+      [fmt.qty(r.delayed_quantity), 'n'], [fmt.pct(r.on_time_delivery_rate), 'n'], [fmt.pct(r.supplier_fill_rate), 'n'],
+      [fmt.days(r.average_delay_days), 'n nw']]));
+  panel.replaceChildren(back, el('h3', country.name), summary, wrap, notes[0]);
+  back.focus({ preventScroll: true });
+}
+
+$('map-kpi').addEventListener('change', () => { if (mapSuppliers.length) renderMap(); });
+$('map-region').addEventListener('change', () => { if (mapSuppliers.length) { mapSelected = null; renderMap(); } });
+let mapResizeTimer = null, mapLastWidth = 0;
+if (typeof ResizeObserver !== 'undefined') {
+  new ResizeObserver(() => {
+    clearTimeout(mapResizeTimer);
+    mapResizeTimer = setTimeout(() => {
+      const w = $('map').clientWidth;
+      if (mapCountries.length && Math.abs(w - mapLastWidth) > 2) { mapLastWidth = w; drawMap(); }
+    }, 150);
+  }).observe($('map'));
+}
 
 /* ---------------- thinking indicator (shown on the Ask button) ---------------- */
 let thinkingTimer = null, thinkingStart = 0;
@@ -499,7 +1226,7 @@ document.querySelectorAll('.examples button').forEach((b) => b.addEventListener(
 /* ---------------- connect ---------------- */
 async function connect() {
   showError('list-error', null);
-  await Promise.all([loadKpis(), loadList()]);
+  await Promise.all([loadKpis(), loadList(), loadMap()]);
 }
 function showAccount() {
   $('who').textContent = account ? (account.name || account.username) : 'Not signed in';
