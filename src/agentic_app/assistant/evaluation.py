@@ -95,6 +95,10 @@ def fallback_answer(evidence: list[dict[str, Any]]) -> str:
             values = ', '.join(f"{r['group']}: {r['value']}" for r in data['results'])
             lines.append(f"{data['kpi']} ({data['unit']}): {values}")
             continue
+        if e['tool'] == 'run_gold_sql':
+            lines.append(f"{data['purpose']}: {data['count']} rows returned; first {min(data['count'], 5)}:")
+            lines += ['  - ' + ', '.join(f'{k}={v}' for k, v in row.items()) for row in data['rows'][:5]]
+            continue
         key = next(k for k in KEY_FIELDS if k in data)
         rows = data[key][:5]
         if key == 'affected_products':

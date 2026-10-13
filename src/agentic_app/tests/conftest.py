@@ -23,7 +23,7 @@ sys.path.insert(0, str(HERE.parent))
 
 from langchain_core.messages import AIMessage, ToolMessage
 
-from assistant.schemas import Draft, Judgment, RouteDecision, SupervisorDecision
+from assistant.schemas import CombinedDraft, Draft, Judgment, RouteDecision, SqlPlan, SqlTask, SupervisorDecision
 
 # --------------------------------------------------------------------------- Entra ID test tokens
 SIGNING_KEY = rsa.generate_private_key(public_exponent=65537, key_size=2048)
@@ -74,11 +74,16 @@ def api(spark):
     import app as module
 
     async def local_run_statement(client, statement, parameters=None):
+        from pyspark.errors import PySparkException
         sql = statement.replace(f'{module.CATALOG}.{module.SCHEMA}.', '')
         args = {p['name']: date.fromisoformat(p['value']) if p['type'] == 'DATE' else p['value']
                 for p in parameters or []}
         conv = lambda v: float(v) if isinstance(v, Decimal) else v.isoformat() if isinstance(v, date) else v
-        return [{k: conv(v) for k, v in r.asDict().items()} for r in spark.sql(sql, args=args).collect()]
+        try:
+            rows = spark.sql(sql, args=args).collect()
+        except PySparkException as exc:          # what Databricks reports as a FAILED statement
+            raise module.StatementFailed(str(exc).splitlines()[0]) from None
+        return [{k: conv(v) for k, v in r.asDict().items()} for r in rows]
 
     module.run_statement = local_run_statement
     module.jwks_client = _LocalKeys()
@@ -104,7 +109,7 @@ class _Runner:
 
 def evidence_from(messages):
     text = messages[-1].content
-    return json.loads(text.split('EVIDENCE_JSON:\n', 1)[1].split('\n\nSpecialist findings', 1)[0])
+    return json.JSONDecoder().raw_decode(text.split('EVIDENCE_JSON:\n', 1)[1])[0]
 
 
 class FakeLLM:
@@ -113,20 +118,29 @@ class FakeLLM:
     route:       RouteDecision route for the guard
     specialists: list of specialist names the supervisor delegates to, in order, then 'finish'
     tool_script: {tool_name_available_to_specialist: [(tool, args), ...]} calls made one per turn
-    composer:    function(evidence, attempt) -> answer text
+    composer:    function(evidence, attempt) -> combined answer text (evidence = all ok tool results)
+    conflicts:   function(attempt) -> conflicts the combiner reports between the two answers (default none)
     judge:       function(attempt) -> dict of scores (default all 90)
+    sql_plan:    [(purpose, sql), ...] returned by the SQL planner
+    sql_fix:     function(failed_sql) -> corrected sql for a SQL worker
+    missing:     information the supervisor reports as missing when it finishes
+    The analysts' and the SQL answer are fixed texts; the inputs of the planner and the combiner are recorded.
     """
 
-    def __init__(self, route='answer', specialists=('kpi_analyst',), tool_script=None, composer=None, judge=None):
+    def __init__(self, route='answer', specialists=('kpi_analyst',), tool_script=None, composer=None, judge=None,
+                 sql_plan=(), sql_fix=None, missing='', conflicts=None):
         self.route, self.specialists = route, list(specialists)
         self.tool_script = tool_script or {}
         self.composer_fn = composer or (lambda ev, attempt: 'No numbers here.')
         self.judge_fn = judge or (lambda attempt: {})
+        self.sql_plan, self.sql_fix = list(sql_plan), sql_fix or (lambda sql: sql)
+        self.missing, self.conflicts_fn = missing, conflicts or (lambda attempt: [])
         self.calls, self.composer_attempts, self.judge_attempts = [], 0, 0
+        self.sql_requests, self.combiner_requests = [], []
 
     def with_structured_output(self, schema, **kwargs):
         handlers = {'RouteDecision': self._route, 'SupervisorDecision': self._supervise,
-                    'Draft': self._compose, 'Judgment': self._judge}
+                    'Draft': self._answer, 'CombinedDraft': self._combine, 'Judgment': self._judge, 'SqlPlan': self._plan_sql, 'SqlTask': self._fix_sql}
         return _Runner(lambda msgs: (self.calls.append(schema.__name__), handlers[schema.__name__](msgs))[1])
 
     def bind_tools(self, tools, **kwargs):
@@ -141,7 +155,16 @@ class FakeLLM:
     def _supervise(self, msgs):
         done = msgs[-1].content.count('\n- ')
         nxt = self.specialists[done] if done < len(self.specialists) else 'finish'
-        return SupervisorDecision(next=nxt, task=f'task for {nxt}' if nxt != 'finish' else '')
+        return SupervisorDecision(next=nxt, task=f'task for {nxt}' if nxt != 'finish' else '',
+                                  missing=self.missing if nxt == 'finish' else '')
+
+    def _plan_sql(self, msgs):
+        self.sql_requests.append(msgs[-1].content)
+        return SqlPlan(queries=[SqlTask(purpose=p, sql=q) for p, q in self.sql_plan])
+
+    def _fix_sql(self, msgs):
+        failed = msgs[-1].content.split('SQL:\n', 1)[1].split('\nError:', 1)[0]
+        return SqlTask(purpose='fixed', sql=self.sql_fix(failed))
 
     def _specialist(self, msgs, tool_names):
         used = sum(isinstance(m, ToolMessage) for m in msgs)
@@ -151,10 +174,15 @@ class FakeLLM:
             return AIMessage(content='', tool_calls=[{'name': name, 'args': args, 'id': f'call_{used}'}])
         return AIMessage(content='Findings summarised from the tool results.')
 
-    def _compose(self, msgs):
+    def _answer(self, msgs):
+        source = 'SQL' if 'run_gold_sql results' in msgs[0].content else "analysts'"
+        return Draft(status='answered', answer=f'The {source} answer.', measures=['scripted'])
+
+    def _combine(self, msgs):
         self.composer_attempts += 1
-        answer = self.composer_fn(evidence_from(msgs), self.composer_attempts)
-        return Draft(status='answered', answer=answer, measures=['scripted'], limitations=[])
+        self.combiner_requests.append(msgs[-1].content)
+        return CombinedDraft(status='answered', answer=self.composer_fn(evidence_from(msgs), self.composer_attempts),
+                             measures=['scripted'], conflicts=self.conflicts_fn(self.composer_attempts))
 
     def _judge(self, msgs):
         self.judge_attempts += 1

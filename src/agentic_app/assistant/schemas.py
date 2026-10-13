@@ -21,8 +21,24 @@ class RouteDecision(BaseModel):
 
 class SupervisorDecision(BaseModel):
     next: Literal['kpi_analyst', 'supplier_analyst', 'inventory_analyst', 'network_analyst', 'finish'] = Field(
-        description='Specialist to run next, or finish when the findings answer every part of the question.')
+        description='Specialist to run next; finish when the findings answer every part of the question or more '
+                    'calls cannot help. The SQL workers always run after you finish.')
     task: str = Field('', description='Precise instruction for the specialist; empty when finishing.')
+    missing: str = Field('', description='Information the question asks for that the findings do not contain (e.g. '
+                                         'an attribute of a given ID, or a lookup that returned no matching rows); '
+                                         'the SQL workers look for it first. Empty when the findings answer every '
+                                         'part of the question.')
+
+
+class SqlTask(BaseModel):
+    purpose: str = Field(description='What this query answers, in plain words.')
+    sql: str = Field(description='One read-only SELECT over the Gold tables, unqualified table names.')
+
+
+class SqlPlan(BaseModel):
+    queries: list[SqlTask] = Field(max_length=3, description='1-3 independent queries that together answer the '
+                                                             'question from the Gold tables; empty if no Gold table '
+                                                             'has the information.')
 
 
 class Draft(BaseModel):
@@ -30,6 +46,13 @@ class Draft(BaseModel):
     answer: str = Field(description='Answer in plain business English, using only numbers from the evidence.')
     measures: list[str] = Field(description='Business brief KPIs or tools the answer is based on.')
     limitations: list[str] = Field(default_factory=list, description='Caveats the user must know.')
+
+
+class CombinedDraft(Draft):
+    """The combiner's final draft built from the analysts' answer and the SQL workers' answer."""
+    conflicts: list[str] = Field(default_factory=list, description=(
+        "Each point where the analysts' answer and the SQL answer disagree (different value, entity or date for "
+        'the same thing), with both values; empty when they agree or only one of them has data.'))
 
 
 class Judgment(BaseModel):

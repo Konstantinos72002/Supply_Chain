@@ -1,4 +1,7 @@
-"""The five approved tools. Each mirrors one business endpoint of the API; the assistant has no other data access.
+"""The approved tools. Each mirrors one endpoint of the API; the assistant has no other data access.
+
+The five business tools belong to the specialists; run_gold_sql (guarded read-only SQL over the Gold tables) is used
+only by the SQL workers, for information the business tools cannot provide.
 
 Arguments are validated with these Pydantic models before any call; the API validates them again.
 """
@@ -69,6 +72,12 @@ class SupplierDisruptionImpactArgs(BaseModel):
     critical_only: bool = Field(True, description='Only CRITICAL products; false to include all products.')
 
 
+class GoldSqlArgs(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    purpose: str = Field(min_length=3, max_length=300, description='What this query answers.')
+    sql: str = Field(min_length=10, max_length=4000, description='One read-only SELECT over the Gold tables.')
+
+
 @dataclass(frozen=True)
 class ToolSpec:
     args_model: type[BaseModel]
@@ -100,6 +109,9 @@ TOOLS: dict[str, ToolSpec] = {
         'Knowledge-graph what-if for one supplier that stops delivering: the products that depend on it (CRITICAL '
         'only by default), their alternate suppliers and whether one is active, and the open shipments of those '
         'products with their status and destination warehouse. Uncovered products come first.'),
+    'run_gold_sql': ToolSpec(
+        GoldSqlArgs, 'POST', '/analytics/sql',
+        'Run one read-only SELECT over the Gold star schema (no confidential columns, at most 200 rows).'),
 }
 
 SPECIALIST_TOOLS = {

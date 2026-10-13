@@ -34,6 +34,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from assistant.graph import default_llm, run_assistant
 from assistant.schemas import AssistantAnswer, AssistantQuery
+from gold_sql import UnsafeSql, prepare
 from knowledge_graph.graph import load_graph, supplier_alternatives
 
 load_dotenv(override=True)
@@ -170,6 +171,14 @@ async def send_with_retry(client: httpx.AsyncClient, method: str, url: str, **kw
     raise AssertionError('unreachable')
 
 
+class StatementFailed(HTTPException):
+    """The SQL warehouse ran the statement and it failed (bad SQL), as opposed to the warehouse being unavailable."""
+
+    def __init__(self, error_message: str):
+        super().__init__(status_code=502, detail='The query on the data source failed. Please try again later.')
+        self.error_message = error_message
+
+
 def check_response(response: httpx.Response) -> dict[str, Any]:
     if response.is_error:
         # The full Databricks reply can contain SQL and table names: server log only, never to the client.
@@ -214,9 +223,9 @@ async def run_statement(client: httpx.AsyncClient, statement: str,
         result = check_response(await send_with_retry(client, 'GET', f'{STATEMENTS_PATH}/{statement_id}'))
 
     if result['status']['state'] != 'SUCCEEDED':
-        logger.error('Statement %s ended in state %s: %s', statement_id, result['status']['state'],
-                     result['status'].get('error'))
-        raise HTTPException(status_code=502, detail='The query on the data source failed. Please try again later.')
+        error = result['status'].get('error') or {}
+        logger.error('Statement %s ended in state %s: %s', statement_id, result['status']['state'], error)
+        raise StatementFailed(str(error.get('message', result['status']['state'])))
 
     schema = result['manifest']['schema']['columns']
     chunk = result.get('result', {})
@@ -752,6 +761,54 @@ async def get_supplier_disruption_impact(
     if result.get('error') == 'NOT_FOUND':
         raise HTTPException(status_code=404, detail=f'Supplier {supplier_id} is not in the knowledge graph.')
     return DisruptionImpactResponse(filters={'supplier_id': supplier_id, 'critical_only': critical_only}, **result)
+
+
+# =============================================================================
+# Read-only SQL over the Gold tables (used by the assistant's SQL workers)
+# =============================================================================
+SQL_MAX_ROWS = 200
+
+
+class GoldSqlQuery(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    purpose: str = Field(min_length=3, max_length=300, description='What this query answers, in plain words.')
+    sql: str = Field(min_length=10, max_length=4000,
+                     description='One SELECT over the Gold tables, using unqualified table names.')
+
+
+class GoldSqlResponse(BaseModel):
+    purpose: str
+    sql: str = Field(description='The statement as executed (qualified and row-capped).')
+    as_of_date: str | None = Field(description='Snapshot date of the data (yyyy-MM-dd).')
+    filters: dict[str, Any]
+    columns: list[str]
+    count: int
+    truncated: bool = Field(description=f'True when the query returned more than {SQL_MAX_ROWS} rows.')
+    rows: list[dict[str, Any]]
+
+
+@app.post('/analytics/sql', response_model=GoldSqlResponse, operation_id='run_gold_sql',
+          summary='Run one read-only SELECT over the Gold tables', dependencies=[Depends(require_user)],
+          responses={400: {'description': 'The SQL is not allowed or failed on the warehouse.'}})
+async def run_gold_sql(request: Request, body: GoldSqlQuery) -> GoldSqlResponse:
+    """For questions the business endpoints do not cover. Accepts a single read-only SELECT over the Gold star
+    schema only; confidential columns, SELECT * and external functions are refused and the result is capped at
+    SQL_MAX_ROWS rows."""
+    try:
+        statement = prepare(body.sql, CATALOG, SCHEMA, SQL_MAX_ROWS)
+    except UnsafeSql as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from None
+    client = request.app.state.client
+    try:
+        rows, snapshot = await asyncio.gather(
+            run_statement(client, statement),
+            run_statement(client, f'{SNAPSHOT_CTE} SELECT CAST(as_of_date AS STRING) AS as_of_date FROM snap'))
+    except StatementFailed as exc:
+        raise HTTPException(status_code=400, detail=f'The query failed: {exc.error_message[:300]}') from None
+    return GoldSqlResponse(
+        purpose=body.purpose, sql=statement, as_of_date=snapshot[0]['as_of_date'] if snapshot else None, filters={},
+        columns=list(rows[0]) if rows else [], count=min(len(rows), SQL_MAX_ROWS),
+        truncated=len(rows) > SQL_MAX_ROWS, rows=rows[:SQL_MAX_ROWS])
 
 
 # =============================================================================
