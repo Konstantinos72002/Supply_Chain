@@ -118,7 +118,7 @@ class FakeLLM:
     route:       RouteDecision route for the guard
     specialists: list of specialist names the supervisor delegates to, in order, then 'finish'
     tool_script: {tool_name_available_to_specialist: [(tool, args), ...]} calls made one per turn
-    composer:    function(evidence, attempt) -> combined answer text (evidence = all ok tool results)
+    composer:    function(evidence, attempt) -> combined (or simple-mode) answer text (evidence = ok tool results)
     conflicts:   function(attempt) -> conflicts the combiner reports between the two answers (default none)
     judge:       function(attempt) -> dict of scores (default all 90)
     sql_plan:    [(purpose, sql), ...] returned by the SQL planner
@@ -175,6 +175,10 @@ class FakeLLM:
         return AIMessage(content='Findings summarised from the tool results.')
 
     def _answer(self, msgs):
+        if 'no second data source' in msgs[0].content:          # simple mode: the analysts' answer is final
+            self.composer_attempts += 1
+            return Draft(status='answered', answer=self.composer_fn(evidence_from(msgs), self.composer_attempts),
+                         measures=['scripted'])
         source = 'SQL' if 'run_gold_sql results' in msgs[0].content else "analysts'"
         return Draft(status='answered', answer=f'The {source} answer.', measures=['scripted'])
 

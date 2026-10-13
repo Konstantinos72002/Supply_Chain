@@ -59,7 +59,7 @@ def test_error_requests_are_logged_with_their_status(client, caplog):
 def test_assistant_tool_calls_carry_the_same_correlation_id(client, monkeypatch):
     seen = {}
 
-    async def fake_run_assistant(question, tools_client, llm):
+    async def fake_run_assistant(question, tools_client, llm, mode='extended'):
         seen['header'] = tools_client.headers.get('X-Correlation-ID')
         return module.AssistantAnswer(status='no_data', answer='-', evidence=[], filters={}, measures=[],
                                       as_of_date=None, limitations=[], quality=None, trace=[])

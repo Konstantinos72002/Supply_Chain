@@ -13,6 +13,9 @@ the question (the information the analysts could not provide first) into up to M
 tables, and one sql_worker per query runs it through the guarded run_gold_sql endpoint (fixing its SQL once on an
 error). Two answers are then written independently, one from the analysts' tool evidence and one from the SQL
 evidence; the combiner checks them against each other and writes the final answer, reporting any disagreement.
+
+Simple mode (faster, fewer tokens) skips the SQL part: supervisor (finish) -> simple_answer -> checks -> judge ->
+finalize, where simple_answer writes the final draft from the analysts' tool evidence alone (and revises it once).
 """
 import json
 import operator
@@ -68,6 +71,7 @@ def default_llm():
 
 class State(TypedDict, total=False):
     question: str
+    mode: str                                # 'simple' (API tools only) or 'extended' (+ SQL workers, combiner)
     route: str
     clarifying_question: str | None
     active: str
@@ -161,11 +165,12 @@ def build_graph(llm: Any, client: httpx.AsyncClient):
         if steps >= MAX_SUPERVISOR_STEPS or len(state.get('evidence', [])) >= MAX_TOOL_CALLS:
             return {'active': 'finish', 'missing': '', 'trace': ['supervisor:finish(limit)']}
         findings = '\n'.join(f"- {f['specialist']} ({f['task']}): {f['summary']}" for f in state.get('findings', []))
+        extended = state.get('mode', 'extended') == 'extended'
         decision = await structured(SupervisorDecision, [
-            SystemMessage(prompts.SUPERVISOR),
+            SystemMessage(prompts.SUPERVISOR + (prompts.SUPERVISOR_SQL if extended else '')),
             HumanMessage(f"Question: {state['question']}\n\nFindings so far:\n{findings or '(none)'}")])
         if decision.next == 'finish':
-            # Always followed by the SQL workers, which answer the question again from the Gold tables.
+            # Extended mode: followed by the SQL workers, which answer the question again from the Gold tables.
             return {'active': 'finish', 'missing': decision.missing.strip(), 'trace': ['supervisor:finish']}
         return {'active': decision.next, 'task': decision.task, 'supervisor_steps': steps + 1,
                 'agent_messages': [SystemMessage(prompts.SPECIALISTS[decision.next] + prompts.SPECIALIST_RULES),
@@ -306,6 +311,25 @@ def build_graph(llm: Any, client: httpx.AsyncClient):
             else 'combiner'
         return {'draft': draft.model_dump(), 'revisions': revisions, 'feedback': [], 'trace': [trace]}
 
+    # ------------------------------------------------------------------ simple mode: one answer from the analysts
+    async def simple_answer(state: State) -> State:
+        """Writes the final draft from the analysts' tool evidence alone; also revises it after a failed check."""
+        feedback = state.get('feedback') or []
+        revisions = state.get('revisions', 0) + (1 if feedback else 0)
+        evidence = [e for e in _ok_evidence(state) if _rows(e)]
+        if not evidence:                       # an empty result answers nothing: no LLM call needed
+            draft = Draft(status='no_data', answer=NO_DATA, measures=[])
+            return {'draft': draft.model_dump(), 'revisions': revisions, 'feedback': [],
+                    'trace': ['simple_answer:no_data']}
+        content = (f"Question: {state['question']}\n\nEVIDENCE_JSON:\n{evidence_json(evidence)}\n\n"
+                   f"Findings:\n{_findings(state, sql=False) or '(none)'}")
+        if feedback:
+            content += (f"\n\nYour previous answer was rejected:\n{state['draft']['answer']}\n"
+                        'Fix these problems:\n' + '\n'.join(f'- {f}' for f in feedback))
+        draft = await structured(Draft, [SystemMessage(prompts.SIMPLE_ANSWER), HumanMessage(content)])
+        return {'draft': draft.model_dump(), 'revisions': revisions, 'feedback': [],
+                'trace': ['simple_answer:revision' if feedback else 'simple_answer']}
+
     # ------------------------------------------------------------------ evaluation gate
 
     def checks(state: State) -> State:
@@ -364,16 +388,20 @@ def build_graph(llm: Any, client: httpx.AsyncClient):
                        ('tools', tools), ('unavailable', unavailable_answer),
                        ('analyst_answer', make_answer('analyst_answer', sql=False)),
                        ('sql_answer', make_answer('sql_answer', sql=True)), ('combiner', combiner),
+                       ('simple_answer', simple_answer),
                        ('checks', checks), ('judge', judge), ('fallback', fallback), ('finalize', finalize),
                        ('sql_planner', sql_planner), ('sql_worker', sql_worker), ('sql_merge', sql_merge)]:
         graph.add_node(name, node)
     for name in SPECIALIST_TOOLS:
         graph.add_node(name, make_specialist(name))
 
+    def revise(s: State) -> str:
+        return 'combiner' if s.get('mode', 'extended') == 'extended' else 'simple_answer'
+
     graph.add_edge(START, 'guard')
     graph.add_conditional_edges('guard', lambda s: 'supervisor' if s['route'] == 'answer' else 'fixed_answer')
     graph.add_conditional_edges('supervisor', lambda s: s['active'] if s['active'] in SPECIALIST_TOOLS
-                                else 'sql_planner')
+                                else 'sql_planner' if s.get('mode', 'extended') == 'extended' else 'simple_answer')
     graph.add_conditional_edges('sql_planner', dispatch_sql, ['sql_worker', 'sql_merge'])
     graph.add_edge('sql_worker', 'sql_merge')
     graph.add_conditional_edges('sql_merge', lambda s: 'unavailable' if s.get('unavailable')
@@ -383,12 +411,13 @@ def build_graph(llm: Any, client: httpx.AsyncClient):
         graph.add_conditional_edges(name, lambda s: 'tools' if s.get('pending_tools') else 'supervisor')
     graph.add_conditional_edges('tools', lambda s: 'unavailable' if s.get('unavailable') else s['active'])
     graph.add_edge('combiner', 'checks')
+    graph.add_edge('simple_answer', 'checks')
     graph.add_conditional_edges('checks', lambda s: 'judge' if not s['feedback'] and s['draft']['status'] == 'answered'
                                 else 'finalize' if not s['feedback']
-                                else 'combiner' if s.get('revisions', 0) == 0 else 'fallback')
+                                else revise(s) if s.get('revisions', 0) == 0 else 'fallback')
     graph.add_conditional_edges('judge', lambda s: 'fallback' if s.get('judge_failed')
                                 else 'finalize' if not s['feedback']
-                                else 'combiner' if s.get('revisions', 0) == 0 else 'fallback')
+                                else revise(s) if s.get('revisions', 0) == 0 else 'fallback')
     graph.add_edge('fallback', 'finalize')
     for end in ('fixed_answer', 'unavailable', 'finalize'):
         graph.add_edge(end, END)
@@ -413,10 +442,12 @@ def _final(state: State, status: str, answer: str, measures: list[str], limitati
     }
 
 
-async def run_assistant(question: str, client: httpx.AsyncClient, llm: Any) -> AssistantAnswer:
+async def run_assistant(question: str, client: httpx.AsyncClient, llm: Any,
+                        mode: str = 'extended') -> AssistantAnswer:
     graph = build_graph(llm, client)
-    state = await graph.ainvoke({'question': question, 'trace': [], 'findings': [], 'evidence': []},
+    state = await graph.ainvoke({'question': question, 'mode': mode, 'trace': [], 'findings': [], 'evidence': []},
                                 config={'recursion_limit': RECURSION_LIMIT})
     final = state['final']
     final['trace'] = state['trace']
+    final['mode'] = mode
     return AssistantAnswer(**final)

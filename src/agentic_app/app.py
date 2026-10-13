@@ -859,11 +859,13 @@ async def ask_assistant(request: Request, body: AssistantQuery) -> AssistantAnsw
                                          headers={'Authorization': request.headers['Authorization'],
                                                   CORRELATION_HEADER: correlation_id.get()},
                                          timeout=POLL_DEADLINE_SECONDS + 30) as tools_client:
-                answer = await run_assistant(body.question, tools_client, request.app.state.assistant_llm)
+                answer = await run_assistant(body.question, tools_client, request.app.state.assistant_llm,
+                                       mode=body.mode)
     finally:
         sql_metrics.reset(metrics_token)
     answer.metrics = query_metrics(time.perf_counter() - start, statements, llm_calls.calls, len(answer.evidence))
-    logger.info('assistant metrics', extra={'fields': answer.metrics.model_dump(exclude={'sql_statements', 'llm'})})
+    logger.info('assistant metrics', extra={'fields': {'mode': body.mode}
+                | answer.metrics.model_dump(exclude={'sql_statements', 'llm'})})
     return answer
 
 

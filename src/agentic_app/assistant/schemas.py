@@ -4,11 +4,15 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 Specialist = Literal['kpi_analyst', 'supplier_analyst', 'inventory_analyst', 'network_analyst']
+Mode = Literal['simple', 'extended']
 
 
 class AssistantQuery(BaseModel):
     model_config = ConfigDict(extra='forbid')
     question: str = Field(min_length=3, max_length=1000, description='Business question in natural language.')
+    mode: Mode = Field('extended', description="'simple' = the analysts' API tools only: faster, fewer tokens. "
+                                               "'extended' = also SQL workers on the Gold tables, cross-checked "
+                                               'by a combiner: slower, more tokens.')
 
 
 class RouteDecision(BaseModel):
@@ -123,6 +127,7 @@ class QueryMetrics(BaseModel):
 
 
 class AssistantAnswer(BaseModel):
+    mode: Mode | None = Field(None, description='Assistant version that answered: simple or extended.')
     status: Literal['answered', 'clarification_needed', 'out_of_scope', 'no_data', 'data_unavailable']
     answer: str
     evidence: list[Evidence]

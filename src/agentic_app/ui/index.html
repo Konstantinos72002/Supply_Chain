@@ -97,6 +97,11 @@
   .error[hidden] { display: none; }
 
   #ask { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .mode { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 10px; }
+  .mode-switch { display: inline-flex; border: 1px solid var(--hull); border-radius: 4px; overflow: hidden; }
+  .mode-switch button { padding: 4px 12px; border: 0; background: #fff; color: var(--hull); font-size: 14px; font-weight: 500; cursor: pointer; }
+  .mode-switch button + button { border-left: 1px solid var(--hull); }
+  .mode-switch button[aria-pressed="true"] { background: var(--hull); color: #fff; }
 
   /* lists */
   .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--rule); margin-bottom: 14px; }
@@ -175,6 +180,13 @@
       <form id="ask-form">
         <label for="question" class="hint">Your question</label>
         <textarea id="question" maxlength="1000" required placeholder="Which delayed orders should we expedite first?"></textarea>
+        <div class="mode">
+          <div class="mode-switch" role="group" aria-label="Assistant version">
+            <button type="button" data-mode="simple" aria-pressed="true">Simple</button>
+            <button type="button" data-mode="extended" aria-pressed="false">Extended</button>
+          </div>
+          <span class="hint" id="mode-hint"></span>
+        </div>
         <div class="ask-bar">
           <span class="hint">Read-only: the assistant cannot change orders or contact suppliers.</span>
           <button class="btn" type="submit" id="ask">Ask</button>
@@ -455,6 +467,7 @@ function renderAnswer(r) {
   const verdict = $('verdict'); verdict.textContent = label; verdict.className = `verdict ${tone}`;
   $('answer-text').textContent = r.answer;
   const facts = [];
+  if (r.mode) facts.push(`${r.mode === 'simple' ? 'Simple' : 'Extended'} version`);
   if (r.as_of_date) facts.push(`Data as of ${r.as_of_date}`);
   r.limitations.forEach((l) => facts.push(l));
   $('facts').replaceChildren(...facts.map((f) => el('li', f)));
@@ -513,6 +526,23 @@ function renderMetrics(m) {
   $('metrics').replaceChildren(...parts);
 }
 
+/* ---------------- assistant version (simple / extended) ---------------- */
+const MODE_HINTS = {
+  simple: 'Faster, fewer tokens: answers from the business tools only.',
+  extended: 'Slower, more tokens: also runs SQL on the Gold tables and cross-checks both answers.',
+};
+let mode = 'simple';
+try { if (localStorage.getItem('assistant-mode') in MODE_HINTS) mode = localStorage.getItem('assistant-mode'); } catch {}
+
+function setMode(next) {
+  mode = next;
+  document.querySelectorAll('.mode-switch button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+  $('mode-hint').textContent = MODE_HINTS[mode];
+  try { localStorage.setItem('assistant-mode', mode); } catch {}
+}
+document.querySelectorAll('.mode-switch button').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+setMode(mode);
+
 $('ask-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const question = $('question').value.trim();
@@ -522,7 +552,7 @@ $('ask-form').addEventListener('submit', async (event) => {
   showError('ask-error', null);
   startThinking();
   try {
-    renderAnswer(await api('/assistant/query', { method: 'POST', body: { question } }));
+    renderAnswer(await api('/assistant/query', { method: 'POST', body: { question, mode } }));
   } catch (error) {
     showError('ask-error', error);
   } finally {

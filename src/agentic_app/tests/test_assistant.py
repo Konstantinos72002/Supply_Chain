@@ -12,16 +12,16 @@ def otd_answer(evidence, attempt):
     return f"The On-Time Delivery Rate is {kpi['results'][0]['value'] * 100:.2f}% as of {kpi['as_of_date']}."
 
 
-def ask(client, api, llm, question='What is our on-time delivery rate?'):
+def ask(client, api, llm, question='What is our on-time delivery rate?', **body):
     api.app.state.assistant_llm = llm
-    response = client.post('/assistant/query', json={'question': question}, headers=H)
+    response = client.post('/assistant/query', json={'question': question, **body}, headers=H)
     assert response.status_code == 200, response.text
     return response.json()
 
 
 def test_kpi_question(client, api):
     r = ask(client, api, FakeLLM(tool_script={'query_kpi': OTD}, composer=otd_answer))
-    assert r['status'] == 'answered' and '64.46%' in r['answer']
+    assert r['mode'] == 'extended' and r['status'] == 'answered' and '64.46%' in r['answer']
     assert r['evidence'][0]['result_summary']['results'][0]['value'] == 0.6446
     assert r['as_of_date'] == '2026-10-07'
     assert r['quality'] == {'scores': {k: 90 for k in r['quality']['scores']}, 'passed': True, 'revised': False,
@@ -30,6 +30,26 @@ def test_kpi_question(client, api):
                           'kpi_analyst:done', 'supervisor:finish', 'sql_planner:0 queries', 'sql_merge:0/0 ok',
                           'analyst_answer', 'sql_answer:no_data', 'combiner', 'checks:pass', 'judge:pass', 'finalize']
     assert not any('FX' in x for x in r['limitations'])          # a ratio: no EUR involved
+
+
+def test_simple_mode_skips_the_sql_workers(client, api):
+    llm = FakeLLM(tool_script={'query_kpi': OTD}, composer=otd_answer)
+    r = ask(client, api, llm, mode='simple')
+    assert r['mode'] == 'simple' and r['status'] == 'answered' and '64.46%' in r['answer'] and r['quality']['passed']
+    assert r['trace'] == ['guard:answer', 'supervisor->kpi_analyst', 'kpi_analyst:call query_kpi', 'tool:query_kpi:ok',
+                          'kpi_analyst:done', 'supervisor:finish', 'simple_answer', 'checks:pass', 'judge:pass',
+                          'finalize']
+    assert llm.sql_requests == [] and 'SqlPlan' not in llm.calls and 'CombinedDraft' not in llm.calls
+    assert not any('SQL' in x for x in r['limitations'])
+
+
+def test_simple_mode_revises_its_own_answer(client, api):
+    llm = FakeLLM(tool_script={'query_kpi': OTD},
+                  composer=lambda ev, n: 'The On-Time Delivery Rate is 64.90%.' if n == 1 else otd_answer(ev, n))
+    r = ask(client, api, llm, mode='simple')
+    assert r['quality']['revised'] and r['quality']['passed'] and '64.46%' in r['answer']
+    assert r['trace'][-6:] == ['simple_answer', 'checks:fail', 'simple_answer:revision', 'checks:pass', 'judge:pass',
+                               'finalize']
 
 
 def test_expedite_question_uses_inventory_tools(client, api):
@@ -147,6 +167,7 @@ def test_assistant_requires_sign_in_and_valid_body(client, api):
     assert client.post('/assistant/query', json={'question': 'What is our order value?'}).status_code == 401
     assert client.post('/assistant/query', json={'question': 'x'}, headers=H).status_code == 422
     assert client.post('/assistant/query', json={'question': 'ok?', 'x': 1}, headers=H).status_code == 422
+    assert client.post('/assistant/query', json={'question': 'ok?', 'mode': 'fast'}, headers=H).status_code == 422
 
 
 @pytest.mark.parametrize('answer, bad', [

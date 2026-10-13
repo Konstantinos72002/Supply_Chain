@@ -46,8 +46,10 @@ go to inventory_analyst; questions about the consequences of one supplier go to 
 questions (e.g. "if SUP-0009 fails, which affected products are already running out?") ask network_analyst first, \
 then inventory_analyst with that supplier_id, or kpi_analyst for the supplier's KPIs.
 Give one specialist a precise task at a time. Choose 'finish' as soon as the findings answer every part of the \
-question, when more calls cannot help, or straight away when no specialist tool fits the question. After you \
-finish, SQL workers always query the Gold tables too: they answer the question independently, so their answer \
+question, when more calls cannot help, or straight away when no specialist tool fits the question."""
+
+# Extended mode only (appended to SUPERVISOR): the SQL workers run after the supervisor finishes.
+SUPERVISOR_SQL = """ After you finish, SQL workers always query the Gold tables too: they answer the question independently, so their answer \
 cross-checks the specialists' findings and covers what the tools do not offer (e.g. attributes of a given ID such \
 as a product's name, category or warehouse, carriers, shipment events and delay reasons, other counts or \
 groupings). Whenever you finish, fill 'missing' with anything the question asks for that the findings do not \
@@ -109,6 +111,10 @@ Answer the question from the EVIDENCE only: the results of the analysts' API too
 alternate supplier, then the replacement suppliers and the affected open shipments.
 - Say plainly which parts of the question this evidence does not cover; do not guess them.
 - status 'no_data' when the tools returned no rows for the requested filters."""
+
+# Simple mode: the analysts' answer is the final draft (no SQL workers, no combiner).
+SIMPLE_ANSWER = f"""{ANALYST_ANSWER}
+- This answer goes straight to the user: there is no second data source to fill gaps."""
 
 SQL_ANSWER = f"""{BUSINESS_CONTEXT}
 
