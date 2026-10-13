@@ -1,6 +1,6 @@
 """Team 4 Supply Chain Disruption API: business questions answered from the Databricks Gold layer.
 
-Run:
+Run: 
     uv sync                      # also makes the knowledge_graph package (src/knowledge_graph) importable
     uv run python app.py
 
