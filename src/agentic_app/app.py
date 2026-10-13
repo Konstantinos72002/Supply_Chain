@@ -26,11 +26,13 @@ from typing import Any, Literal
 
 import httpx
 import jwt
+import sqlglot
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Security
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, OAuth2AuthorizationCodeBearer
 from pydantic import BaseModel, ConfigDict, Field
+from sqlglot import exp
 
 from assistant.graph import default_llm, run_assistant
 from assistant.schemas import AssistantAnswer, AssistantQuery
@@ -752,6 +754,128 @@ async def get_supplier_disruption_impact(
     if result.get('error') == 'NOT_FOUND':
         raise HTTPException(status_code=404, detail=f'Supplier {supplier_id} is not in the knowledge graph.')
     return DisruptionImpactResponse(filters={'supplier_id': supplier_id, 'critical_only': critical_only}, **result)
+
+
+# =============================================================================
+# Ad-hoc read-only SQL on the Gold tables (sql_analyst)
+# =============================================================================
+# Gold tables and columns the SQL endpoint accepts (databricks/docs/data_model.md), without confidential columns.
+# gold_dim_risk_level is left out: it only holds supplier risk ratings. Keep in sync with prompts.SQL_ANALYST.
+SQL_TABLES: dict[str, list[str]] = {
+    'gold_fact_purchase_order_line': [
+        'po_id', 'po_line_number', 'supplier_key', 'product_key', 'location_key', 'order_date_key',
+        'promised_delivery_date_key', 'actual_delivery_date_key', 'latest_eta_date_key', 'line_status',
+        'ordered_qty', 'rate_to_eur', 'received_qty', 'delay_days', 'delayed_qty', 'is_delivered', 'is_on_time',
+        'is_delayed'],
+    'gold_fact_shipment_event': [
+        'event_id', 'shipment_id', 'po_id', 'shipment_status_key', 'supplier_key', 'location_key', 'event_date_key',
+        'carrier', 'delay_reason_code', 'event_ts', 'eta_ts'],
+    'gold_fact_inventory_exposure': [
+        'snapshot_date_key', 'product_key', 'supplier_key', 'location_key', 'on_hand_qty', 'safety_stock_qty',
+        'rate_to_eur', 'days_of_cover', 'delayed_inbound_qty', 'days_until_arrival'],
+    'gold_dim_date': ['date_key', 'date', 'year', 'quarter', 'month', 'month_name'],
+    'gold_dim_supplier': ['supplier_key', 'supplier_id', 'supplier_name', 'country_code', 'region',
+                          'default_currency', 'is_active', 'onboarded_date'],
+    'gold_dim_product': ['product_key', 'product_id', 'product_name', 'category', 'unit_of_measure', 'criticality',
+                         'primary_supplier_id', 'alternate_supplier_id', 'stocking_location_id',
+                         'has_active_alternate'],
+    'gold_dim_location': ['location_key', 'location_id', 'location_name', 'location_country', 'location_type'],
+    'gold_dim_shipment_status': ['shipment_status_key', 'status'],
+}
+# Confidential (data dictionary) and the keys that lead to them: rejected anywhere in a query.
+SQL_CONFIDENTIAL_COLUMNS = {'unit_price', 'unit_cost', 'avg_daily_demand', 'contract_lead_time_days', 'risk_rating',
+                            'risk_level', 'risk_level_key'}
+# Functions that reach outside the Gold tables (files, secrets, JVM, external calls).
+SQL_BLOCKED_FUNCTIONS = {'read_files', 'reflect', 'java_method', 'secret', 'try_secret', 'http_request', 'ai_query'}
+SQL_MAX_ROWS = 200
+SQL_WRITE_NODES = (exp.Insert, exp.Update, exp.Delete, exp.Merge, exp.Drop, exp.Create, exp.Alter, exp.Command,
+                   exp.Into)
+
+
+class SqlQuery(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    sql: str = Field(min_length=6, max_length=4000,
+                     description='One read-only SELECT (or WITH ... SELECT) on the Gold tables, e.g. '
+                                 "SELECT COUNT(*) AS suppliers FROM gold_dim_supplier WHERE region = 'APAC'.")
+    limit: int = Field(SQL_MAX_ROWS, ge=1, le=SQL_MAX_ROWS, description=f'Maximum rows returned (at most {SQL_MAX_ROWS}).')
+
+
+class SqlResponse(BaseModel):
+    sql: str = Field(description='The statement that ran: validated, fully qualified and with the row limit.')
+    tables: list[str] = Field(description='Gold tables the query read.')
+    columns: list[str]
+    rows: list[dict[str, Any]]
+    row_count: int
+    truncated: bool = Field(description='True when more rows exist than the limit; only the first rows are returned.')
+
+
+def sql_rejected(reason: str) -> HTTPException:
+    return HTTPException(status_code=422, detail=f'{reason} Rewrite the query and retry.')
+
+
+def checked_sql(text: str, limit: int) -> tuple[exp.Expression, list[str], bool]:
+    """Parses and validates the query; returns the tree to run (qualified tables, row limit applied), the Gold
+    tables it reads, and whether one extra row is fetched to detect truncation. Raises 422 on any violation."""
+    try:
+        statements = [s for s in sqlglot.parse(text, read='databricks') if s is not None]
+    except sqlglot.errors.ParseError as exc:
+        raise sql_rejected(f'The SQL could not be parsed ({str(exc).splitlines()[0]}).')
+    if len(statements) != 1:
+        raise sql_rejected('Send exactly one statement.')
+    tree = statements[0]
+    if not isinstance(tree, (exp.Select, exp.SetOperation)) or tree.find(*SQL_WRITE_NODES):
+        raise sql_rejected('Only a single read-only SELECT (or WITH ... SELECT) is allowed.')
+
+    allowed = ', '.join(SQL_TABLES)
+    ctes = {cte.alias_or_name.lower() for cte in tree.find_all(exp.CTE)}
+    tables = []
+    for source in list(tree.find_all(exp.Table)):
+        name = source.name.lower()
+        if not (source.catalog or source.db) and name in ctes:
+            continue
+        if (name not in SQL_TABLES or (source.catalog and source.catalog.lower() != CATALOG.lower())
+                or (source.db and source.db.lower() != SCHEMA.lower())):
+            raise sql_rejected(f'Table {source.sql(dialect="databricks")!r} is not allowed. Use only the Gold '
+                               f'tables: {allowed}.')
+        source.set('catalog', exp.to_identifier(CATALOG))
+        source.set('db', exp.to_identifier(SCHEMA))
+        tables.append(name)
+    for column in tree.find_all(exp.Column):
+        if column.name.lower() in SQL_CONFIDENTIAL_COLUMNS:
+            raise sql_rejected(f'Column {column.name!r} is confidential and cannot be queried.')
+    if any(not isinstance(star.parent, exp.Count) for star in tree.find_all(exp.Star)):
+        raise sql_rejected('SELECT * is not allowed: name the columns you need (COUNT(*) is fine).')
+    for function in tree.find_all(exp.Func):
+        name = (function.name if isinstance(function, exp.Anonymous) else function.sql_name()).lower()
+        if name in SQL_BLOCKED_FUNCTIONS:
+            raise sql_rejected(f'Function {name}() is not allowed.')
+
+    requested = tree.args.get('limit')
+    if requested is not None and not (isinstance(requested.expression, exp.Literal) and requested.expression.is_int):
+        raise sql_rejected('LIMIT must be a whole number.')
+    own_limit = int(requested.expression.name) if requested is not None else None
+    probe = own_limit is None or own_limit > limit          # fetch one extra row to tell whether rows were cut
+    tree = tree.limit(limit + 1 if probe else own_limit, copy=False)
+    return tree, sorted(set(tables)), probe
+
+
+@app.post('/analytics/sql', response_model=SqlResponse, operation_id='run_sql_query',
+          summary='Run one read-only SELECT on the Gold tables (ad-hoc lookups, counts and lists)',
+          responses={422: {'description': 'The query was rejected; the detail says why and how to fix it.'}},
+          dependencies=[Depends(require_user)])
+async def run_sql_query(request: Request, body: SqlQuery) -> SqlResponse:
+    """Answers ad-hoc questions the business endpoints do not cover ("how many suppliers are in APAC?").
+    Enforced in code: one SELECT / WITH ... SELECT, only the Gold tables and non-confidential columns, no SELECT *,
+    no external functions, and at most `limit` rows (truncated=true when more exist). The query runs as SQL
+    regenerated from the validated parse tree, so what runs is exactly what was checked."""
+    tree, tables, probe = checked_sql(body.sql, body.limit)
+    statement = tree.sql(dialect='databricks')
+    rows = await run_statement(request.app.state.client, statement)
+    truncated = probe and len(rows) > body.limit
+    rows = rows[:body.limit]
+    return SqlResponse(sql=statement, tables=tables, columns=list(rows[0]) if rows else tree.named_selects,
+                       rows=rows, row_count=len(rows), truncated=truncated)
 
 
 # =============================================================================

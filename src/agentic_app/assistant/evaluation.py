@@ -95,6 +95,12 @@ def fallback_answer(evidence: list[dict[str, Any]]) -> str:
             values = ', '.join(f"{r['group']}: {r['value']}" for r in data['results'])
             lines.append(f"{data['kpi']} ({data['unit']}): {values}")
             continue
+        if e['tool'] == 'run_sql_query':
+            rows = data['rows'][:5]
+            cut = ' (cut at the row limit)' if data['truncated'] else ''
+            lines.append(f"run_sql_query: {data['row_count']} rows returned{cut}; first {len(rows)}:")
+            lines += ['  - ' + ', '.join(f'{c}={r.get(c)}' for c in data['columns']) for r in rows]
+            continue
         key = next(k for k in KEY_FIELDS if k in data)
         rows = data[key][:5]
         if key == 'affected_products':

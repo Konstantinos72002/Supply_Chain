@@ -3,7 +3,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-Specialist = Literal['kpi_analyst', 'supplier_analyst', 'inventory_analyst', 'network_analyst']
+Specialist = Literal['kpi_analyst', 'supplier_analyst', 'inventory_analyst', 'network_analyst', 'sql_analyst']
 
 
 class AssistantQuery(BaseModel):
@@ -20,7 +20,8 @@ class RouteDecision(BaseModel):
 
 
 class SupervisorDecision(BaseModel):
-    next: Literal['kpi_analyst', 'supplier_analyst', 'inventory_analyst', 'network_analyst', 'finish'] = Field(
+    next: Literal['kpi_analyst', 'supplier_analyst', 'inventory_analyst', 'network_analyst', 'sql_analyst',
+                  'finish'] = Field(
         description='Specialist to run next, or finish when the findings answer every part of the question.')
     task: str = Field('', description='Precise instruction for the specialist; empty when finishing.')
 

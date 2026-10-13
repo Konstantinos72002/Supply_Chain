@@ -1,11 +1,12 @@
 """LangGraph multi-agent assistant.
 
-guard -> supervisor <-> {kpi_analyst, supplier_analyst, inventory_analyst, network_analyst} <-> tools
+guard -> supervisor <-> {kpi_analyst, supplier_analyst, inventory_analyst, network_analyst, sql_analyst} <-> tools
       -> composer -> checks -> judge -> finalize          (revise once, then safe fallback)
 guard -> fixed answer (out of scope / clarification);  tools -> unavailable (data service down)
 
-The LLM reaches data only through the five API tools (assistant/tools.py); network_analyst's
-get_supplier_disruption_impact is the API's view of the supply-chain knowledge graph.
+The LLM reaches data only through the six API tools (assistant/tools.py); network_analyst's
+get_supplier_disruption_impact is the API's view of the supply-chain knowledge graph, and sql_analyst's run_sql_query
+runs read-only SQL that the API validates (Gold tables only, no confidential columns, row limit) for ad-hoc lookups.
 """
 import json
 import operator
@@ -38,6 +39,8 @@ FX_LIMITATION = 'EUR values use placeholder FX rates until the business brief fx
 KG_TOOLS = {'get_supplier_disruption_impact'}
 KG_LIMITATION = ('Supplier dependencies and open shipments come from the knowledge-graph snapshot of the Gold tables '
                  '(as of its last build), not from a live query.')
+SQL_TOOLS = {'run_sql_query'}
+SQL_LIMITATION = 'The SQL result was cut at the row limit; only the first rows are shown.'
 
 
 def default_llm():
@@ -88,6 +91,8 @@ def _result_summary(tool: str, data: dict[str, Any]) -> dict[str, Any]:
     if tool in KG_TOOLS:
         return {k: data[k] for k in ('supplier_id', 'supplier_name', 'affected_product_count',
                                      'uncovered_product_count')} | {'affected_products': data['affected_products'][:5]}
+    if tool in SQL_TOOLS:
+        return {k: data[k] for k in ('sql', 'tables', 'columns', 'row_count', 'truncated')} | {'rows': data['rows'][:5]}
     rows_key = next(k for k in ('suppliers', 'products', 'order_lines') if k in data)
     return {'count': data['count'], rows_key: data[rows_key][:5]}
 
@@ -237,6 +242,8 @@ def build_graph(llm: Any, client: httpx.AsyncClient):
             limitations.append(FX_LIMITATION)
         if any(e['tool'] in KG_TOOLS for e in evidence):
             limitations.append(KG_LIMITATION)
+        if any(e['tool'] in SQL_TOOLS and e['data']['truncated'] for e in evidence):
+            limitations.append(SQL_LIMITATION)
         fallback_used = state.get('fallback_used', False)
         if fallback_used:
             passed = False

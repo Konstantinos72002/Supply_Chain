@@ -55,7 +55,7 @@ def test_scorecard_exposure_and_queue(client):
 def test_operation_ids_for_agents(client):
     ids = {op['operationId'] for path in client.get('/openapi.json').json()['paths'].values() for op in path.values()}
     assert ids == {'get_health', 'get_readiness', 'query_kpi', 'get_supplier_scorecard', 'get_product_exposure',
-                   'get_delayed_order_lines', 'get_supplier_disruption_impact', 'ask_assistant'}
+                   'get_delayed_order_lines', 'get_supplier_disruption_impact', 'run_sql_query', 'ask_assistant'}
 
 
 def test_user_interface_is_served_without_data(client):
