@@ -23,7 +23,7 @@ sys.path.insert(0, str(HERE.parent))
 
 from langchain_core.messages import AIMessage, ToolMessage
 
-from assistant.schemas import Draft, Judgment, RouteDecision, SupervisorDecision
+from assistant.schemas import Draft, Judgment, RouteDecision, SqlDraft, SupervisorDecision
 
 # --------------------------------------------------------------------------- Entra ID test tokens
 SIGNING_KEY = rsa.generate_private_key(public_exponent=65537, key_size=2048)
@@ -115,19 +115,30 @@ class FakeLLM:
     tool_script: {tool_name_available_to_specialist: [(tool, args), ...]} calls made one per turn
     composer:    function(evidence, attempt) -> answer text
     judge:       function(attempt) -> dict of scores (default all 90)
+    question_type: 'analysis' (supervisor path) or 'lookup' (SQL lookup path)
+    sql_writer:  list of SQL strings, one per SQL writer attempt (the last one repeats)
+    prompts:     system prompt of every structured call, per schema; writer_inputs: what the SQL writer received
     """
 
-    def __init__(self, route='answer', specialists=('kpi_analyst',), tool_script=None, composer=None, judge=None):
+    def __init__(self, route='answer', specialists=('kpi_analyst',), tool_script=None, composer=None, judge=None,
+                 question_type='analysis', sql_writer=None):
         self.route, self.specialists = route, list(specialists)
         self.tool_script = tool_script or {}
         self.composer_fn = composer or (lambda ev, attempt: 'No numbers here.')
         self.judge_fn = judge or (lambda attempt: {})
+        self.question_type, self.sql_writer = question_type, list(sql_writer or [])
         self.calls, self.composer_attempts, self.judge_attempts = [], 0, 0
+        self.prompts, self.writer_inputs = {}, []
 
     def with_structured_output(self, schema, **kwargs):
         handlers = {'RouteDecision': self._route, 'SupervisorDecision': self._supervise,
-                    'Draft': self._compose, 'Judgment': self._judge}
-        return _Runner(lambda msgs: (self.calls.append(schema.__name__), handlers[schema.__name__](msgs))[1])
+                    'Draft': self._compose, 'Judgment': self._judge, 'SqlDraft': self._write_sql}
+
+        def run(msgs):
+            self.calls.append(schema.__name__)
+            self.prompts.setdefault(schema.__name__, []).append(msgs[0].content)
+            return handlers[schema.__name__](msgs)
+        return _Runner(run)
 
     def bind_tools(self, tools, **kwargs):
         return _Runner(lambda msgs: self._specialist(msgs, [t['function']['name'] for t in tools]))
@@ -136,7 +147,13 @@ class FakeLLM:
         return self._specialist(messages, [])
 
     def _route(self, msgs):
-        return RouteDecision(route=self.route, reason='scripted', clarifying_question='Which KPI do you mean?')
+        return RouteDecision(route=self.route, question_type=self.question_type, reason='scripted',
+                             clarifying_question='Which KPI do you mean?')
+
+    def _write_sql(self, msgs):
+        self.writer_inputs.append(msgs[-1].content)
+        sql = self.sql_writer[min(len(self.writer_inputs), len(self.sql_writer)) - 1]
+        return SqlDraft(sql=sql, kind='sample' if 'rand()' in sql.lower() else 'single')
 
     def _supervise(self, msgs):
         done = msgs[-1].content.count('\n- ')

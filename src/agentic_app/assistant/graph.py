@@ -1,12 +1,17 @@
 """LangGraph multi-agent assistant.
 
-guard -> supervisor <-> {kpi_analyst, supplier_analyst, inventory_analyst, network_analyst, sql_analyst} <-> tools
-      -> composer -> checks -> judge -> finalize          (revise once, then safe fallback)
-guard -> fixed answer (out of scope / clarification);  tools -> unavailable (data service down)
+guard (analysis) -> supervisor <-> {kpi_analyst, supplier_analyst, inventory_analyst, network_analyst, sql_analyst}
+                   <-> tools -> composer
+guard (lookup)   -> entity_resolver -> schema_retriever -> sql_writer -> sql_validator -> execute_sql -> result_check
+                   -> composer          (validator error back to the writer, max 3 attempts; 0 rows: one retry)
+composer -> checks -> judge -> finalize          (revise once, then safe fallback)
+guard -> fixed answer (out of scope / clarification);  tools / SQL calls -> unavailable (data service down)
 
 The LLM reaches data only through the six API tools (assistant/tools.py); network_analyst's
 get_supplier_disruption_impact is the API's view of the supply-chain knowledge graph, and sql_analyst's run_sql_query
 runs read-only SQL that the API validates (Gold tables only, no confidential columns, row limit) for ad-hoc lookups.
+Lookup questions skip the supervisor: the lookup path resolves IDs in code, reads the schema from the API, lets the
+LLM write one query, dry-runs it (POST /analytics/sql/validate) and repairs it with the exact error before it runs.
 """
 import json
 import operator
@@ -19,12 +24,14 @@ from langgraph.graph import END, START, StateGraph
 
 from assistant import prompts
 from assistant.evaluation import deterministic_checks, evidence_json, fallback_answer
+from assistant.lookup import resolve_entities, schema_text
 from assistant.schemas import (
     THRESHOLDS,
     AssistantAnswer,
     Draft,
     Judgment,
     RouteDecision,
+    SqlDraft,
     SupervisorDecision,
     judgment_passed,
 )
@@ -41,6 +48,11 @@ KG_LIMITATION = ('Supplier dependencies and open shipments come from the knowled
                  '(as of its last build), not from a live query.')
 SQL_TOOLS = {'run_sql_query'}
 SQL_LIMITATION = 'The SQL result was cut at the row limit; only the first rows are shown.'
+MAX_SQL_ATTEMPTS = 3          # SQL writer attempts when the validator or the warehouse rejects the query
+LOOKUP_ROWS = 50
+EMPTY_RESULT_FEEDBACK = ('The query returned 0 rows. Check the filters: exact upper-case IDs, exact code values from '
+                         'the schema, the right column (see synonyms), and no unnecessary conditions. If nothing can '
+                         'match, return the same query.')
 
 
 def default_llm():
@@ -55,6 +67,13 @@ def default_llm():
 class State(TypedDict, total=False):
     question: str
     route: str
+    question_type: str
+    entities: list[dict[str, str]]
+    schema: dict[str, Any] | None
+    sql_draft: dict[str, Any] | None
+    sql_attempts: int
+    sql_feedback: str | None
+    empty_retry_done: bool
     clarifying_question: str | None
     active: str
     task: str
@@ -85,6 +104,16 @@ def _ok_evidence(state: State) -> list[dict[str, Any]]:
     return [e for e in state.get('evidence', []) if e['status'] == 'ok']
 
 
+def _is_lookup(state: State) -> bool:
+    return state.get('question_type') == 'lookup'
+
+
+def _answer_evidence(state: State) -> list[dict[str, Any]]:
+    """What the answer is based on: all successful tool results, or for a lookup only its final SQL result."""
+    ok = _ok_evidence(state)
+    return ok[-1:] if _is_lookup(state) else ok
+
+
 def _result_summary(tool: str, data: dict[str, Any]) -> dict[str, Any]:
     if tool == 'query_kpi':
         return {'kpi': data['kpi'], 'unit': data['unit'], 'results': data['results']}
@@ -106,8 +135,10 @@ def build_graph(llm: Any, client: httpx.AsyncClient):
     # ------------------------------------------------------------------ guard and router
     async def guard(state: State) -> State:
         decision = await structured(RouteDecision, [SystemMessage(prompts.ROUTER), HumanMessage(state['question'])])
+        lookup = decision.route == 'answer' and decision.question_type == 'lookup'
         return {'route': decision.route, 'clarifying_question': decision.clarifying_question,
-                'trace': [f'guard:{decision.route}']}
+                'question_type': 'lookup' if lookup else 'analysis',
+                'trace': [f'guard:{decision.route}' + (':lookup' if lookup else '')]}
 
     def fixed_answer(state: State) -> State:
         if state['route'] == 'clarify':
@@ -184,6 +215,62 @@ def build_graph(llm: Any, client: httpx.AsyncClient):
         return {'agent_messages': state['agent_messages'] + results, 'evidence': evidence,
                 'unavailable': unavailable, 'trace': trace}
 
+    # ------------------------------------------------------------------ SQL lookup path
+    def entity_resolver(state: State) -> State:
+        entities = resolve_entities(state['question'])
+        return {'entities': entities,
+                'trace': ['entity_resolver:' + (', '.join(e['id'] for e in entities) or 'none')]}
+
+    async def schema_retriever(state: State) -> State:
+        outcome = await call_tool(client, 'get_sql_schema', {})
+        if outcome.kind != 'ok':
+            return {'unavailable': outcome.message or 'The SQL schema is unavailable.', 'trace': ['schema_retriever:error']}
+        return {'schema': outcome.data, 'trace': ['schema_retriever']}
+
+    async def sql_writer(state: State) -> State:
+        entities = '\n'.join(f"- {e['id']}: {e['table']}.{e['column']}" for e in state.get('entities', []))
+        content = (f"QUESTION: {state['question']}\n\nENTITIES:\n{entities or '(none)'}\n\n"
+                   f"SCHEMA:\n{schema_text(state['schema'])}")
+        if state.get('sql_feedback'):
+            content += f"\n\nPREVIOUS ATTEMPT:\n{state['sql_draft']['sql']}\nPROBLEM: {state['sql_feedback']}"
+        draft = await structured(SqlDraft, [SystemMessage(prompts.SQL_WRITER), HumanMessage(content)])
+        return {'sql_draft': draft.model_dump(), 'sql_attempts': state.get('sql_attempts', 0) + 1,
+                'sql_feedback': None, 'trace': [f'sql_writer:{draft.kind}']}
+
+    async def sql_call(state: State, tool: str, step: str) -> State:
+        """Validator and execution share one pattern: ok, rejected (feedback to the writer) or unavailable."""
+        outcome = await call_tool(client, tool, {'sql': state['sql_draft']['sql'], 'limit': LOOKUP_ROWS})
+        if outcome.kind == 'unavailable':
+            return {'unavailable': outcome.message, 'trace': [f'{step}:error']}
+        ok = outcome.kind == 'ok'
+        record = tool == 'run_sql_query' or not ok          # successful dry runs are not evidence
+        return {'sql_feedback': None if ok else outcome.message, 'trace': [f"{step}:{'ok' if ok else 'fail'}"],
+                'evidence': [{'tool': tool, 'arguments': outcome.arguments, 'status': 'ok' if ok else 'error',
+                              'data': outcome.data if ok else None, 'error': None if ok else outcome.message}]
+                if record else []}
+
+    async def sql_validator(state: State) -> State:
+        return await sql_call(state, 'validate_sql_query', 'sql_validator')
+
+    async def execute_sql(state: State) -> State:
+        return await sql_call(state, 'run_sql_query', 'execute_sql')
+
+    def result_check(state: State) -> State:
+        result = _ok_evidence(state)[-1]['data']
+        if result['row_count'] == 0 and not state.get('empty_retry_done'):
+            return {'sql_feedback': EMPTY_RESULT_FEEDBACK, 'empty_retry_done': True, 'trace': ['result_check:empty']}
+        status = 'empty' if result['row_count'] == 0 else 'truncated' if result['truncated'] else 'ok'
+        return {'trace': [f'result_check:{status}']}
+
+    def after_sql_call(next_step: str):
+        def route(s: State) -> str:
+            if s.get('unavailable'):
+                return 'unavailable'
+            if not s.get('sql_feedback'):
+                return next_step
+            return 'sql_writer' if s.get('sql_attempts', 0) < MAX_SQL_ATTEMPTS else 'composer'
+        return route
+
     def unavailable_answer(state: State) -> State:
         return {'final': _final(state, 'data_unavailable', 'The data service is unavailable right now, so I cannot '
                                 'answer from the Gold data. Please try again later.', measures=[],
@@ -192,7 +279,7 @@ def build_graph(llm: Any, client: httpx.AsyncClient):
 
     # ------------------------------------------------------------------ composer and evaluation gate
     async def composer(state: State) -> State:
-        evidence = _ok_evidence(state)
+        evidence = _answer_evidence(state)
         feedback = state.get('feedback') or []
         revisions = state.get('revisions', 0) + (1 if feedback else 0)
         if not evidence:
@@ -204,19 +291,21 @@ def build_graph(llm: Any, client: httpx.AsyncClient):
         if feedback:
             content += (f"\n\nYour previous answer was rejected:\n{state['draft']['answer']}\n"
                         'Fix these problems:\n' + '\n'.join(f'- {f}' for f in feedback))
-        draft = await structured(Draft, [SystemMessage(prompts.COMPOSER), HumanMessage(content)])
+        system = prompts.COMPOSER_LOOKUP if _is_lookup(state) else prompts.COMPOSER
+        draft = await structured(Draft, [SystemMessage(system), HumanMessage(content)])
         return {'draft': draft.model_dump(), 'revisions': revisions, 'feedback': [],
                 'trace': ['composer:revision' if feedback else 'composer']}
 
     def checks(state: State) -> State:
-        errors = deterministic_checks(state['draft'], _ok_evidence(state), state['question'])
+        errors = deterministic_checks(state['draft'], _answer_evidence(state), state['question'], lookup=_is_lookup(state))
         return {'feedback': errors, 'trace': ['checks:fail' if errors else 'checks:pass']}
 
     async def judge(state: State) -> State:
-        content = (f"QUESTION:\n{state['question']}\n\nEVIDENCE:\n{evidence_json(_ok_evidence(state))}\n\n"
+        content = (f"QUESTION:\n{state['question']}\n\nEVIDENCE:\n{evidence_json(_answer_evidence(state))}\n\n"
                    f"CANDIDATE ANSWER:\n{state['draft']['answer']}")
+        rubric = prompts.JUDGE_LOOKUP if _is_lookup(state) else prompts.JUDGE
         try:
-            judgment = await structured(Judgment, [SystemMessage(prompts.JUDGE), HumanMessage(content)])
+            judgment = await structured(Judgment, [SystemMessage(rubric), HumanMessage(content)])
         except Exception as exc:  # noqa: BLE001 - a failing judge must never let an unchecked answer through
             return {'judge_failed': True, 'trace': [f'judge:error({type(exc).__name__})']}
         if judgment_passed(judgment):
@@ -227,7 +316,7 @@ def build_graph(llm: Any, client: httpx.AsyncClient):
                 'trace': ['judge:fail']}
 
     def fallback(state: State) -> State:
-        evidence = _ok_evidence(state)
+        evidence = _answer_evidence(state)
         draft = {'status': 'answered' if evidence else 'no_data',
                  'answer': fallback_answer(evidence) if evidence else 'I could not retrieve any data for this question.',
                  'measures': sorted({e['tool'] for e in evidence}),
@@ -236,7 +325,7 @@ def build_graph(llm: Any, client: httpx.AsyncClient):
 
     def finalize(state: State) -> State:
         draft, judgment = state['draft'], state.get('judgment')
-        evidence = _ok_evidence(state)
+        evidence = _answer_evidence(state)
         limitations = list(draft.get('limitations', []))
         if any(e['tool'] in EUR_TOOLS or (e['data'] or {}).get('unit') == 'EUR' for e in evidence):
             limitations.append(FX_LIMITATION)
@@ -260,13 +349,23 @@ def build_graph(llm: Any, client: httpx.AsyncClient):
     graph = StateGraph(State)
     for name, node in [('guard', guard), ('fixed_answer', fixed_answer), ('supervisor', supervisor),
                        ('tools', tools), ('unavailable', unavailable_answer), ('composer', composer),
-                       ('checks', checks), ('judge', judge), ('fallback', fallback), ('finalize', finalize)]:
+                       ('checks', checks), ('judge', judge), ('fallback', fallback), ('finalize', finalize),
+                       ('entity_resolver', entity_resolver), ('schema_retriever', schema_retriever),
+                       ('sql_writer', sql_writer), ('sql_validator', sql_validator), ('execute_sql', execute_sql),
+                       ('result_check', result_check)]:
         graph.add_node(name, node)
     for name in SPECIALIST_TOOLS:
         graph.add_node(name, make_specialist(name))
 
     graph.add_edge(START, 'guard')
-    graph.add_conditional_edges('guard', lambda s: 'supervisor' if s['route'] == 'answer' else 'fixed_answer')
+    graph.add_conditional_edges('guard', lambda s: 'fixed_answer' if s['route'] != 'answer'
+                                else 'entity_resolver' if _is_lookup(s) else 'supervisor')
+    graph.add_edge('entity_resolver', 'schema_retriever')
+    graph.add_conditional_edges('schema_retriever', lambda s: 'unavailable' if s.get('unavailable') else 'sql_writer')
+    graph.add_edge('sql_writer', 'sql_validator')
+    graph.add_conditional_edges('sql_validator', after_sql_call('execute_sql'))
+    graph.add_conditional_edges('execute_sql', after_sql_call('result_check'))
+    graph.add_conditional_edges('result_check', lambda s: 'sql_writer' if s.get('sql_feedback') else 'composer')
     graph.add_conditional_edges('supervisor', lambda s: s['active'] if s['active'] in SPECIALIST_TOOLS else 'composer')
     for name in SPECIALIST_TOOLS:
         graph.add_conditional_edges(name, lambda s: 'tools' if s.get('pending_tools') else 'supervisor')

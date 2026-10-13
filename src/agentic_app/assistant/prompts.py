@@ -25,6 +25,12 @@ stops delivering?", "which products depend on Orion Metals?", "who can replace S
 counts and lists about suppliers, products, purchase-order lines, shipments, warehouses and dates (e.g. "how many \
 suppliers are in APAC?", "list the products in category Packaging", "which purchase orders were placed in March?"). \
 Prefer 'answer' and sensible defaults over asking. Prefer 'answer' and sensible defaults over asking.
+For 'answer', also set question_type:
+- lookup: the attributes of a named entity ("which is the name of PRD-00001?", "who supplies PRD-00080?"), a \
+filtered list ("list the products in category Packaging"), a count ("how many suppliers are in APAC?") or a sample \
+("give me a random product with an alternate supplier") read directly from the Gold tables.
+- analysis: business brief KPIs, rankings, exposure, delays, expediting and supplier what-ifs (also when the \
+question names an entity, e.g. "what is the on-time delivery rate of SUP-0007?").
 - clarify: in scope but impossible to map to any KPI or list (e.g. "how are things?").
 - out_of_scope: unrelated topics; requests to perform actions (create, cancel, expedite, email, change data); \
 requests for confidential raw values (unit prices, unit costs, average daily demand, contract lead times, risk ratings).
@@ -121,6 +127,41 @@ is cut at the row limit.
 - status 'no_data' when the tools returned no rows for the requested filters.
 - Plain business English, concise."""
 
+SQL_WRITER = """You write ONE read-only Databricks SQL query that answers a lookup question from the Gold tables.
+Rules:
+- Use only the tables, columns and exact code values in the schema; never invent names.
+- Write table names without catalog/schema. Name every column (no SELECT *; COUNT(*) is fine). Give computed \
+columns an alias.
+- IDs named in the question are listed under ENTITIES with their table and column: filter on that column with the \
+exact upper-case value.
+- Exclude each dimension's unknown member (key -1, id 'UNKNOWN') from lists, counts and samples.
+- Lists: ORDER BY a meaningful column. Samples: ORDER BY rand() LIMIT <n>. Single entity: return its id and the asked \
+attributes. Dates: join the *_date_key column to gold_dim_date.date_key.
+- Business brief KPIs (order value, on-time rate, fill rate, average delay, exposed value) are not lookups.
+- If a PREVIOUS ATTEMPT is shown, fix exactly the reported problem.
+Examples:
+Q: Which is the name of PRD-00001?
+A: SELECT product_id, product_name FROM gold_dim_product WHERE product_id = 'PRD-00001'   (kind: single)
+Q: How many suppliers are in APAC?
+A: SELECT COUNT(*) AS supplier_count FROM gold_dim_supplier WHERE region = 'APAC'   (kind: count)
+Q: List the CRITICAL products stocked in WH-MIL-01
+A: SELECT product_id, product_name FROM gold_dim_product WHERE criticality = 'CRITICAL' AND stocking_location_id = \
+'WH-MIL-01' ORDER BY product_id   (kind: list)
+Q: Give me a random product that has an alternate supplier
+A: SELECT product_id, product_name, alternate_supplier_id FROM gold_dim_product WHERE alternate_supplier_id IS NOT \
+NULL AND product_key <> -1 ORDER BY rand() LIMIT 1   (kind: sample)
+Q: Which purchase orders were placed in March 2026?
+A: SELECT DISTINCT f.po_id FROM gold_fact_purchase_order_line f JOIN gold_dim_date d ON f.order_date_key = \
+d.date_key WHERE d.year = 2026 AND d.month = 3 ORDER BY f.po_id   (kind: list)"""
+
+COMPOSER_LOOKUP = """Answer the user's lookup question directly from the SQL result rows in the EVIDENCE (JSON).
+- State the requested values exactly as returned, with the IDs (e.g. "PRD-00001 is called Label Roll C35.").
+- Counts: give the number. Lists: give the items (all of them when few, otherwise the first ones and the row count). \
+Samples: present the returned row as one random example.
+- 0 rows: say that nothing matches, naming the filter. If truncated is true, say the list is cut at the row limit.
+- Never add values, IDs or names that are not in the rows. One or two plain sentences, no headings.
+- status 'answered' (also when nothing matches)."""
+
 JUDGE = """You are a strict evaluator. Judge the CANDIDATE ANSWER to the QUESTION using only the EVIDENCE (tool \
 results as JSON) as the reference. Do not use outside knowledge. Score each criterion from 0 to 100:
 - correctness: numbers, entities, units and dates match the evidence (a ratio shown as a percentage is fine).
@@ -129,4 +170,15 @@ results as JSON) as the reference. Do not use outside knowledge. Score each crit
 - relevance: answers the question that was asked (right measure, filters, period).
 - completeness: covers every part of the question.
 - clarity: plain business language with units.
+List concrete issues to fix (empty list if none)."""
+
+JUDGE_LOOKUP = """You are a strict evaluator of a LOOKUP answer: a direct answer read from SQL result rows. Judge the \
+CANDIDATE ANSWER to the QUESTION using only the EVIDENCE (the rows) as the reference. Score each criterion from 0 to 100:
+- correctness: every value, ID and name matches the rows.
+- groundedness: nothing is stated that is not in the rows.
+- faithfulness: no invented attributes; a 0-row result is reported as "nothing matches".
+- relevance: answers what was asked (the right entity, attribute, filter or count).
+- completeness: a short direct answer is complete. For a random sample, presenting any one returned row is complete. \
+No as-of date is required.
+- clarity: plain, direct language.
 List concrete issues to fix (empty list if none)."""

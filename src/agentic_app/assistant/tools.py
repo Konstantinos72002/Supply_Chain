@@ -1,6 +1,7 @@
-"""The six approved tools. Each mirrors one endpoint of the API; the assistant has no other data access.
-run_sql_query is the only free-form one: the API validates its SQL (read-only, Gold tables, no confidential columns,
-row limit) before anything runs.
+"""The approved tools. Each mirrors one endpoint of the API; the assistant has no other data access.
+Specialists bind the six in SPECIALIST_TOOLS; the SQL lookup path calls get_sql_schema, validate_sql_query and
+run_sql_query from its own graph nodes. The API validates all SQL (read-only, Gold tables, no confidential columns,
+known columns, row limit) before anything runs.
 
 Arguments are validated with these Pydantic models before any call; the API validates them again.
 """
@@ -71,6 +72,10 @@ class SupplierDisruptionImpactArgs(BaseModel):
     critical_only: bool = Field(True, description='Only CRITICAL products; false to include all products.')
 
 
+class SqlSchemaArgs(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+
 class RunSqlQueryArgs(BaseModel):
     model_config = ConfigDict(extra='forbid')
     sql: str = Field(min_length=6, max_length=4000,
@@ -110,6 +115,12 @@ TOOLS: dict[str, ToolSpec] = {
         'Knowledge-graph what-if for one supplier that stops delivering: the products that depend on it (CRITICAL '
         'only by default), their alternate suppliers and whether one is active, and the open shipments of those '
         'products with their status and destination warehouse. Uncovered products come first.'),
+    'get_sql_schema': ToolSpec(
+        SqlSchemaArgs, 'GET', '/analytics/sql/schema',
+        'Gold tables, columns, exact code values and synonyms that the SQL endpoints accept.'),
+    'validate_sql_query': ToolSpec(
+        RunSqlQueryArgs, 'POST', '/analytics/sql/validate',
+        'Dry run of one read-only SELECT: same rules as run_sql_query plus a warehouse EXPLAIN; returns no data.'),
     'run_sql_query': ToolSpec(
         RunSqlQueryArgs, 'POST', '/analytics/sql',
         'Run one read-only SELECT on the Gold tables for ad-hoc lookups, counts and lists that no business endpoint '

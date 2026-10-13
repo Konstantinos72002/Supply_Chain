@@ -15,6 +15,10 @@ class RouteDecision(BaseModel):
     route: Literal['answer', 'clarify', 'out_of_scope'] = Field(
         description="'answer' = in scope and answerable with the tools; 'clarify' = in scope but too vague to pick "
                     "any measure; 'out_of_scope' = unrelated, an action request, or confidential raw data.")
+    question_type: Literal['lookup', 'analysis'] = Field(
+        'analysis', description="Only for 'answer': 'lookup' = attributes of a named entity, a filtered list, a "
+                                "count or a sample from the Gold tables; 'analysis' = KPIs, rankings, exposure, "
+                                "delays or supplier what-ifs.")
     reason: str = Field(description='One sentence explaining the decision.')
     clarifying_question: str | None = Field(None, description="Only for 'clarify': one short question to the user.")
 
@@ -24,6 +28,13 @@ class SupervisorDecision(BaseModel):
                   'finish'] = Field(
         description='Specialist to run next, or finish when the findings answer every part of the question.')
     task: str = Field('', description='Precise instruction for the specialist; empty when finishing.')
+
+
+class SqlDraft(BaseModel):
+    sql: str = Field(description='One read-only SELECT (or WITH ... SELECT) on the Gold tables.')
+    kind: Literal['single', 'list', 'count', 'sample'] = Field(
+        description="'single' = attributes of one entity, 'list' = filtered rows, 'count' = a number, "
+                    "'sample' = random row(s).")
 
 
 class Draft(BaseModel):

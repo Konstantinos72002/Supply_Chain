@@ -218,7 +218,7 @@ async def run_statement(client: httpx.AsyncClient, statement: str,
     if result['status']['state'] != 'SUCCEEDED':
         logger.error('Statement %s ended in state %s: %s', statement_id, result['status']['state'],
                      result['status'].get('error'))
-        raise HTTPException(status_code=502, detail='The query on the data source failed. Please try again later.')
+        raise StatementFailed(str((result['status'].get('error') or {}).get('message', '')))
 
     schema = result['manifest']['schema']['columns']
     chunk = result.get('result', {})
@@ -227,6 +227,15 @@ async def run_statement(client: httpx.AsyncClient, statement: str,
         chunk = check_response(await send_with_retry(client, 'GET', link))
         rows.extend(chunk.get('data_array', []))
     return [{col['name']: convert(v, col['type_name']) for col, v in zip(schema, row)} for row in rows]
+
+
+class StatementFailed(HTTPException):
+    """The warehouse ran the statement and it failed (not an outage). Same 502 for callers; `error` stays server-side
+    unless an endpoint (the SQL dry run) deliberately returns a redacted version of it."""
+
+    def __init__(self, error: str):
+        super().__init__(status_code=502, detail='The query on the data source failed. Please try again later.')
+        self.error = error
 
 
 class Filters:
@@ -846,6 +855,14 @@ def checked_sql(text: str, limit: int) -> tuple[exp.Expression, list[str], bool]
             raise sql_rejected(f'Column {column.name!r} is confidential and cannot be queried.')
     if any(not isinstance(star.parent, exp.Count) for star in tree.find_all(exp.Star)):
         raise sql_rejected('SELECT * is not allowed: name the columns you need (COUNT(*) is fine).')
+    available = {c for t in tables for c in SQL_TABLES[t]}
+    defined = ({a.alias.lower() for a in tree.find_all(exp.Alias)}
+               | {p.name.lower() for lam in tree.find_all(exp.Lambda) for p in lam.expressions})
+    for column in tree.find_all(exp.Column):
+        name = column.name.lower()
+        if name and name not in available and name not in defined:
+            raise sql_rejected(f'Unknown column {column.name!r}. Columns of {", ".join(sorted(set(tables)))}: '
+                               + '; '.join(f'{t}({", ".join(SQL_TABLES[t])})' for t in sorted(set(tables))) + '.')
     for function in tree.find_all(exp.Func):
         name = (function.name if isinstance(function, exp.Anonymous) else function.sql_name()).lower()
         if name in SQL_BLOCKED_FUNCTIONS:
@@ -876,6 +893,111 @@ async def run_sql_query(request: Request, body: SqlQuery) -> SqlResponse:
     rows = rows[:body.limit]
     return SqlResponse(sql=statement, tables=tables, columns=list(rows[0]) if rows else tree.named_selects,
                        rows=rows, row_count=len(rows), truncated=truncated)
+
+
+# ----------------------------------------------------------------------------- schema and dry run (lookup path)
+SQL_TABLE_GRAIN = {
+    'gold_fact_purchase_order_line': 'one purchase-order line, current version, cancelled lines excluded',
+    'gold_fact_shipment_event': 'one shipment status event',
+    'gold_fact_inventory_exposure': 'one product at the snapshot date',
+    'gold_dim_date': 'one calendar day; date_key = yyyyMMdd',
+    'gold_dim_supplier': 'one supplier (current snapshot)',
+    'gold_dim_product': 'one product (current snapshot)',
+    'gold_dim_location': 'one location: warehouse, port, hub or supplier site',
+    'gold_dim_shipment_status': 'one shipment status',
+}
+SQL_ALLOWED_VALUES = {   # documented code lists (data dictionary); product categories are read from Gold
+    'gold_dim_supplier.region': ['EMEA', 'APAC', 'AMER'],
+    'gold_dim_product.criticality': ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'],
+    'gold_dim_product.unit_of_measure': ['EA', 'KG', 'L'],
+    'gold_fact_purchase_order_line.line_status': ['OPEN', 'PARTIALLY_RECEIVED', 'CLOSED'],
+    'gold_dim_location.location_type': ['WAREHOUSE', 'PORT', 'HUB', 'SUPPLIER_SITE'],
+    'gold_dim_shipment_status.status': ['CREATED', 'PICKED_UP', 'IN_TRANSIT', 'CUSTOMS', 'OUT_FOR_DELIVERY',
+                                        'DELIVERED', 'DELAYED', 'CANCELLED'],
+}
+SQL_SYNONYMS = {
+    'name of a product / supplier / location': 'gold_dim_product.product_name, gold_dim_supplier.supplier_name, '
+                                                'gold_dim_location.location_name',
+    'has an alternate (backup) supplier': 'gold_dim_product.alternate_supplier_id IS NOT NULL',
+    'has an active alternate supplier': 'gold_dim_product.has_active_alternate = true',
+    'main / primary supplier of a product': 'gold_dim_product.primary_supplier_id',
+    'warehouse where a product is stocked': 'gold_dim_product.stocking_location_id',
+    'stock / inventory of a product': 'gold_fact_inventory_exposure.on_hand_qty (join gold_dim_product on product_key)',
+    'order date, promised date, delivery date': '*_date_key columns joined to gold_dim_date.date_key',
+    'active supplier': 'gold_dim_supplier.is_active = true',
+}
+SQL_JOINS = [
+    'facts join dimensions on supplier_key, product_key, location_key and shipment_status_key',
+    'every *_date_key joins gold_dim_date.date_key',
+    "each dimension has one 'unknown' member with key -1 and id 'UNKNOWN': exclude it from lists, counts and samples",
+]
+
+
+class SqlTable(BaseModel):
+    name: str
+    grain: str
+    columns: list[str]
+
+
+class SqlSchemaResponse(BaseModel):
+    tables: list[SqlTable]
+    allowed_values: dict[str, list[str]] = Field(description='Exact values of code columns (table.column).')
+    synonyms: dict[str, str] = Field(description='Business words and the columns they mean.')
+    joins: list[str]
+    max_rows: int
+
+
+@app.get('/analytics/sql/schema', response_model=SqlSchemaResponse, operation_id='get_sql_schema',
+         summary='Gold tables, columns, code values and synonyms that POST /analytics/sql accepts',
+         dependencies=[Depends(require_user)])
+async def get_sql_schema(request: Request) -> SqlSchemaResponse:
+    """The schema the SQL lookup path writes against: the same allowlist the SQL endpoints enforce (confidential
+    columns are never listed), the exact code values, and synonyms that map business words to columns."""
+    categories = await run_statement(
+        request.app.state.client,
+        f'SELECT DISTINCT category FROM {DIM_PRODUCT} WHERE category IS NOT NULL ORDER BY category LIMIT 50')
+    allowed = SQL_ALLOWED_VALUES | {'gold_dim_product.category': [r['category'] for r in categories]}
+    return SqlSchemaResponse(
+        tables=[SqlTable(name=t, grain=SQL_TABLE_GRAIN[t], columns=c) for t, c in SQL_TABLES.items()],
+        allowed_values=allowed, synonyms=SQL_SYNONYMS, joins=SQL_JOINS, max_rows=SQL_MAX_ROWS)
+
+
+class SqlValidation(BaseModel):
+    valid: bool
+    sql: str = Field(description='The statement that would run: validated, fully qualified, with the row limit.')
+    tables: list[str]
+    columns: list[str]
+
+
+PLANNING_ERROR = re.compile(r'(AnalysisException|ParseException|Error occurred during query planning)')
+
+
+def redacted(text: str) -> str:
+    """First line of a warehouse error, without confidential column names (suggestions may list them)."""
+    line = next((x.strip() for x in text.splitlines() if PLANNING_ERROR.search(x) or '[' in x), text.strip())
+    line = re.sub(r'^.*?(AnalysisException|ParseException):\s*', '', line)
+    for name in SQL_CONFIDENTIAL_COLUMNS:
+        line = re.sub(rf'\b{name}\b', '[confidential]', line, flags=re.IGNORECASE)
+    return line[:300]
+
+
+@app.post('/analytics/sql/validate', response_model=SqlValidation, operation_id='validate_sql_query',
+          summary='Dry run: check one read-only SELECT without returning data',
+          responses={422: {'description': 'The query was rejected or does not run; the detail says why.'}},
+          dependencies=[Depends(require_user)])
+async def validate_sql_query(request: Request, body: SqlQuery) -> SqlValidation:
+    """Same rules as POST /analytics/sql, plus a dry run (EXPLAIN) on the warehouse that catches errors the rules
+    cannot see (wrong aggregation, type mismatches). Returns no data; a 422 detail tells the writer what to fix."""
+    tree, tables, _ = checked_sql(body.sql, body.limit)
+    statement = tree.sql(dialect='databricks')
+    try:
+        plan = await run_statement(request.app.state.client, f'EXPLAIN {statement}')
+    except StatementFailed as exc:
+        raise sql_rejected(f'The query does not run: {redacted(exc.error) or "planning failed"}.')
+    text = '\n'.join(str(value) for row in plan for value in row.values())
+    if PLANNING_ERROR.search(text):
+        raise sql_rejected(f'The query does not run: {redacted(text)}.')
+    return SqlValidation(valid=True, sql=statement, tables=tables, columns=tree.named_selects)
 
 
 # =============================================================================
