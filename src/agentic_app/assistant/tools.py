@@ -1,4 +1,7 @@
-"""The five approved tools. Each mirrors one business endpoint of the API; the assistant has no other data access.
+"""The approved tools. Each mirrors one endpoint of the API; the assistant has no other data access.
+Specialists bind the six in SPECIALIST_TOOLS; the SQL lookup path calls get_sql_schema, validate_sql_query and
+run_sql_query from its own graph nodes. The API validates all SQL (read-only, Gold tables, no confidential columns,
+known columns, row limit) before anything runs.
 
 Arguments are validated with these Pydantic models before any call; the API validates them again.
 """
@@ -69,6 +72,18 @@ class SupplierDisruptionImpactArgs(BaseModel):
     critical_only: bool = Field(True, description='Only CRITICAL products; false to include all products.')
 
 
+class SqlSchemaArgs(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+
+class RunSqlQueryArgs(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    sql: str = Field(min_length=6, max_length=4000,
+                     description='One read-only SELECT (or WITH ... SELECT) on the Gold tables listed in your '
+                                 'instructions; table names without catalog/schema; no SELECT *.')
+    limit: int = Field(50, ge=1, le=200, description='Maximum rows returned (at most 200).')
+
+
 @dataclass(frozen=True)
 class ToolSpec:
     args_model: type[BaseModel]
@@ -100,6 +115,17 @@ TOOLS: dict[str, ToolSpec] = {
         'Knowledge-graph what-if for one supplier that stops delivering: the products that depend on it (CRITICAL '
         'only by default), their alternate suppliers and whether one is active, and the open shipments of those '
         'products with their status and destination warehouse. Uncovered products come first.'),
+    'get_sql_schema': ToolSpec(
+        SqlSchemaArgs, 'GET', '/analytics/sql/schema',
+        'Gold tables, columns, exact code values and synonyms that the SQL endpoints accept.'),
+    'validate_sql_query': ToolSpec(
+        RunSqlQueryArgs, 'POST', '/analytics/sql/validate',
+        'Dry run of one read-only SELECT: same rules as run_sql_query plus a LIMIT 0 run on the warehouse; returns no data.'),
+    'run_sql_query': ToolSpec(
+        RunSqlQueryArgs, 'POST', '/analytics/sql',
+        'Run one read-only SELECT on the Gold tables for ad-hoc lookups, counts and lists that no business endpoint '
+        'covers (e.g. suppliers in a region, products in a category, orders placed in a month). Returns columns, rows, '
+        'row_count and truncated. Rejected queries come back with the reason; fix the SQL and retry.'),
 }
 
 SPECIALIST_TOOLS = {
@@ -107,6 +133,7 @@ SPECIALIST_TOOLS = {
     'supplier_analyst': ['get_supplier_scorecard', 'query_kpi'],
     'inventory_analyst': ['get_product_exposure', 'get_delayed_order_lines'],
     'network_analyst': ['get_supplier_disruption_impact', 'get_supplier_scorecard'],
+    'sql_analyst': ['run_sql_query'],
 }
 
 

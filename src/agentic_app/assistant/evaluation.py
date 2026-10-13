@@ -8,6 +8,8 @@ import json
 import re
 from typing import Any
 
+from assistant.lookup import ids_in
+
 ID_OR_DATE = re.compile(r'\b[A-Za-z]+-[A-Za-z0-9-]+\b|\b\d{4}-\d{2}(?:-\d{2})?\b')
 NUMBER = re.compile(r'(?<![\w.])\d[\d,]*(?:\.\d+)?')
 SCALES = (1, 100, 1e-3, 1e-6)          # as is, ratio -> percent, thousands, millions
@@ -50,13 +52,25 @@ def ungrounded_numbers(answer: str, evidence: list[dict[str, Any]], question: st
     return problems
 
 
-def deterministic_checks(draft: dict[str, Any], evidence: list[dict[str, Any]], question: str) -> list[str]:
+def ungrounded_ids(answer: str, evidence: list[dict[str, Any]], question: str) -> list[str]:
+    """Business IDs (PRD-00001, SUP-0007, ...) in the answer that are neither in the evidence nor in the question."""
+    known = ids_in(json.dumps([e.get('data') for e in evidence], default=str)) | ids_in(question)
+    return sorted(ids_in(answer) - known)
+
+
+def deterministic_checks(draft: dict[str, Any], evidence: list[dict[str, Any]], question: str,
+                         lookup: bool = False) -> list[str]:
+    """Numbers must come from the evidence; for lookups, IDs too (entity grounding)."""
     errors = []
     if draft['status'] == 'answered' and not evidence:
         errors.append("Status is 'answered' but no tool returned data.")
     bad = ungrounded_numbers(draft['answer'], evidence, question)
     if bad:
         errors.append(f"These numbers are not in the evidence: {', '.join(bad)}. Use only values the tools returned.")
+    if lookup:
+        bad_ids = ungrounded_ids(draft['answer'], evidence, question)
+        if bad_ids:
+            errors.append(f"These IDs are not in the result rows: {', '.join(bad_ids)}. Use only returned rows.")
     return errors
 
 
@@ -94,6 +108,12 @@ def fallback_answer(evidence: list[dict[str, Any]]) -> str:
         if e['tool'] == 'query_kpi':
             values = ', '.join(f"{r['group']}: {r['value']}" for r in data['results'])
             lines.append(f"{data['kpi']} ({data['unit']}): {values}")
+            continue
+        if e['tool'] == 'run_sql_query':
+            rows = data['rows'][:5]
+            cut = ' (cut at the row limit)' if data['truncated'] else ''
+            lines.append(f"run_sql_query: {data['row_count']} rows returned{cut}; first {len(rows)}:")
+            lines += ['  - ' + ', '.join(f'{c}={r.get(c)}' for c in data['columns']) for r in rows]
             continue
         key = next(k for k in KEY_FIELDS if k in data)
         rows = data[key][:5]
