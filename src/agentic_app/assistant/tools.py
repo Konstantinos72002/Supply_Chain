@@ -120,7 +120,7 @@ TOOLS: dict[str, ToolSpec] = {
         'Gold tables, columns, exact code values and synonyms that the SQL endpoints accept.'),
     'validate_sql_query': ToolSpec(
         RunSqlQueryArgs, 'POST', '/analytics/sql/validate',
-        'Dry run of one read-only SELECT: same rules as run_sql_query plus a warehouse EXPLAIN; returns no data.'),
+        'Dry run of one read-only SELECT: same rules as run_sql_query plus a LIMIT 0 run on the warehouse; returns no data.'),
     'run_sql_query': ToolSpec(
         RunSqlQueryArgs, 'POST', '/analytics/sql',
         'Run one read-only SELECT on the Gold tables for ad-hoc lookups, counts and lists that no business endpoint '

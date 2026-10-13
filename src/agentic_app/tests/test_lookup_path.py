@@ -75,6 +75,13 @@ def test_warehouse_errors_are_redacted():
     assert 'risk_rating' not in module.redacted(error) and 'unit_cost' not in module.redacted(error)
 
 
+def test_redaction_finds_the_error_class_after_a_header_line():
+    """Spark 4 / Databricks can put a header line before the error class; the class must still be found."""
+    error = ('Error occurred during query planning:\n[MISSING_AGGREGATION] The non-aggregating expression '
+             '"product_id" is based on columns which are not participating in the GROUP BY clause.')
+    assert module.redacted(error).startswith('[MISSING_AGGREGATION] The non-aggregating expression')
+
+
 # --------------------------------------------------------------------------- entity resolver
 def test_entity_resolver_normalises_ids_by_their_first_segment():
     found = resolve_entities('name of prd-00001 and SITE-SUP-0040, PO-2025-00208, top-5')

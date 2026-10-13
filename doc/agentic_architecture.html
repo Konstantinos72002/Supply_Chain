@@ -323,7 +323,7 @@
       endpoints enforce, with exact code values (product categories read from Gold) and synonyms such as
       "has an alternate supplier" → <code>alternate_supplier_id IS NOT NULL</code>; confidential columns never
       appear in it. The validator applies the same rules as execution, rejects unknown columns with the list of
-      valid ones, and dry-runs the query with <code>EXPLAIN</code>; warehouse errors are redacted before the
+      valid ones, and dry-runs the query with <code>LIMIT 0</code> (full analysis, no data read); warehouse errors are redacted before the
       writer sees them. Only the final SQL result becomes the answer's evidence. A data-service error at any step
       ends the run as <code>data_unavailable</code>.</figcaption>
   </figure>

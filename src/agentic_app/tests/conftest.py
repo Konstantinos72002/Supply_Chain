@@ -12,6 +12,7 @@ import dotenv
 import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
+from pyspark.errors import PySparkException
 
 TENANT, CLIENT = '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222'
 os.environ.update(DATABRICKS_HOST='https://example', DATABRICKS_TOKEN='x', DATABRICKS_WAREHOUSE_ID='w',
@@ -78,7 +79,11 @@ def api(spark):
         args = {p['name']: date.fromisoformat(p['value']) if p['type'] == 'DATE' else p['value']
                 for p in parameters or []}
         conv = lambda v: float(v) if isinstance(v, Decimal) else v.isoformat() if isinstance(v, date) else v
-        return [{k: conv(v) for k, v in r.asDict().items()} for r in spark.sql(sql, args=args).collect()]
+        try:
+            rows = spark.sql(sql, args=args).collect()
+        except PySparkException as exc:          # like the warehouse: a failed statement is StatementFailed
+            raise module.StatementFailed(str(exc)) from exc
+        return [{k: conv(v) for k, v in r.asDict().items()} for r in rows]
 
     module.run_statement = local_run_statement
     module.jwks_client = _LocalKeys()

@@ -969,34 +969,37 @@ class SqlValidation(BaseModel):
     columns: list[str]
 
 
-PLANNING_ERROR = re.compile(r'(AnalysisException|ParseException|Error occurred during query planning)')
+ERROR_CLASS = re.compile(r'\[[A-Z][A-Z0-9_]*(?:\.[A-Z0-9_]+)*\]')     # e.g. [MISSING_AGGREGATION]
 
 
 def redacted(text: str) -> str:
-    """First line of a warehouse error, without confidential column names (suggestions may list them)."""
-    line = next((x.strip() for x in text.splitlines() if PLANNING_ERROR.search(x) or '[' in x), text.strip())
-    line = re.sub(r'^.*?(AnalysisException|ParseException):\s*', '', line)
+    """The warehouse error from its error class on (first matching line), without confidential column names
+    (suggestions may list them). Works whether the class is on the first line or after a header line."""
+    lines = [x.strip() for x in text.splitlines() if x.strip()]
+    line = next((x for x in lines if ERROR_CLASS.search(x)), lines[0] if lines else '')
+    if match := ERROR_CLASS.search(line):
+        line = line[match.start():]
     for name in SQL_CONFIDENTIAL_COLUMNS:
         line = re.sub(rf'\b{name}\b', '[confidential]', line, flags=re.IGNORECASE)
     return line[:300]
 
 
 @app.post('/analytics/sql/validate', response_model=SqlValidation, operation_id='validate_sql_query',
-          summary='Dry run: check one read-only SELECT without returning data',
+          summary='Dry run: check one read-only SELECT without returning data (LIMIT 0)',
           responses={422: {'description': 'The query was rejected or does not run; the detail says why.'}},
           dependencies=[Depends(require_user)])
 async def validate_sql_query(request: Request, body: SqlQuery) -> SqlValidation:
-    """Same rules as POST /analytics/sql, plus a dry run (EXPLAIN) on the warehouse that catches errors the rules
-    cannot see (wrong aggregation, type mismatches). Returns no data; a 422 detail tells the writer what to fix."""
+    """Same rules as POST /analytics/sql, plus a dry run on the warehouse that catches errors the rules cannot see
+    (wrong aggregation, type mismatches). The dry run is the validated query with LIMIT 0: the warehouse analyses it
+    fully and reports errors with their message, but the optimizer turns LIMIT 0 into an empty result, so no data is
+    read. (EXPLAIN is not used: Spark 4 no longer includes the error message in its plan.) Returns no data; a 422
+    detail tells the writer what to fix."""
     tree, tables, _ = checked_sql(body.sql, body.limit)
     statement = tree.sql(dialect='databricks')
     try:
-        plan = await run_statement(request.app.state.client, f'EXPLAIN {statement}')
+        await run_statement(request.app.state.client, tree.copy().limit(0).sql(dialect='databricks'))
     except StatementFailed as exc:
-        raise sql_rejected(f'The query does not run: {redacted(exc.error) or "planning failed"}.')
-    text = '\n'.join(str(value) for row in plan for value in row.values())
-    if PLANNING_ERROR.search(text):
-        raise sql_rejected(f'The query does not run: {redacted(text)}.')
+        raise sql_rejected(f'The query does not run: {redacted(exc.error) or "the warehouse could not plan it"}.')
     return SqlValidation(valid=True, sql=statement, tables=tables, columns=tree.named_selects)
 
 
